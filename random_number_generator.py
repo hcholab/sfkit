@@ -1,11 +1,13 @@
 import math
-import random
-import string
+import sys
 
 import nacl.secret
 
-# taken from the secure-gwas repo
+# some large prime; taken from the secure-gwas repo
 BASE_P = 1461501637330902918203684832716283019655932542929
+
+# some string of length 1000
+MESSAGE = b"neoiiztdnrzxokrhqnzlufoehvdknkflkypwvgnjzhfivnlecgzijiepozmiqnrqcaefhzusbymkzcrcxboozvtlvcylhpxemteaycpluxbezsiczcezzmdvibqraczxztvlaolphtiwogpinowxffviwkzapoqozozagnnzrnstxpvtidnajdmqxvvlsbzlzdcgnznhodcjxrjqigrcgzppcrfpidfwldtzbqzaaxkjeddmytjgfoekmvqvkixfthipaczpdcmlvucctxkmblpusybzsgyopzeedtqlhgbrbmfxcpdafktznmnrhhuzebmipynozsglrzaqbywexrvnudcxtelwhyarbvrsphefztdivytybagfcrqxbulgzndqgkoodgsxnntofscryscfkvgvlafvreabrymxpwhkbyjwetsehlwvaoiutqrdppydxcspzlkurijvbhjpoqosntdeofmmajydthafqubarwbngxydqpzjgtaotsgdqpelnfycvggoyxomgnqkcvosrirtelcdqhbfmtuvzoxmnrdbfltdohcitiutciyyxrzallhtjcqwqbxinckicdhvupwbnlkkvmmuoxlxhkflxhgqxoymevqfxihruqdqilqkydlrvzyvmrkncjdcrkudtjufzayhifjogywnyxfclqpyhdssrkwytnbdxlvwxwrsliymzlcvsjertgcychbzncgkhopawsufcefjwdveivduwphrkasigxtndyftmswovaxxkprxehscmflhmqkveqxlekpgrhnxpsgpmriibfeivotfbmkcwocsewxhusduzqgxbjfasutjwpdgntljntjgbrrozcfmbxbjkqihzytwdauznoofukgucmibfriisdqrqgxzjewyngwefvstvbibuylkbqcfjhqgvdhqqmatrwnjoxycejcxpqrbvwxqhkgnivjuuzylitpvfbmdwjdqhartpvcjookn"
 
 
 class RandomNumberGenerator:
@@ -17,46 +19,69 @@ class RandomNumberGenerator:
     def __init__(self, key, base_p=BASE_P):
         self.base_p = base_p
         self.box = nacl.secret.SecretBox(key)
-        self.nonce = 1
-        self.generate_buffer()
+        self.nonce = 0
+        self.buffer = []
 
     def generate_buffer(self):
+        """
+        Generates a buffer of random numbers in the range of base_p
+        """
+
         self.nonce += 1
-        random.seed(self.nonce)
-        # the cyrptographic strength of this message is unimportant.
-        # It really just needs to be a byte string of a reasonable length.
-        msg = "".join(random.choices(string.ascii_lowercase, k=1000)).encode("utf-8")
 
         pseudo_random_byte_string = self.box.encrypt(
-            msg, self.nonce.to_bytes(24, byteorder="big")
-        ).ciphertext
+            MESSAGE, self.nonce.to_bytes(24, byteorder="big")
+        ).ciphertext[16:]
+        # 16: because this encryption adds 16 bytes at the beginning, relative to the cpp implementation
 
-        self.buffer = convert_byte_string_to_list_of_ints_in_range(
-            pseudo_random_byte_string, self.base_p
+        self.buffer = self.convert_byte_string_to_list_of_ints_in_range(
+            pseudo_random_byte_string
         )
 
     def next(self):
         if not self.buffer:
             self.generate_buffer()
-        return self.buffer.pop()
+        return self.buffer.pop(0)
+
+    def convert_byte_string_to_list_of_ints_in_range(self, byte_string):
+        res = []
+
+        l = len(bin(self.base_p)) - 2  # bit length; -2 to remove the "0b" prefix
+        n = math.ceil(l / 8)  # number of bytes we need to convert
+
+        # pop first n bytes from byte_string
+        while len(byte_string) >= n:
+            cur = list(byte_string[:n])
+            byte_string = byte_string[n:]
+
+            # if there are extra bits, we mask the first ones with 0
+            if (n * 8) > l:
+                diff = n * 8 - l
+                # mask first diff bits as 0
+                cur[0] = cur[0] & (1 << diff) - 1
+
+            cur = int.from_bytes(cur, byteorder="big")
+
+            # check if cur is in range; I can't just use the modulus as that would
+            # lead to a non-uniform distribution for the numbers
+            if cur <= self.base_p:
+                res.append(cur)
+
+        return res
 
 
-def convert_byte_string_to_list_of_ints_in_range(byte_string, max_value):
-    res = []
+def main():  # for testing
+    key = bytes.fromhex(
+        "3a57393f2a2ef038d43b432c34339e0cd021a15ce25b17c8bf07a5d9eae05d13"
+    )
+    rng = RandomNumberGenerator(key)
+    for _ in range(10):
+        print(rng.next())
 
-    l = len(bin(max_value)) - 2  # get bit length of max_value
-    n = math.ceil(l / 8)  # number of bytes we need to convert
 
-    # pop first n bytes from byte_string
-    while len(byte_string) >= n:
-        cur = byte_string[:n]
-        byte_string = byte_string[n:]
-
-        # convert cur to int
-        cur = int.from_bytes(cur, byteorder="big")
-        # check if cur is in range; I can't just use the modulus as that would
-        # lead to a non-uniform distribution for the numbers
-        if cur <= max_value:
-            res.append(cur)
-
-    return res
+if __name__ == "__main__":
+    global debug
+    debug = False
+    if len(sys.argv) > 1 and sys.argv[1] == "debug":
+        debug = True
+    main()
