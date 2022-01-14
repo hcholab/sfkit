@@ -26,7 +26,6 @@ class RandomNumberGenerator:
         """
         Generates a buffer of random numbers in the range of base_p
         """
-
         self.nonce += 1
 
         pseudo_random_byte_string = self.box.encrypt(
@@ -75,13 +74,12 @@ def main():  # for testing
         "3a57393f2a2ef038d43b432c34339e0cd021a15ce25b17c8bf07a5d9eae05d13"
     )
     rng = RandomNumberGenerator(key)
-    for _ in range(10):
-        print(rng.next())
+    for _ in range(2000):
+        print(rng.next(), end=" ")
 
 
 if __name__ == "__main__":
     global debug
-    debug = False
-    if len(sys.argv) > 1 and sys.argv[1] == "debug":
-        debug = True
+    debug = len(sys.argv) > 1 and sys.argv[1] == "debug"
+
     main()

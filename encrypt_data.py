@@ -8,7 +8,9 @@ from tqdm import tqdm
 
 from random_number_generator import RandomNumberGenerator
 
+BASE_P = 1461501637330902918203684832716283019655932542929
 
+# deprecated by encrypt_GMP
 def encrypt(file, rng, mode):
     """
     Encrypts the given file using the given random number generator in a manner
@@ -24,6 +26,61 @@ def encrypt(file, rng, mode):
         for genotype in line:
             output_file.write((str(int(genotype) - rng.next()) + " ").encode("utf-8"))
         output_file.write(b"\n")
+
+
+def encrypt_GMP(rng, role):
+    """
+    Converts the data to GMP vectors (genotype, missing data, phenotype), encrypts
+    them, and writes them to files.
+    """
+    geno_file = open(f"input_data/geno.txt", "r")
+    pheno_file = open(f"input_data/pheno.txt", "r")
+    cov_file = open(f"input_data/cov.txt", "r")
+
+    g_file = open(f"output_data/g.bin", "wb")
+    m_file = open(f"output_data/m.bin", "wb")
+    p_file = open(f"output_data/p.bin", "wb")
+
+    num_lines = sum(1 for line in open("input_data/pheno.txt", "r"))
+    for _ in tqdm(range(num_lines)):
+        p = (
+            pheno_file.readline().rstrip().split()
+            + cov_file.readline().rstrip().split()
+        )
+        p = [str((int(x) - rng.next()) % BASE_P) for x in p]
+
+        geno_line = geno_file.readline().rstrip().split()
+        g = [[-rng.next() % BASE_P for _ in range(len(geno_line))] for _ in range(3)]
+        m = [-rng.next() % BASE_P for _ in range(len(geno_line))]
+        for j, val in enumerate(geno_line):
+            if val == "0":
+                g[0][j] = (g[0][j] + 1) % BASE_P
+            elif val == "1":
+                g[1][j] = (g[1][j] + 1) % BASE_P
+            elif val == "2":
+                g[2][j] = (g[2][j] + 1) % BASE_P
+            else:
+                m[j] = (m[j] + 1) % BASE_P
+
+        g_text = (
+            " ".join(map(str, g[0]))
+            + " "
+            + " ".join(map(str, g[1]))
+            + " "
+            + " ".join(map(str, g[2]))
+            + "\n"
+        )
+        g_file.write(g_text.encode("utf-8"))
+        m_file.write((" ".join([str(x) for x in m]) + "\n").encode("utf-8"))
+        p_file.write((" ".join(p) + "\n").encode("utf-8"))
+
+    geno_file.close()
+    pheno_file.close()
+    cov_file.close()
+
+    g_file.close()
+    m_file.close()
+    p_file.close()
 
 
 def get_shared_keys(my_private_key, other_public_key):
@@ -91,19 +148,8 @@ def main():
 
     shared_keys = get_shared_keys(my_private_key, other_public_key)
 
-    rng1, rng2 = (
-        RandomNumberGenerator(shared_keys[1]),
-        RandomNumberGenerator(shared_keys[2]),
-    )
-
-    # encrypt the data
-    files = ["cov", "pheno", "geno"]
-    if role == 1:
-        for file in files:
-            encrypt(file, rng1, "wb")
-    elif role == 2:
-        for file in files:
-            encrypt(file, rng2, "wb")
+    # convert to GMP and encrypt the data
+    encrypt_GMP(RandomNumberGenerator(shared_keys[role]), role=role)
 
     print("\n\nThe encryption is complete. Please upload output_data to Google Cloud.")
 

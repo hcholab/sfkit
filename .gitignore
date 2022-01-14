@@ -4,6 +4,6 @@ keys.txt
 keys2.txt
 venv/
 test.py
-output_data/
+output_data/*
 old_code/
-input_data/*
+practice.py
