@@ -151,6 +151,9 @@ def main():
     # convert to GMP and encrypt the data
     encrypt_GMP(RandomNumberGenerator(shared_keys[role]), role=role)
 
+    with open("output_data/other_shared_key.bin", "wb") as f:
+        f.write(shared_keys[3 - role])
+
     print("\n\nThe encryption is complete. Please upload output_data to Google Cloud.")
 
 
