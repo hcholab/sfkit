@@ -1,4 +1,4 @@
-## Key Exchange and Encryption for Secure GWAS Website
+## Cryptographic Keys and Encryption for Secure GWAS Website
 
 This repository is made to facilitate offline key exchange and encryption before the online DataSharing and GWAS analysis. The goal is to make it easier for researchers to share data and conduct GWAS analysis without every having to upload unencrypted data to the server.
 
