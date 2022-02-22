@@ -1,3 +1,4 @@
+import shutil
 import sys
 
 import nacl.secret
@@ -11,21 +12,21 @@ from random_number_generator import RandomNumberGenerator
 BASE_P = 1461501637330902918203684832716283019655932542929
 
 # deprecated by encrypt_GMP
-def encrypt(file, rng, mode):
-    """
-    Encrypts the given file using the given random number generator in a manner
-    that is compatible with the secret-sharing scheme used in our GWAS protocol.
-    """
-    input_file = open(f"input_data/{file}.txt", "r")
-    output_file = open(f"output_data/{file}.bin", mode)
-    file_lines = input_file.readlines()
-    print(f"Encrypting input_data/{file}...")
-    for line in tqdm(file_lines):
-        line = line.strip()
-        line = line.split("\t")
-        for genotype in line:
-            output_file.write((str(int(genotype) - rng.next()) + " ").encode("utf-8"))
-        output_file.write(b"\n")
+# def encrypt(file, rng, mode):
+#     """
+#     Encrypts the given file using the given random number generator in a manner
+#     that is compatible with the secret-sharing scheme used in our GWAS protocol.
+#     """
+#     input_file = open(f"input_data/{file}.txt", "r")
+#     output_file = open(f"output_data/{file}.bin", mode)
+#     file_lines = input_file.readlines()
+#     print(f"Encrypting input_data/{file}...")
+#     for line in tqdm(file_lines):
+#         line = line.strip()
+#         line = line.split("\t")
+#         for genotype in line:
+#             output_file.write((str(int(genotype) - rng.next()) + " ").encode("utf-8"))
+#         output_file.write(b"\n")
 
 
 def encrypt_GMP(rng, role):
@@ -33,15 +34,15 @@ def encrypt_GMP(rng, role):
     Converts the data to GMP vectors (genotype, missing data, phenotype), encrypts
     them, and writes them to files.
     """
-    geno_file = open(f"input_data/geno.txt", "r")
-    pheno_file = open(f"input_data/pheno.txt", "r")
-    cov_file = open(f"input_data/cov.txt", "r")
+    geno_file = open("input_data/geno.txt", "r")
+    pheno_file = open("input_data/pheno.txt", "r")
+    cov_file = open("input_data/cov.txt", "r")
 
-    g_file = open(f"output_data/g.bin", "wb")
-    m_file = open(f"output_data/m.bin", "wb")
-    p_file = open(f"output_data/p.bin", "wb")
+    g_file = open("output_data/g.bin", "wb")
+    m_file = open("output_data/m.bin", "wb")
+    p_file = open("output_data/p.bin", "wb")
 
-    num_lines = sum(1 for line in open("input_data/pheno.txt", "r"))
+    num_lines = sum(1 for _ in open("input_data/pheno.txt", "r"))
     for _ in tqdm(range(num_lines)):
         p = (
             pheno_file.readline().rstrip().split()
@@ -128,7 +129,11 @@ def get_users_input():
         )
     else:
         # get user's role
-        role = int(input("Please enter your role (1 or 2): "))
+        role = int(
+            input(
+                "Please enter your role (1 or 2).  If you unsure your role, please check the study page on the website: "
+            )
+        )
         if role not in [1, 2]:
             print("Invalid role; role must be 1 or 2.  Exiting.")
             sys.exit(1)
@@ -154,12 +159,12 @@ def main():
     with open("output_data/other_shared_key.bin", "wb") as f:
         f.write(shared_keys[3 - role])
 
+    shutil.copyfile("input_data/pos.txt", "output_data/pos.txt")
+
     print("\n\nThe encryption is complete. Please upload output_data to Google Cloud.")
 
 
 if __name__ == "__main__":
     global debug
-    debug = False
-    if len(sys.argv) > 1 and sys.argv[1] == "debug":
-        debug = True
+    debug = len(sys.argv) > 1 and sys.argv[1] == "debug"
     main()
