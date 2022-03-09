@@ -5,5 +5,8 @@ keys2.txt
 venv/
 test.py
 output_data/*
+encrypted_data/*
+my_p*
+public_key_*
 old_code/
 practice.py

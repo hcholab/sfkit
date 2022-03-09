@@ -10,17 +10,14 @@ def main():
     private_key = PrivateKey.generate()
     public_key = private_key.public_key
 
-    # print the keys
-    print("Public key:", public_key.encode(encoder=HexEncoder).decode())
-    print("Secret key:", private_key.encode(encoder=HexEncoder).decode())
+    with open("my_public_key.txt", "w") as f:
+        f.write(public_key.encode(encoder=HexEncoder).decode())  # type: ignore
 
-    # Save the keypair to keys.txt
-    with open("keys.txt", "w") as f:
-        f.write(public_key.encode(encoder=HexEncoder).decode() + "\n")
-        f.write(private_key.encode(encoder=HexEncoder).decode())
+    with open("my_private_key.txt", "w") as f:
+        f.write(private_key.encode(encoder=HexEncoder).decode())  # type: ignore
 
     print(
-        "Please upload your public key to the project page on the Secure GWAS Website."
+        "Your public and private keys have been generated.  Please upload my_public_key.txt to the Secure GWAS website"
     )
 
 

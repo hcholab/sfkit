@@ -2,15 +2,24 @@
 
 This repository is made to facilitate offline key exchange and encryption before the online DataSharing and GWAS analysis. The goal is to make it easier for researchers to share data and conduct GWAS analysis without every having to upload unencrypted data to the server.
 
-## Installation and Usage
+## Prerequisites
 
-1. Download the respository with `git clone https://github.com/broadinstitute/key-exchange.git`
-2. Install the dependencies with `pip install -r requirements.txt` (you can optionally create a [virtual environment](https://docs.python.org/3/library/venv.html) before doing this; this is the recommended practice if you have multiple python environments that you would like to keep separate)
-3. Put your data in the `input_data/` directory.
-4. Run `python3 generate_personal_keys.py` to generate your personal keys.
-5. Upload your public key to the project page of the [Secure-GWAS website](https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/index).
-6. Once you have the other participant's public key, run `python3 encrypt_data.py` to encrypt your data.
-7. Upload your encrypted data to your Google Cloud Bucket.
+If you don't already have them, you will need to install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) and [python3](https://www.python.org/downloads/).
+
+## Installation
+
+1. Download the respository with `git clone https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption.git`
+2. Enter the directory with `cd secure-gwas-keys-and-encryption`
+3. Create and activate a python virtual environment with `python3 -m venv venv && source venv/bin/activate` (this step is optional but recommended)
+4. Install the dependencies with `python -m pip install -r requirements.txt`
+
+## Usage
+
+1. Run `python generate_personal_keys.py` to generate your personal keys.
+2. Upload your public key to the project page of the [Secure-GWAS website](https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/index).
+3. Download the other participant's public key and put it in this repository.
+4. Run `python encrypt_data.py` to encrypt your data.
+5. Upload your encrypted data (the encrypted_data directory) to a Google Cloud Bucket.
 
 You are now ready to conduct your GWAS analysis!
 
