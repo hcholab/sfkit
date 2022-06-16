@@ -1,2 +1,9 @@
-PyNaCl # the encryption library
-tqdm # makes a nice progress bar so you can visually see how the encryption is progressing
+black
+google-api-python-client
+google-cloud-firestore
+google-cloud-pubsub
+google-cloud-storage
+ipaddr
+PyNaCl
+tenacity
+tqdm

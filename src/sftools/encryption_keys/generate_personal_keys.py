@@ -2,9 +2,9 @@ from nacl.encoding import HexEncoder
 from nacl.public import PrivateKey
 
 
-def main():
+def generate_personal_keys():
     """
-    Generate a new keypair, print them to stdout, and save them to keys.txt
+    Generate a new keypair, and save my_public_key.txt and my_private_key.txt.
     """
     # Generate a new keypair
     private_key = PrivateKey.generate()
@@ -16,10 +16,8 @@ def main():
     with open("my_private_key.txt", "w") as f:
         f.write(private_key.encode(encoder=HexEncoder).decode())  # type: ignore
 
-    print(
-        "Your public and private keys have been generated.  Please upload my_public_key.txt to the Secure GWAS website"
-    )
+    print("Your public and private keys have been generated. Please upload my_public_key.txt to the Website.")
 
 
 if __name__ == "__main__":
-    main()
+    generate_personal_keys()
