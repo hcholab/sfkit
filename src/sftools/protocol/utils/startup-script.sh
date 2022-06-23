@@ -9,7 +9,7 @@ sudo -s
 
 topic_id=$(hostname)
 role=$(hostname | tail -c 2)
-data_path=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/data_path" -H "Metadata-Flavor: Google")
+data_path=$1
 
 printf "\n\n Begin installing dependencies \n\n"
 apt-get --assume-yes update &&

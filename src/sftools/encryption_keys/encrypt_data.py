@@ -4,11 +4,11 @@ import sys
 
 import nacl.secret
 import nacl.utils
+from google.cloud import firestore
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
-from tqdm import tqdm
-
 from sftools.encryption_keys.random_number_generator import PseudoRandomNumberGenerator
+from tqdm import tqdm
 
 BASE_P = 1461501637330902918203684832716283019655932542929
 
@@ -94,14 +94,19 @@ def get_shared_keys(my_private_key, other_public_key, debug=False):
 
 
 def encrypt_data():
-    print(os.listdir("."))
-    pk_files = [filename for filename in os.listdir(".") if filename.startswith("public_key_")]
-    assert len(pk_files) == 1, f"Expected 1 file of the form 'public_key_*', found {len(pk_files)}"
+    with open("auth.txt", "r") as f:
+        study_title = f.readline()
+        email = f.readline().rstrip()
 
-    with open(f"./{pk_files[0]}", "r") as f:
-        other_public_key = PublicKey(f.readline().rstrip(), encoder=HexEncoder)  # type: ignore
-        other_role = f.readline().rstrip()
-    role = 3 - int(other_role)
+    db = firestore.Client()
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
+    role = doc_ref_dict["participants"].index(email) + 1
+    other_emails: list = doc_ref_dict["participants"].copy()
+    other_emails.remove(email)
+    other_email: str = other_email[0]
+    other_public_key = doc_ref_dict["personal_parameters"][other_email]["PUBLIC_KEY"]["value"]
+    other_public_key = PublicKey(other_public_key, encoder=HexEncoder)
 
     with open("./my_private_key.txt", "r") as f:
         my_private_key = PrivateKey(f.readline().rstrip(), encoder=HexEncoder)  # type: ignore
@@ -119,7 +124,11 @@ def encrypt_data():
     print("\n\nThe encryption is complete. Please upload everything in the encrypted_data directory to Google Cloud.")
 
 
+def main():
+    encrypt_data()
+
+
 if __name__ == "__main__":
     global debug
     debug = len(sys.argv) > 1 and sys.argv[1] == "debug"
-    encrypt_data()
+    main()

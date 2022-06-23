@@ -60,3 +60,8 @@ class GoogleCloudStorage:
         bucket = self.storage_client.bucket(bucket_name)
         blob = bucket.blob(filename)
         return blob.name in [b.name for b in bucket.list_blobs()]
+
+    def list_files_in_path(self, path):
+        bucket, prefix = path.split("/")[0], "/".join(path.split("/")[1:])
+        bucket = self.storage_client.bucket(bucket)
+        return [b.name for b in bucket.list_blobs(prefix=prefix)]
