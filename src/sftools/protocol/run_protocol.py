@@ -1,4 +1,5 @@
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -12,7 +13,7 @@ from sftools.protocol.utils.utils import create_instance_name
 
 def run_protocol() -> bool:
     with open("auth.txt", "r") as f:
-        study_title = f.readline()
+        study_title = f.readline().rstrip()
         email = f.readline().rstrip()
 
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
@@ -34,7 +35,11 @@ def run_protocol() -> bool:
     elif statuses[email] == ["ready"]:
         gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
         gcloudPubsub.publish(f"update_firestore::status=running::{study_title}::{email}")
-        subprocess.call([os.path.join(os.path.dirname(__file__), "utils/startup-script.sh"), data_path])
+        # subprocess.call([os.path.join(os.path.dirname(__file__), "utils/startup-script.sh"), data_path])
+        # copy the startup script to current directory
+        shutil.copyfile(os.path.join(os.path.dirname(__file__), "utils/startup-script.sh"), "startup-script.sh")
+        # run the startup script
+        subprocess.call(["bash", "startup-script.sh", data_path])
 
         if role == "1":
             print("Asking cp0 to set up their part as well...")

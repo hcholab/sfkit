@@ -1,3 +1,38 @@
+[project]
+name = "sftools"
+version = "0.0.23"
+authors = [{ name = "Simon Mendelsohn", email = "smendels@broadinstitute.org" }]
+description = "Some CLI Tools For The Secure Multi-party Genomic Analysis Website"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    'black',
+    'checksumdir',
+    'google-api-python-client',
+    'google-cloud-firestore',
+    'google-cloud-storage',
+    'google-cloud-pubsub',
+    'ipaddr',
+    'PyNaCl',
+    'tenacity',
+    'tqdm',
+]
+
+[project.scripts]
+sftools = "sftools.cli:main"
+
+[project.urls]
+"Website" = "https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/"
+"Github" = "https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption"
+
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sftools"]

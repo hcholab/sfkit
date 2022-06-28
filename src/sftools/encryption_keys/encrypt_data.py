@@ -95,17 +95,19 @@ def get_shared_keys(my_private_key, other_public_key, debug=False):
 
 def encrypt_data():
     with open("auth.txt", "r") as f:
-        study_title = f.readline()
+        study_title = f.readline().rstrip()
         email = f.readline().rstrip()
 
-    db = firestore.Client()
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
     role = doc_ref_dict["participants"].index(email) + 1
     other_emails: list = doc_ref_dict["participants"].copy()
     other_emails.remove(email)
-    other_email: str = other_email[0]
+    other_email: str = other_emails[0]
     other_public_key = doc_ref_dict["personal_parameters"][other_email]["PUBLIC_KEY"]["value"]
+    if other_public_key == "":
+        print("No public key found for other user. Exiting.")
+        sys.exit(1)
     other_public_key = PublicKey(other_public_key, encoder=HexEncoder)
 
     with open("./my_private_key.txt", "r") as f:
@@ -121,6 +123,7 @@ def encrypt_data():
         f.write(shared_keys[3 - role])
     shutil.copyfile(f"{input_dir}/pos.txt", "./encrypted_data/pos.txt")
 
+    # TODO: the source should probbly be in cloud storage, and the destination also automatically be in cloud storage
     print("\n\nThe encryption is complete. Please upload everything in the encrypted_data directory to Google Cloud.")
 
 

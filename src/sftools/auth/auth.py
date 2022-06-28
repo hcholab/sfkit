@@ -5,6 +5,15 @@ from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
 
 
 def auth():
+    """
+    Takes in users's study title and email.
+    Checks is user is in firestore database.
+    Validates Google Cloud Permissions.
+    Sets up PubSub with website.
+    TODO: Fix this to actually validate the correct user.
+        Option 1: 'sftools auth' pulls up (localhost?) page where user can login with my website. Save credentials to .config directory like google?
+        Option 2:
+    """
     study_title: str = input("Enter study title (same study title as on the website): ")
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
@@ -18,7 +27,6 @@ def auth():
         exit(1)
 
     # validate google cloud permissions
-    # TODO: review if this is sufficient and necessary?
     print("Validating Google Cloud permissions...")
     gcp_project = doc_ref_dict["personal_parameters"][email]["GCP_PROJECT"]["value"]
     gcloudCompute = GoogleCloudCompute(gcp_project)
@@ -36,7 +44,7 @@ def auth():
 
     # save the email, study title to a file
     with open("auth.txt", "w") as f:
-        f.write(f"{study_title}\n{email}")
+        f.write(f"{study_title}\n{email}\n")
 
     print("You are now authenticated with the sftools CLI!")
 
