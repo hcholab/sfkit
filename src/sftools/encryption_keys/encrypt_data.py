@@ -2,6 +2,7 @@ import os
 import shutil
 import sys
 
+import checksumdir
 import nacl.secret
 import nacl.utils
 from google.cloud import firestore
@@ -9,6 +10,9 @@ from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
 from sftools.encryption_keys.random_number_generator import PseudoRandomNumberGenerator
 from tqdm import tqdm
+from sftools.protocol.utils import constants
+
+from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
 
 BASE_P = 1461501637330902918203684832716283019655932542929
 
@@ -94,7 +98,7 @@ def get_shared_keys(my_private_key, other_public_key, debug=False):
 
 
 def encrypt_data():
-    with open("auth.txt", "r") as f:
+    with open(os.path.expanduser("~/.config/sftools/auth.txt"), "r") as f:
         study_title = f.readline().rstrip()
         email = f.readline().rstrip()
 
@@ -110,20 +114,29 @@ def encrypt_data():
         sys.exit(1)
     other_public_key = PublicKey(other_public_key, encoder=HexEncoder)
 
-    with open("./my_private_key.txt", "r") as f:
+    private_key_path = os.path.join(os.path.expanduser("~/.config/sftools"), "my_private_key.txt")
+    with open(private_key_path, "r") as f:
         my_private_key = PrivateKey(f.readline().rstrip(), encoder=HexEncoder)  # type: ignore
     assert my_private_key != other_public_key, "Private and public keys must be different"
 
     shared_keys = get_shared_keys(my_private_key, other_public_key)
 
-    input_dir = input("Enter the full path to your input directory (directory with cov.txt, geno.txt, ...): ")
+    input_dir_path = os.path.join(os.path.expanduser("~/.config/sftools"), "data_path.txt")
+    with open(input_dir_path, "r") as f:
+        input_dir = f.readline().rstrip()
+
+    data_hash = checksumdir.dirhash(input_dir, "md5")
+    assert data_hash == doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"], "Data hash mismatch"
+
     encrypt_GMP(PseudoRandomNumberGenerator(shared_keys[role]), input_dir)
 
     with open("./encrypted_data/other_shared_key.bin", "wb") as f:
         f.write(shared_keys[3 - role])
     shutil.copyfile(f"{input_dir}/pos.txt", "./encrypted_data/pos.txt")
 
-    # TODO: the source should probbly be in cloud storage, and the destination also automatically be in cloud storage
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
+    gcloudPubsub.publish(f"update_firestore::status=not ready::{study_title}::{email}")
+
     print("\n\nThe encryption is complete. Please upload everything in the encrypted_data directory to Google Cloud.")
 
 

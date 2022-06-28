@@ -1,19 +1,21 @@
+import os
+
+import pydata_google_auth
+from google.auth.transport import requests as google_requests
 from google.cloud import firestore
-from sftools.protocol.utils import constants
-from sftools.protocol.utils.google_cloud_compute import GoogleCloudCompute
-from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
+from google.oauth2 import id_token
 
 
 def auth():
     """
-    Takes in users's study title and email.
-    Checks is user is in firestore database.
-    Validates Google Cloud Permissions.
-    Sets up PubSub with website.
-    TODO: Fix this to actually validate the correct user.
-        Option 1: 'sftools auth' pulls up (localhost?) page where user can login with my website. Save credentials to .config directory like google?
-        Option 2:
+    Logs in user with Google
+    Gets study title
     """
+    print("Logging in with Google...")
+    credentials, _ = pydata_google_auth.default(scopes=["openid", "https://www.googleapis.com/auth/userinfo.email"])
+    email: str = id_token.verify_oauth2_token(credentials.id_token, google_requests.Request()).get("email")
+    print(f"Logged in as {email}")
+
     study_title: str = input("Enter study title (same study title as on the website): ")
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
@@ -21,29 +23,14 @@ def auth():
         print("The study you entered was not found.")
         exit(1)
 
-    email: str = input("Enter email (this should be the same email that you use to log in to the website): ")
     if email not in doc_ref_dict["participants"]:  # validate email
         print("The email you entered was not found in the study.")
         exit(1)
 
-    # validate google cloud permissions
-    print("Validating Google Cloud permissions...")
-    gcp_project = doc_ref_dict["personal_parameters"][email]["GCP_PROJECT"]["value"]
-    gcloudCompute = GoogleCloudCompute(gcp_project)
-    try:
-        gcloudCompute.list_instances()
-    except Exception as e:
-        print("Insufficient permissions your GCP project's Google Cloud Compute API; see below for more information: ")
-        print(e)
-        exit(1)
-
-    # set up pubsub
-    role: str = str(doc_ref_dict["participants"].index(email) + 1)
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
-    gcloudPubsub.create_topic_and_subscribe()
-
     # save the email, study title to a file
-    with open("auth.txt", "w") as f:
+    if not os.path.exists(os.path.expanduser("~/.config/sftools")):
+        os.makedirs(os.path.expanduser("~/.config/sftools"))
+    with open(os.path.expanduser("~/.config/sftools/auth.txt"), "w") as f:
         f.write(f"{study_title}\n{email}\n")
 
     print("You are now authenticated with the sftools CLI!")

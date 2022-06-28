@@ -1,17 +1,13 @@
-import sys
 import os
-import checksumdir
 
+import checksumdir
 from google.cloud import firestore
 from sftools.protocol.utils import constants
-from sftools.protocol.utils.google_cloud_compute import GoogleCloudCompute
 from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
-from sftools.protocol.utils.google_cloud_storage import GoogleCloudStorage
-from sftools.protocol.utils.utils import create_instance_name
 
 
 def register_data() -> bool:
-    with open("auth.txt", "r") as f:
+    with open(os.path.expanduser("~/.config/sftools/auth.txt"), "r") as f:
         study_title = f.readline().rstrip()
         email = f.readline().rstrip()
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
@@ -28,16 +24,13 @@ def register_data() -> bool:
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
     gcloudPubsub.publish(f"update_firestore::status=not ready::{study_title}::{email}")
     gcloudPubsub.publish(f"update_firestore::data_hash={data_hash}::{study_title}::{email}")
+
+    data_path_path = os.path.join(os.path.expanduser("~/.config/sftools"), "data_path.txt")
+    with open(data_path_path, "w") as f:
+        f.write(data_path + "\n")
+
     print("Successfully validated data!")
     return True
-
-    # gcp_project = doc_ref_dict["personal_parameters"][email]["GCP_PROJECT"]["value"]
-    # data_path = doc_ref_dict["personal_parameters"][email]["DATA_PATH"]["value"]
-    # if not gcp_project or gcp_project == "" or not data_path or data_path == "":
-    #     print("Before you can start the study, you need to set your GCP project and data path on the website.")
-    #     return False
-    # gcloudStorage = GoogleCloudStorage(gcp_project)
-    # files = gcloudStorage.list_files_in_path(data_path)
 
 
 def main():
