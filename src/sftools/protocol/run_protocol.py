@@ -41,7 +41,7 @@ def run_protocol() -> bool:
         shutil.copyfile(os.path.join(os.path.dirname(__file__), "utils/startup-script.sh"), "startup-script.sh")
         # run the startup script
         hostname = f"{study_title.replace(' ', '').lower()}-{constants.INSTANCE_NAME_ROOT}{role}"
-        subprocess.call(["bash", "startup-script.sh", hostname, data_path])
+        subprocess.run(["sudo", "bash", "startup-script.sh", hostname, data_path])
 
         if role == "1":
             print("Asking cp0 to set up their part as well...")

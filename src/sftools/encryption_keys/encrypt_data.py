@@ -134,10 +134,10 @@ def encrypt_data():
         f.write(shared_keys[3 - role])
     shutil.copyfile(f"{input_dir}/pos.txt", "./encrypted_data/pos.txt")
 
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, str(role), study_title)
     gcloudPubsub.publish(f"update_firestore::status=not ready::{study_title}::{email}")
 
-    print("\n\nThe encryption is complete. Please upload everything in the encrypted_data directory to Google Cloud.")
+    print("\n\nThe encryption is complete.")
 
 
 def main():

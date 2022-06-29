@@ -1,4 +1,5 @@
 import os
+import time
 
 import checksumdir
 from google.cloud import firestore
@@ -16,13 +17,14 @@ def register_data() -> bool:
 
     data_path = input("Enter the (absolute) path to your data files: ")
     files_list = os.listdir(data_path)
-    for needed_file in constants.DATA_VALIDATION_FILES:
+    for needed_file in constants.DATA_RAW_FILES:
         if all(needed_file not in file for file in files_list):
             print(f"You are missing the file {needed_file}.")
             return False
     data_hash = checksumdir.dirhash(data_path, "md5")
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
     gcloudPubsub.publish(f"update_firestore::status=not ready::{study_title}::{email}")
+    time.sleep(1)
     gcloudPubsub.publish(f"update_firestore::data_hash={data_hash}::{study_title}::{email}")
 
     data_path_path = os.path.join(os.path.expanduser("~/.config/sftools"), "data_path.txt")

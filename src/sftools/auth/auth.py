@@ -13,7 +13,12 @@ def auth():
     """
     print("Logging in with Google...")
     credentials, _ = pydata_google_auth.default(scopes=["openid", "https://www.googleapis.com/auth/userinfo.email"])
-    email: str = id_token.verify_oauth2_token(credentials.id_token, google_requests.Request()).get("email")
+    if "id_token" in credentials.__dict__.keys() or "_id_token" in credentials.__dict__.keys():
+        email: str = id_token.verify_oauth2_token(credentials.id_token, google_requests.Request()).get("email")
+    elif "_service_account_email" in credentials.__dict__.keys():
+        email: str = credentials.service_account_email
+    else:
+        raise LookupError("Could not get email from credentials")
     print(f"Logged in as {email}")
 
     study_title: str = input("Enter study title (same study title as on the website): ")

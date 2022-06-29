@@ -30,7 +30,7 @@ def generate_personal_keys():
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
     role: str = str(doc_ref_dict["participants"].index(email) + 1)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
-    gcloudPubsub.publish(f"public_key={public_key}::{study_title}::{email}")
+    gcloudPubsub.publish(f"update_firestore::public_key={public_key}::{study_title}::{email}")
     print("Your public and private keys have been generated.")
 
 

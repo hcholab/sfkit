@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Many of the commands need root privileges for the VM
-sudo -s
+# sudo -s
 
 topic_id=$1
-role=$(topic_id | tail -c 2)
+role=${topic_id:(-2)}
 data_path=$2
 
 printf "\n\n Begin installing dependencies \n\n"

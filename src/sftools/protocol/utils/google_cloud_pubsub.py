@@ -5,7 +5,7 @@ from google.cloud.pubsub_v1.subscriber.client import subscriber_client
 
 
 class GoogleCloudPubsub:
-    def __init__(self, project, role, study_title) -> None:
+    def __init__(self, project: str, role: str, study_title: str) -> None:
         self.project = project
         self.publisher = publisher_client.PublisherClient()
         self.subscriber = subscriber_client.SubscriberClient()
