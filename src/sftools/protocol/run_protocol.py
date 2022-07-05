@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import time
 
 from google.cloud import firestore
 from sftools.protocol.utils import constants
@@ -15,7 +16,6 @@ def run_protocol() -> bool:
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()  # type: ignore
     role: str = str(doc_ref_dict["participants"].index(email) + 1)
-    data_path = "./encrypted_data"
     statuses: dict = doc_ref_dict["status"]
 
     if statuses[email] in ["['']", "['validating']", "['invalid data']"]:
@@ -27,17 +27,22 @@ def run_protocol() -> bool:
         statuses[email] = ["ready"]
         gcloudPubsub.publish(f"update_firestore::status=ready::{study_title}::{email}")
 
-    if any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"]):
-        print("The other participant is not yet ready.  Please try again once they are.")
-        return False
-    elif statuses[email] == ["ready"]:
+    while any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"]):
+        print(
+            "The other participant is not yet ready.  Please wait or cancel (CTRL-C) and try again when they are ready..."
+        )
+        time.sleep(5)
+        doc_ref_dict = doc_ref.get().to_dict()  # type: ignore # TODO: make sure this will update when other user is ready
+        statuses = doc_ref_dict["status"]
+
+    if statuses[email] == ["ready"]:
         gcloudPubsub.publish(f"update_firestore::status=running::{study_title}::{email}")
         # subprocess.call([os.path.join(os.path.dirname(__file__), "utils/startup-script.sh"), data_path])
         # copy the startup script to current directory
         shutil.copyfile(os.path.join(os.path.dirname(__file__), "utils/startup-script.sh"), "startup-script.sh")
         # run the startup script
         hostname = f"{study_title.replace(' ', '').lower()}-{constants.INSTANCE_NAME_ROOT}{role}"
-        subprocess.run(["sudo", "bash", "startup-script.sh", hostname, data_path])
+        subprocess.run(["sudo", "bash", "startup-script.sh", hostname, "./encrypted_data"])
 
         if role == "1":
             print("Asking cp0 to set up their part as well...")

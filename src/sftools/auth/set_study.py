@@ -1,7 +1,5 @@
-import os
-from sftools.protocol.utils import constants
-
 from google.cloud import firestore
+from sftools.protocol.utils import constants
 
 
 def set_study():
@@ -31,7 +29,6 @@ def set_study():
     with open(constants.AUTH_FILE, "w") as f:
         f.write(email + "\n")
         f.write(study_title + "\n")
-
     print(f"\nSuccessfully set study to {study_title}!")
 
 
