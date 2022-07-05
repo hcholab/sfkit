@@ -2,8 +2,8 @@ import os
 
 import pydata_google_auth
 from google.auth.transport import requests as google_requests
-from google.cloud import firestore
 from google.oauth2 import id_token
+from sftools.protocol.utils import constants
 
 
 def auth():
@@ -21,22 +21,11 @@ def auth():
         raise LookupError("Could not get email from credentials")
     print(f"Logged in as {email}")
 
-    study_title: str = input("Enter study title (same study title as on the website): ")
-    doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
-    doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
-    if not doc_ref_dict:  # validate study title
-        print("The study you entered was not found.")
-        exit(1)
-
-    if email not in doc_ref_dict["participants"]:  # validate email
-        print("The email you entered was not found in the study.")
-        exit(1)
-
     # save the email, study title to a file
-    if not os.path.exists(os.path.expanduser("~/.config/sftools")):
-        os.makedirs(os.path.expanduser("~/.config/sftools"))
-    with open(os.path.expanduser("~/.config/sftools/auth.txt"), "w") as f:
-        f.write(f"{study_title}\n{email}\n")
+    if not os.path.exists(constants.SFTOOLS_DIR):
+        os.makedirs(constants.SFTOOLS_DIR)
+    with open(constants.AUTH_FILE, "w") as f:
+        f.write(f"{email}\n")
 
     print("You are now authenticated with the sftools CLI!")
 

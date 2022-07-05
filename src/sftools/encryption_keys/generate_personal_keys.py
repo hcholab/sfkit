@@ -14,24 +14,25 @@ def generate_personal_keys():
     private_key = PrivateKey.generate()
     public_key = private_key.public_key.encode(encoder=HexEncoder).decode()
 
-    public_key_path = os.path.join(os.path.expanduser("~/.config/sftools"), "my_public_key.txt")
+    public_key_path = os.path.join(constants.SFTOOLS_DIR, "my_public_key.txt")
     with open(public_key_path, "w") as f:
         f.write(public_key + "\n")
 
-    private_key_path = os.path.join(os.path.expanduser("~/.config/sftools"), "my_private_key.txt")
+    private_key_path = os.path.join(constants.SFTOOLS_DIR, "my_private_key.txt")
     with open(private_key_path, "w") as f:
         f.write(private_key.encode(encoder=HexEncoder).decode() + "\n")  # type: ignore
 
-    with open(os.path.expanduser("~/.config/sftools/auth.txt"), "r") as f:
-        study_title = f.readline().rstrip()
+    with open(constants.AUTH_FILE, "r") as f:
         email = f.readline().rstrip()
+        study_title = f.readline().rstrip()
 
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
     role: str = str(doc_ref_dict["participants"].index(email) + 1)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
     gcloudPubsub.publish(f"update_firestore::public_key={public_key}::{study_title}::{email}")
-    print("Your public and private keys have been generated.")
+    print(f"Your public and private keys have been generated and saved to {constants.SFTOOLS_DIR}.")
+    print("Your public key has been uploaded to the website and is available for all participants in your study.")
 
 
 def main():

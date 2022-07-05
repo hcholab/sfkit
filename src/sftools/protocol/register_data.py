@@ -8,9 +8,9 @@ from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
 
 
 def register_data() -> bool:
-    with open(os.path.expanduser("~/.config/sftools/auth.txt"), "r") as f:
-        study_title = f.readline().rstrip()
+    with open(constants.AUTH_FILE, "r") as f:
         email = f.readline().rstrip()
+        study_title = f.readline().rstrip()
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
     role: str = str(doc_ref_dict["participants"].index(email) + 1)
@@ -27,7 +27,7 @@ def register_data() -> bool:
     time.sleep(1)
     gcloudPubsub.publish(f"update_firestore::data_hash={data_hash}::{study_title}::{email}")
 
-    data_path_path = os.path.join(os.path.expanduser("~/.config/sftools"), "data_path.txt")
+    data_path_path = os.path.join(constants.SFTOOLS_DIR, "data_path.txt")
     with open(data_path_path, "w") as f:
         f.write(data_path + "\n")
 

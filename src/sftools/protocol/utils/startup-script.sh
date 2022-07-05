@@ -4,7 +4,7 @@
 # sudo -s
 
 topic_id=$1
-role=${topic_id:(-2)}
+role=${topic_id:(-1)}
 data_path=$2
 
 printf "\n\n Begin installing dependencies \n\n"

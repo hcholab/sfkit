@@ -98,10 +98,11 @@ def get_shared_keys(my_private_key, other_public_key, debug=False):
 
 
 def encrypt_data():
-    with open(os.path.expanduser("~/.config/sftools/auth.txt"), "r") as f:
-        study_title = f.readline().rstrip()
+    with open(constants.AUTH_FILE, "r") as f:
         email = f.readline().rstrip()
+        study_title = f.readline().rstrip()
 
+    print("Downloading other party's public key...")
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
     role = doc_ref_dict["participants"].index(email) + 1
@@ -114,20 +115,22 @@ def encrypt_data():
         sys.exit(1)
     other_public_key = PublicKey(other_public_key, encoder=HexEncoder)
 
-    private_key_path = os.path.join(os.path.expanduser("~/.config/sftools"), "my_private_key.txt")
+    print("Generating shared keys...")
+    private_key_path = os.path.join(constants.SFTOOLS_DIR, "my_private_key.txt")
     with open(private_key_path, "r") as f:
         my_private_key = PrivateKey(f.readline().rstrip(), encoder=HexEncoder)  # type: ignore
     assert my_private_key != other_public_key, "Private and public keys must be different"
 
     shared_keys = get_shared_keys(my_private_key, other_public_key)
 
-    input_dir_path = os.path.join(os.path.expanduser("~/.config/sftools"), "data_path.txt")
+    input_dir_path = os.path.join(constants.SFTOOLS_DIR, "data_path.txt")
     with open(input_dir_path, "r") as f:
         input_dir = f.readline().rstrip()
 
     data_hash = checksumdir.dirhash(input_dir, "md5")
     assert data_hash == doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"], "Data hash mismatch"
 
+    print("Encrypting data...")
     encrypt_GMP(PseudoRandomNumberGenerator(shared_keys[role]), input_dir)
 
     with open("./encrypted_data/other_shared_key.bin", "wb") as f:

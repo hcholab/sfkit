@@ -1,20 +1,16 @@
 import os
 import shutil
-import socket
 import subprocess
-import sys
 
 from google.cloud import firestore
 from sftools.protocol.utils import constants
-from sftools.protocol.utils.google_cloud_compute import GoogleCloudCompute
 from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
-from sftools.protocol.utils.utils import create_instance_name
 
 
 def run_protocol() -> bool:
-    with open(os.path.expanduser("~/.config/sftools/auth.txt"), "r") as f:
-        study_title = f.readline().rstrip()
+    with open(constants.AUTH_FILE, "r") as f:
         email = f.readline().rstrip()
+        study_title = f.readline().rstrip()
 
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()  # type: ignore
@@ -46,6 +42,9 @@ def run_protocol() -> bool:
         if role == "1":
             print("Asking cp0 to set up their part as well...")
             gcloudPubsub.publish(f"run_protocol_for_cp0::{study_title}::{email}")
+    else:
+        print("Something went wrong.  Please try again.")
+        return False
 
     print("Set up is complete!  Your GWAS is now running.")
     return True
