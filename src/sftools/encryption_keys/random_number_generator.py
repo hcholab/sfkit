@@ -6,7 +6,7 @@ import nacl.secret
 # some large prime; taken from the secure-gwas repo
 BASE_P = 1461501637330902918203684832716283019655932542929
 
-# some arbitrary string of length 1000; its content is not important to the efficacy of the encryption
+# some arbitrary string of length 1000; its content is not important to the efficacy/security of the encryption; in particular, it is okay to be deterministic like this
 MESSAGE = b"neoiiztdnrzxokrhqnzlufoehvdknkflkypwvgnjzhfivnlecgzijiepozmiqnrqcaefhzusbymkzcrcxboozvtlvcylhpxemteaycpluxbezsiczcezzmdvibqraczxztvlaolphtiwogpinowxffviwkzapoqozozagnnzrnstxpvtidnajdmqxvvlsbzlzdcgnznhodcjxrjqigrcgzppcrfpidfwldtzbqzaaxkjeddmytjgfoekmvqvkixfthipaczpdcmlvucctxkmblpusybzsgyopzeedtqlhgbrbmfxcpdafktznmnrhhuzebmipynozsglrzaqbywexrvnudcxtelwhyarbvrsphefztdivytybagfcrqxbulgzndqgkoodgsxnntofscryscfkvgvlafvreabrymxpwhkbyjwetsehlwvaoiutqrdppydxcspzlkurijvbhjpoqosntdeofmmajydthafqubarwbngxydqpzjgtaotsgdqpelnfycvggoyxomgnqkcvosrirtelcdqhbfmtuvzoxmnrdbfltdohcitiutciyyxrzallhtjcqwqbxinckicdhvupwbnlkkvmmuoxlxhkflxhgqxoymevqfxihruqdqilqkydlrvzyvmrkncjdcrkudtjufzayhifjogywnyxfclqpyhdssrkwytnbdxlvwxwrsliymzlcvsjertgcychbzncgkhopawsufcefjwdveivduwphrkasigxtndyftmswovaxxkprxehscmflhmqkveqxlekpgrhnxpsgpmriibfeivotfbmkcwocsewxhusduzqgxbjfasutjwpdgntljntjgbrrozcfmbxbjkqihzytwdauznoofukgucmibfriisdqrqgxzjewyngwefvstvbibuylkbqcfjhqgvdhqqmatrwnjoxycejcxpqrbvwxqhkgnivjuuzylitpvfbmdwjdqhartpvcjookn"
 
 
@@ -28,14 +28,10 @@ class PseudoRandomNumberGenerator:
         """
         self.nonce += 1
 
-        pseudo_random_byte_string = self.box.encrypt(
-            MESSAGE, self.nonce.to_bytes(24, byteorder="big")
-        ).ciphertext[16:]
+        pseudo_random_byte_string = self.box.encrypt(MESSAGE, self.nonce.to_bytes(24, byteorder="big")).ciphertext[16:]
         # 16: because this encryption adds 16 bytes at the beginning, relative to the cpp implementation
 
-        self.buffer = self.convert_byte_string_to_list_of_ints_in_range(
-            pseudo_random_byte_string
-        )
+        self.buffer = self.convert_byte_string_to_list_of_ints_in_range(pseudo_random_byte_string)
 
     def next(self):
         if not self.buffer:
@@ -70,9 +66,7 @@ class PseudoRandomNumberGenerator:
 
 
 def main():  # for testing
-    key = bytes.fromhex(
-        "3a57393f2a2ef038d43b432c34339e0cd021a15ce25b17c8bf07a5d9eae05d13"
-    )
+    key = bytes.fromhex("3a57393f2a2ef038d43b432c34339e0cd021a15ce25b17c8bf07a5d9eae05d13")
     prng = PseudoRandomNumberGenerator(key)
     for _ in range(2000):
         print(prng.next(), end=" ")

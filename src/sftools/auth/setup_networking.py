@@ -1,5 +1,4 @@
 import socket
-import time
 
 from google.cloud import firestore
 from sftools.protocol.utils import constants
@@ -14,21 +13,21 @@ def setup_networking():
     # send pubsub to the website with my ip address and port
     ip_address = socket.gethostbyname(socket.gethostname())
 
-    # get 2 ports from user
-    ports = input("Please enter the ports you want to use (separated by a comma): ").split(",")
-    if len(ports) != 2:
-        print("Invalid number of ports.")
-        return
     print("Processing...")
 
     collection = firestore.Client().collection("studies")
     doc_ref_dict = collection.document(study_title.replace(" ", "").lower()).get().to_dict() or {}  # type: ignore
-    role: str = str(doc_ref_dict["participants"].index(email) + 1)
+    role: str = str(doc_ref_dict["participants"].index(email))
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
     gcloudPubsub.publish(f"update_firestore::ip_address={ip_address}::{study_title}::{email}")
-    time.sleep(1)
-    gcloudPubsub.publish(f"update_firestore::ports={','.join(ports)}::{study_title}::{email}")
-    print("Your networking options (ip address and port) have been updated in the study parameters.")
+
+    # get port from user if role 1
+    if role == "1":
+        port = input("Enter the port number you want to use: ")  # used to communicate with P2
+        ports = ["null", "null", port]
+        gcloudPubsub.publish(f"update_firestore::ports={','.join(ports)}::{study_title}::{email}")
+
+    print("Your networking options have been updated in the study parameters.")
 
 
 def main():

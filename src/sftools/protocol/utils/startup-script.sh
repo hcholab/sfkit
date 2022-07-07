@@ -24,7 +24,7 @@ if [[ $? -ne 0 ]]; then
     printf "\n\n Failed to install dependencies \n\n"
     exit 1
 else
-    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-Done installing dependencies" --ordering-key="1" --project="broad-cho-priv1"
+    11gcloud pubsub topics publish ${topic_id} --message="${topic_id}-Done installing dependencies" --ordering-key="1" --project="broad-cho-priv1"
     printf "\n\n Done installing dependencies \n\n"
 fi
 

@@ -7,7 +7,8 @@ from sftools.protocol.utils import constants
 from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
 
 
-def validate_data(data_path: str, num_inds=1000) -> None:
+def validate_data(data_path: str, num_inds: int = 1000) -> None:
+    # sourcery skip: for-index-underscore
     print("Validating data...")
     files_list = os.listdir(data_path)
     # check that we have all the necessary files
@@ -17,10 +18,10 @@ def validate_data(data_path: str, num_inds=1000) -> None:
             exit(1)
     # check that all files in files_list have 1000 lines
     for file in files_list:
-        with open(os.path.join(data_path, file), "r") as f:
-            if sum(1 for _ in f) != num_inds:
-                print(f"The file {file} has {sum(1 for _ in f)} lines instead of {num_inds}.")
-                exit(1)
+        num_lines = sum(1 for line in open(os.path.join(data_path, file)))
+        if num_lines != num_inds:
+            print(f"The file {file} has {num_lines} lines instead of {num_inds}.")
+            exit(1)
     print("Data is valid!")
 
 
@@ -30,10 +31,10 @@ def register_data() -> bool:
         study_title = f.readline().rstrip()
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
-    role: str = str(doc_ref_dict["participants"].index(email) + 1)
+    role: str = str(doc_ref_dict["participants"].index(email))
 
     data_path = input("Enter the (absolute) path to your data files: ")
-    validate_data(data_path, num_inds=doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"])
+    validate_data(data_path, num_inds=int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]))
 
     data_hash = checksumdir.dirhash(data_path, "md5")
 

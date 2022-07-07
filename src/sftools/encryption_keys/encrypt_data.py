@@ -105,11 +105,10 @@ def encrypt_data():
     print("Downloading other party's public key...")
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
-    role = doc_ref_dict["participants"].index(email) + 1
-    other_emails: list = doc_ref_dict["participants"].copy()
-    other_emails.remove(email)
-    other_email: str = other_emails[0]
-    other_public_key = doc_ref_dict["personal_parameters"][other_email]["PUBLIC_KEY"]["value"]
+    role = doc_ref_dict["participants"].index(email)
+    other_public_key = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][3 - role]]["PUBLIC_KEY"][
+        "value"
+    ]
     if other_public_key == "":
         print("No public key found for other user. Exiting.")
         sys.exit(1)
