@@ -17,11 +17,11 @@ def validate_data(data_path: str, num_inds: int = 1000) -> None:
             print(f"You are missing the file {needed_file}.")
             exit(1)
     # check that all files in files_list have 1000 lines
-    for file in files_list:
-        num_lines = sum(1 for line in open(os.path.join(data_path, file)))
-        if num_lines != num_inds:
-            print(f"The file {file} has {num_lines} lines instead of {num_inds}.")
-            exit(1)
+    # for file in files_list:
+    #     num_lines = sum(1 for line in open(os.path.join(data_path, file)))
+    #     if num_lines != num_inds:
+    #         print(f"The file {file} has {num_lines} lines instead of {num_inds}.")
+    #         exit(1)
     print("Data is valid!")
 
 
@@ -34,6 +34,7 @@ def register_data() -> bool:
     role: str = str(doc_ref_dict["participants"].index(email))
 
     data_path = input("Enter the (absolute) path to your data files: ")
+    # TODO: update num_inds to be number of rows in geno.txt?
     validate_data(data_path, num_inds=int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]))
 
     data_hash = checksumdir.dirhash(data_path, "md5")

@@ -97,7 +97,7 @@ def get_shared_keys(my_private_key, other_public_key, debug=False):
     return [None, shared_key_1, shared_key_2]
 
 
-def encrypt_data():
+def encrypt_data() -> None:
     with open(constants.AUTH_FILE, "r") as f:
         email = f.readline().rstrip()
         study_title = f.readline().rstrip()

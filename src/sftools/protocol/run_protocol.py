@@ -1,5 +1,4 @@
 import subprocess
-import sys
 import time
 
 from google.cloud import firestore
@@ -7,7 +6,7 @@ from sftools.protocol.utils import constants
 from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
 
 
-def run_protocol() -> bool:
+def run_protocol() -> None:
     with open(constants.AUTH_FILE, "r") as f:
         email = f.readline().rstrip()
         study_title = f.readline().rstrip()
@@ -19,7 +18,7 @@ def run_protocol() -> bool:
 
     if statuses[email] in ["['']", "['validating']", "['invalid data']"]:
         print("You have not successfully validated your data.  Please do so before proceeding.")
-        return False
+        return
 
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
     if statuses[email] == ["not ready"]:
@@ -31,8 +30,7 @@ def run_protocol() -> bool:
             "The other participant is not yet ready.  Please wait or cancel (CTRL-C) and try again when they are ready..."
         )
         time.sleep(5)
-        doc_ref_dict = doc_ref.get().to_dict()  # type: ignore # TODO: make sure this will update when other user is ready
-        statuses = doc_ref_dict["status"]
+        statuses = doc_ref.get().to_dict()["status"]
 
     if statuses[email] == ["ready"]:
         gcloudPubsub.publish(f"update_firestore::status=running::{study_title}::{email}")
@@ -42,26 +40,25 @@ def run_protocol() -> bool:
             time.sleep(1)
             gcloudPubsub.publish(f"run_protocol_for_cp0::{study_title}")
 
-        # if sys.platform != "linux":
-        #     print("You are not running on Linux.  Please run this script on Linux.")
-        #     return False
-
         install_dependencies()
-        print("\n\n Begin installing GWAS repo \n\n")
-        subprocess.run("git clone https://github.com/simonjmendelsohn/secure-gwas secure-gwas", shell=True)
-        print("\n\n Finished installing GWAS repo \n\n")
-        copy_data_to_gwas_repo("./encrypted_data", role)
+        install_gwas_repo()
         install_ntl_library()
         compile_gwas_code()
-        connect_to_other_vms(role, doc_ref_dict)
+        connect_to_other_vms(role, doc_ref)
+        copy_data_to_gwas_repo("./encrypted_data", role)
         start_datasharing(role)
         start_gwas(role)
     else:
-        print("Something went wrong.  Please try again.")
-        return False
+        print("You status is not ready.  Exiting now.")
+        return
 
     print("Set up is complete!  Your GWAS is now running.")
-    return True
+
+
+def install_gwas_repo():
+    print("\n\n Begin installing GWAS repo \n\n")
+    subprocess.run("git clone https://github.com/simonjmendelsohn/secure-gwas secure-gwas", shell=True)
+    print("\n\n Finished installing GWAS repo \n\n")
 
 
 def install_dependencies():
@@ -84,21 +81,6 @@ def install_dependencies():
     print("\n\n Finished installing dependencies \n\n")
 
 
-def copy_data_to_gwas_repo(data_path, role):
-    print("\n\n Copy data to GWAS repo \n\n")
-    commands = f"""cp '{data_path}'/g.bin secure-gwas/test_data/g.bin 
-    cp '{data_path}'/m.bin secure-gwas/test_data/m.bin 
-    cp '{data_path}'/p.bin secure-gwas/test_data/p.bin 
-    cp '{data_path}'/other_shared_key.bin secure-gwas/test_data/other_shared_key.bin 
-    cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt 
-    gsutil cp gs://secure-gwas-data/test.par.'{role}'.txt secure-gwas/par/test.par.'{role}'.txt"""
-    for command in commands.split("\n"):
-        if subprocess.run(command, shell=True).returncode != 0:
-            print(f"Failed to perform command {command}")
-            exit(1)
-    print("\n\n Finished copying data to GWAS repo \n\n")
-
-
 def install_ntl_library():
     print("\n\n Begin installing NTL library \n\n")
     commands = """curl https://libntl.org/ntl-10.3.0.tar.gz --output ntl-10.3.0.tar.gz
@@ -115,6 +97,21 @@ def install_ntl_library():
     print("\n\n Finished installing NTL library \n\n")
 
 
+def copy_data_to_gwas_repo(data_path, role):
+    print("\n\n Copy data to GWAS repo \n\n")
+    commands = f"""cp '{data_path}'/g.bin secure-gwas/test_data/g.bin 
+    cp '{data_path}'/m.bin secure-gwas/test_data/m.bin 
+    cp '{data_path}'/p.bin secure-gwas/test_data/p.bin 
+    cp '{data_path}'/other_shared_key.bin secure-gwas/test_data/other_shared_key.bin 
+    cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt 
+    gsutil cp gs://secure-gwas-data/test.par.'{role}'.txt secure-gwas/par/test.par.'{role}'.txt"""
+    for command in commands.split("\n"):
+        if subprocess.run(command, shell=True).returncode != 0:
+            print(f"Failed to perform command {command}")
+            exit(1)
+    print("\n\n Finished copying data to GWAS repo \n\n")
+
+
 def compile_gwas_code():
     print("\n\n Begin compiling GWAS code \n\n")
     command = """cd secure-gwas/code && COMP=$(which clang++) &&\
@@ -128,7 +125,8 @@ def compile_gwas_code():
     print("\n\n Finished compiling GWAS code \n\n")
 
 
-def connect_to_other_vms(role: str, doc_ref_dict):
+def connect_to_other_vms(role: str, doc_ref):
+    doc_ref_dict = doc_ref.get().to_dict()
     print("\n\n Begin connecting to other VMs \n\n")
     ip_addresses = [
         doc_ref_dict["personal_parameters"][user]["IP_ADDRESS"]["value"] for user in doc_ref_dict["participants"]
@@ -137,20 +135,25 @@ def connect_to_other_vms(role: str, doc_ref_dict):
     ports = [
         doc_ref_dict["personal_parameters"][user]["PORTS"]["value"].split(",") for user in doc_ref_dict["participants"]
     ]
-    print("Ports:", ports)
+    # print("Ports:", ports)
+    print("Using port 8055 for testing")
     if role == "1":
-        command = f"nc -k -l -p '{ports[1][2]}' &"
+        # command = f"nc -k -l -p '{ports[1][2]}' &"
+        command = "nc -k -l -p 8055 &"
         if subprocess.run(command, shell=True).returncode != 0:
             print(f"Failed to perform command {command}")
             exit(1)
-        command = f"nc -w 5 -v -z '{ip_addresses[0]}' '{ports[0][1]}'"
+        # command = f"nc -w 5 -v -z '{ip_addresses[0]}' '{ports[0][1]}'"
+        command = f"nc -w 5 -v -z '{ip_addresses[0]}' '8055'"
         while subprocess.run(command, shell=True).returncode != 0:
             time.sleep(5)
     elif role == "2":
-        command = f"nc -w 5 -v -z '{ip_addresses[0]}' '{ports[0][2]}'"
+        # command = f"nc -w 5 -v -z '{ip_addresses[0]}' '{ports[0][2]}'"
+        command = f"nc -w 5 -v -z '{ip_addresses[0]}' '8055'"
         while subprocess.run(command, shell=True).returncode != 0:
             time.sleep(5)
-        command = f"nc -w 5 -v -z '{ip_addresses[1]}' '{ports[1][2]}'"
+        # command = f"nc -w 5 -v -z '{ip_addresses[1]}' '{ports[1][2]}'"
+        command = f"nc -w 5 -v -z '{ip_addresses[0]}' '8055'"
         while subprocess.run(command, shell=True).returncode != 0:
             time.sleep(5)
     else:
