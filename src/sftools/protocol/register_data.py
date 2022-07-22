@@ -7,8 +7,7 @@ from sftools.protocol.utils import constants
 from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
 
 
-def validate_data(data_path: str, num_inds: int = 1000) -> None:
-    # sourcery skip: for-index-underscore
+def validate_data(data_path: str) -> int:
     print("Validating data...")
     files_list = os.listdir(data_path)
     # check that we have all the necessary files
@@ -16,13 +15,11 @@ def validate_data(data_path: str, num_inds: int = 1000) -> None:
         if all(needed_file not in file for file in files_list):
             print(f"You are missing the file {needed_file}.")
             exit(1)
-    # check that all files in files_list have 1000 lines
-    # for file in files_list:
-    #     num_lines = sum(1 for line in open(os.path.join(data_path, file)))
-    #     if num_lines != num_inds:
-    #         print(f"The file {file} has {num_lines} lines instead of {num_inds}.")
-    #         exit(1)
-    print("Data is valid!")
+
+    rows = sum(1 for _ in open(os.path.join(data_path, "cov.txt")))
+    assert rows == sum(1 for _ in open(os.path.join(data_path, "geno.txt"))), "rows in cov.txt and geno.txt differ"
+    assert rows == sum(1 for _ in open(os.path.join(data_path, "pheno.txt"))), "rows in cov.txt and pheno.txt differ"
+    return rows
 
 
 def register_data() -> bool:
@@ -32,17 +29,16 @@ def register_data() -> bool:
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
     role: str = str(doc_ref_dict["participants"].index(email))
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
 
     data_path = input("Enter the (absolute) path to your data files: ")
-    # TODO: update num_inds to be number of rows in geno.txt?
-    validate_data(data_path, num_inds=int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]))
-
-    data_hash = checksumdir.dirhash(data_path, "md5")
-
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
+    num_inds = validate_data(data_path)
+    gcloudPubsub.publish(f"update_firestore::NUM_INDS={num_inds}::{study_title}::{email}")
+    time.sleep(1)
     gcloudPubsub.publish(f"update_firestore::status=not ready::{study_title}::{email}")
     time.sleep(1)  # it seems to have trouble if I update both at the same time
-    gcloudPubsub.publish(f"update_firestore::data_hash={data_hash}::{study_title}::{email}")
+    data_hash = checksumdir.dirhash(data_path, "md5")
+    gcloudPubsub.publish(f"update_firestore::DATA_HASH={data_hash}::{study_title}::{email}")
 
     with open(os.path.join(constants.SFTOOLS_DIR, "data_path.txt"), "w") as f:
         f.write(data_path + "\n")

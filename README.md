@@ -1,8 +1,6 @@
-## Sftools
+## sftools
 
-Note: This repo is a work in progress.
-
-Sftools is a collection of CLI tools to help run certain types of secure multi-party computation on genomic data. It is a companion to the website [here](https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/).
+`sftools` is a collection of CLI tools to help run certain types of secure multi-party computation on genomic data. It is a companion to the website [here](https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/).
 
 ## Prerequisites
 
@@ -15,6 +13,14 @@ Sftools is a collection of CLI tools to help run certain types of secure multi-p
 ## Usage
 
 Usage: sftools <auth | set_study | setup_networking | generate_personal_keys | register_data | encrypt_data | run_protocol>
+
+- auth: Authenticate with the CLI.
+- set_study: Set the study you are using.
+- setup_networking: Setup the networking, including your IP address and any relevant ports.
+- generate_personal_keys: Generate your public and private cryptographic keys for use in encrypting the data.
+- register_data: Register and validate your data.
+- encrypt_data: Encrypt your data.
+- run_protocol: Run the protocol. As this command may be long-running, it is recommended that you run it using nohup. This will prevent it from terminating if you close this window/terminal. For example, `nohup sftools run_protocol & tail -f nohup.out`. You can also use a tool like screen or tmux.
 
 ### Questions
 

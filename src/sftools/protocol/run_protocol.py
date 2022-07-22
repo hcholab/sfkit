@@ -26,9 +26,7 @@ def run_protocol() -> None:
         gcloudPubsub.publish(f"update_firestore::status=ready::{study_title}::{email}")
 
     while any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"]):
-        print(
-            "The other participant is not yet ready.  Please wait or cancel (CTRL-C) and try again when they are ready..."
-        )
+        print("The other participant is not yet ready.  Waiting... (press CTRL-C to cancel)")
         time.sleep(5)
         statuses = doc_ref.get().to_dict()["status"]
 
@@ -51,8 +49,6 @@ def run_protocol() -> None:
     else:
         print("You status is not ready.  Exiting now.")
         return
-
-    print("Set up is complete!  Your GWAS is now running.")
 
 
 def install_gwas_repo():
@@ -180,7 +176,7 @@ def start_gwas(role):
     if subprocess.run(command, shell=True).returncode != 0:
         print(f"Failed to perform command {command}")
         exit(1)
-    print("\n\n Finished starting GWAS \n\n")
+    print("\n\n Finished GWAS \n\n")
 
 
 def main():
