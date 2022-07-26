@@ -1,33 +1,50 @@
+import json
 import os
 
-import pydata_google_auth
+import firestore
 from google.auth.transport import requests as google_requests
-from google.oauth2 import id_token
 from sftools.protocol.utils import constants
 
 
 def auth():
-    """
-    Logs in user with Google
-    Gets study title
-    """
-    print("Logging in with Google...")
-    credentials, _ = pydata_google_auth.default(scopes=["openid", "https://www.googleapis.com/auth/userinfo.email"])
-    if "id_token" in credentials.__dict__.keys() or "_id_token" in credentials.__dict__.keys():
-        email: str = id_token.verify_oauth2_token(credentials.id_token, google_requests.Request()).get("email")
-    elif "_service_account_email" in credentials.__dict__.keys():
-        email: str = credentials.service_account_email
-    else:
-        raise LookupError("Could not get email from credentials")
-    print(f"Logged in as {email}")
+    # get path to service account private key file
+    sa_key_file = input("Enter absolute path to service account private key file: ")
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_key_file
 
-    # save the email, study title to a file
-    if not os.path.exists(constants.SFTOOLS_DIR):
-        os.makedirs(constants.SFTOOLS_DIR)
+    with open(sa_key_file, "r") as f:
+        data = json.load(f)
+        sa_email = data["client_email"]
+
+    # confirm that the service account private key file is valid
+    try:
+        google_requests.Request()  # basic check to make sure the key is valid
+    except Exception as e:
+        print(f"Error: {e}")
+        print("Please make sure the service account private key file is valid.")
+        exit(1)
+
+    # get email and study title for this service account from the database
+    study_title, user_email = "", ""
+    collection = firestore.Client().collection("studies")
+    for doc_ref in collection.stream():
+        doc_ref_dict = doc_ref.to_dict()
+        for user in doc_ref_dict["participants"]:
+            if doc_ref_dict["personal_parameters"][user]["SA_EMAIL"]["value"] == sa_email:
+                study_title = doc_ref.id
+                user_email = user
+                break
+        if user_email:
+            break
+    if not user_email:
+        print("Error finding your study.  Please make sure you service account key corresponds to a valid study.")
+        exit(1)
+
     with open(constants.AUTH_FILE, "w") as f:
-        f.write(f"{email}\n")
+        f.write(user_email + "\n")
+        f.write(study_title + "\n")
+        f.write(f"{sa_key_file}\n")
 
-    print("You are now authenticated with the sftools CLI!")
+    print("Successfully authenticated!")
 
 
 def main():

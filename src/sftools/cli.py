@@ -1,7 +1,8 @@
 import sys
 
 from sftools.auth.auth import auth
-from sftools.auth.set_study import set_study
+
+# from sftools.auth.set_study import set_study
 from sftools.auth.setup_networking import setup_networking
 from sftools.encryption_keys.encrypt_data import encrypt_data
 from sftools.encryption_keys.generate_personal_keys import generate_personal_keys
@@ -17,8 +18,8 @@ def main():
         exit(1)
     if sys.argv[1] == "auth":
         auth()
-    elif sys.argv[1] == "set_study":
-        set_study()
+    # elif sys.argv[1] == "set_study":
+    #     set_study()
     elif sys.argv[1] == "setup_networking":
         setup_networking()
     elif sys.argv[1] == "generate_personal_keys":

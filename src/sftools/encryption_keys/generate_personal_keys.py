@@ -25,6 +25,8 @@ def generate_personal_keys():
     with open(constants.AUTH_FILE, "r") as f:
         email = f.readline().rstrip()
         study_title = f.readline().rstrip()
+        sa_key_file = f.readline().rstrip()
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_key_file
 
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore

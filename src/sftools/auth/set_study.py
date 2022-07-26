@@ -1,3 +1,6 @@
+### DEPRECATED ###
+
+
 from google.cloud import firestore
 from sftools.protocol.utils import constants
 

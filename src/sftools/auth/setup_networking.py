@@ -1,3 +1,4 @@
+import os
 import socket
 
 from google.cloud import firestore
@@ -9,6 +10,8 @@ def setup_networking():
     with open(constants.AUTH_FILE, "r") as f:
         email = f.readline().rstrip()
         study_title = f.readline().rstrip()
+        sa_key_file = f.readline().rstrip()
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_key_file
 
     # send pubsub to the website with my ip address and port
     ip_address = socket.gethostbyname(socket.gethostname())
