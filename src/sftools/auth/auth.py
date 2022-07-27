@@ -1,7 +1,7 @@
 import json
 import os
 
-import firestore
+from google.cloud import firestore
 from google.auth.transport import requests as google_requests
 from sftools.protocol.utils import constants
 
@@ -26,8 +26,8 @@ def auth():
     # get email and study title for this service account from the database
     study_title, user_email = "", ""
     collection = firestore.Client().collection("studies")
-    for doc_ref in collection.stream():
-        doc_ref_dict = doc_ref.to_dict()
+    for doc_ref in collection.stream():  # type: ignore
+        doc_ref_dict = doc_ref.to_dict() or {}
         for user in doc_ref_dict["participants"]:
             if doc_ref_dict["personal_parameters"][user]["SA_EMAIL"]["value"] == sa_email:
                 study_title = doc_ref.id

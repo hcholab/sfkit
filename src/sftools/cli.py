@@ -13,7 +13,7 @@ from sftools.protocol.run_protocol import run_protocol
 def main():
     if len(sys.argv) < 2:
         print(
-            "Usage: sftools <auth | set_study | setup_networking | generate_personal_keys | register_data | encrypt_data | run_protocol>"
+            "Usage: sftools <auth | setup_networking | generate_personal_keys | register_data | encrypt_data | run_protocol>"
         )
         exit(1)
     if sys.argv[1] == "auth":
@@ -32,7 +32,7 @@ def main():
         run_protocol()
     else:
         print(
-            "Usage: sftools <auth | set_study | setup_networking | generate_personal_keys | register_data | encrypt_data | run_protocol>"
+            "Usage: sftools <auth | setup_networking | generate_personal_keys | register_data | encrypt_data | run_protocol>"
         )
         exit(1)
 

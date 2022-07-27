@@ -31,7 +31,7 @@ def run_protocol() -> None:
     while any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"]):
         print("The other participant is not yet ready.  Waiting... (press CTRL-C to cancel)")
         time.sleep(5)
-        statuses = doc_ref.get().to_dict()["status"]
+        statuses = doc_ref.get().to_dict()["status"]  # type: ignore
 
     if statuses[email] == ["ready"]:
         gcloudPubsub.publish(f"update_firestore::status=running::{study_title}::{email}")

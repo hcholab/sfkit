@@ -12,7 +12,7 @@
 
 ## Usage
 
-Usage: sftools <auth | set_study | setup_networking | generate_personal_keys | register_data | encrypt_data | run_protocol>
+Usage: sftools <auth | setup_networking | generate_personal_keys | register_data | encrypt_data | run_protocol>
 
 - auth: Authenticate with the CLI.
 - set_study: Set the study you are using.
