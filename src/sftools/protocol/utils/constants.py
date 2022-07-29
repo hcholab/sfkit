@@ -11,8 +11,12 @@ TEMP_FOLDER = "src/temp"
 PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
 # BASE_P = "1461501637330902918203684832716283019655932542929"
 # DATA_VALIDATION_CONSTANT = 4 * len(BASE_P)
-DATA_RAW_FILES = ["cov.txt", "geno.txt", "pheno.txt", "pos.txt"]
-# DATA_VALIDATION_FILES = ["g.bin", "m.bin", "p.bin", "other_shared_key.bin", "pos.txt"]
+GWAS_RAW_INPUT_FILES = ["cov.txt", "geno.txt", "pheno.txt", "pos.txt"]
+SFGWAS_INPUT_FILES = ["geno_party", "pheno_party", "cov_party", "pos.txt"]
+NEEDED_INPUT_FILES = {
+    "GWAS": GWAS_RAW_INPUT_FILES,
+    "PCA": SFGWAS_INPUT_FILES,
+}
 SFTOOLS_DIR = os.path.expanduser("~/.config/sftools")
 AUTH_FILE = os.path.join(SFTOOLS_DIR, "auth.txt")
 

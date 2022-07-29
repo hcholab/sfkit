@@ -8,4 +8,5 @@ ipaddr
 pydata_google_auth
 PyNaCl
 tenacity
+toml
 tqdm

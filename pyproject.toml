@@ -21,6 +21,7 @@ dependencies = [
     'pydata-google-auth~=1.4.0',
     'PyNaCl~=1.5.0',
     'tenacity~=8.0.1',
+    'toml',
     'tqdm~=4.64.0',
 ]
 
