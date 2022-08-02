@@ -1,19 +1,15 @@
-import os
 import time
 
 from google.cloud import firestore
 from sftools.protocol.utils import constants
 from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
 from sftools.protocol.utils.gwas_protocol import run_gwas_protocol
+from sftools.protocol.utils.helper_functions import confirm_authentication
 from sftools.protocol.utils.sfgwas_protocol import run_sfgwas_protocol
 
 
 def run_protocol() -> None:
-    with open(constants.AUTH_FILE, "r") as f:
-        email = f.readline().rstrip()
-        study_title = f.readline().rstrip()
-        sa_key_file = f.readline().rstrip()
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_key_file
+    email, study_title = confirm_authentication()
 
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()  # type: ignore
@@ -50,11 +46,3 @@ def run_protocol() -> None:
     else:
         print("You status is not ready.  Exiting now.")
         return
-
-
-def main():
-    pass
-
-
-if __name__ == "__main__":
-    main()

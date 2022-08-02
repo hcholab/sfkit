@@ -39,17 +39,11 @@ def auth():
         print("Error finding your study.  Please make sure you service account key corresponds to a valid study.")
         exit(1)
 
+    # if path to constants.AUTH_FILE does not exist, create it
+    os.makedirs(constants.SFTOOLS_DIR, exist_ok=True)
     with open(constants.AUTH_FILE, "w") as f:
         f.write(user_email + "\n")
         f.write(study_title + "\n")
         f.write(f"{sa_key_file}\n")
 
     print("Successfully authenticated!")
-
-
-def main():
-    auth()
-
-
-if __name__ == "__main__":
-    main()

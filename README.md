@@ -15,7 +15,7 @@
 Usage: sftools <auth | setup_networking | generate_personal_keys | register_data | encrypt_data | run_protocol>
 
 - auth: Authenticate with the CLI.
-- set_study: Set the study you are using.
+- set_study (deprecated): Set the study you are using.
 - setup_networking: Setup the networking, including your IP address and any relevant ports.
 - generate_personal_keys: Generate your public and private cryptographic keys for use in encrypting the data.
 - register_data: Register and validate your data.

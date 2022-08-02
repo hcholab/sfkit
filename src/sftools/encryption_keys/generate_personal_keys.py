@@ -5,6 +5,7 @@ from nacl.encoding import HexEncoder
 from nacl.public import PrivateKey
 from sftools.protocol.utils import constants
 from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
+from sftools.protocol.utils.helper_functions import confirm_authentication
 
 
 def generate_personal_keys():
@@ -22,11 +23,7 @@ def generate_personal_keys():
     with open(private_key_path, "w") as f:
         f.write(private_key.encode(encoder=HexEncoder).decode() + "\n")  # type: ignore
 
-    with open(constants.AUTH_FILE, "r") as f:
-        email = f.readline().rstrip()
-        study_title = f.readline().rstrip()
-        sa_key_file = f.readline().rstrip()
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_key_file
+    email, study_title = confirm_authentication()
 
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
@@ -35,11 +32,3 @@ def generate_personal_keys():
     gcloudPubsub.publish(f"update_firestore::PUBLIC_KEY={public_key}::{study_title}::{email}")
     print(f"Your public and private keys have been generated and saved to {constants.SFTOOLS_DIR}.")
     print("Your public key has been uploaded to the website and is available for all participants in your study.")
-
-
-def main():
-    generate_personal_keys()
-
-
-if __name__ == "__main__":
-    main()

@@ -13,6 +13,7 @@ from tqdm import tqdm
 from sftools.protocol.utils import constants
 
 from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
+from sftools.protocol.utils.helper_functions import confirm_authentication
 
 BASE_P = 1461501637330902918203684832716283019655932542929
 
@@ -98,11 +99,7 @@ def get_shared_keys(my_private_key, other_public_key, debug=False):
 
 
 def encrypt_data() -> None:
-    with open(constants.AUTH_FILE, "r") as f:
-        email = f.readline().rstrip()
-        study_title = f.readline().rstrip()
-        sa_key_file = f.readline().rstrip()
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_key_file
+    email, study_title = confirm_authentication()
 
     print("Downloading other party's public key...")
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())

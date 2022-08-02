@@ -1,17 +1,13 @@
-import os
 import socket
 
 from google.cloud import firestore
 from sftools.protocol.utils import constants
 from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
+from sftools.protocol.utils.helper_functions import confirm_authentication
 
 
 def setup_networking():
-    with open(constants.AUTH_FILE, "r") as f:
-        email = f.readline().rstrip()
-        study_title = f.readline().rstrip()
-        sa_key_file = f.readline().rstrip()
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_key_file
+    email, study_title = confirm_authentication()
 
     # send pubsub to the website with my ip address and port
     ip_address = socket.gethostbyname(socket.gethostname())
@@ -31,11 +27,3 @@ def setup_networking():
         gcloudPubsub.publish(f"update_firestore::PORTS={','.join(ports)}::{study_title}::{email}")
 
     print("Your networking options have been updated in the study parameters.")
-
-
-def main():
-    setup_networking()
-
-
-if __name__ == "__main__":
-    main()
