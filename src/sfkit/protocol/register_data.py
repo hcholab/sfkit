@@ -3,9 +3,9 @@ import time
 
 import checksumdir
 from google.cloud import firestore
-from sftools.protocol.utils import constants
-from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
-from sftools.protocol.utils.helper_functions import confirm_authentication
+from sfkit.protocol.utils import constants
+from sfkit.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
+from sfkit.protocol.utils.helper_functions import confirm_authentication
 
 
 def register_data() -> bool:
@@ -26,7 +26,7 @@ def register_data() -> bool:
     data_hash = checksumdir.dirhash(data_path, "md5")
     gcloudPubsub.publish(f"update_firestore::DATA_HASH={data_hash}::{study_title}::{email}")
 
-    with open(os.path.join(constants.SFTOOLS_DIR, "data_path.txt"), "w") as f:
+    with open(os.path.join(constants.sfkit_DIR, "data_path.txt"), "w") as f:
         f.write(data_path + "\n")
 
     print("Successfully registered and validated data!")

@@ -1,9 +1,9 @@
 import socket
 
 from google.cloud import firestore
-from sftools.protocol.utils import constants
-from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
-from sftools.protocol.utils.helper_functions import confirm_authentication
+from sfkit.protocol.utils import constants
+from sfkit.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
+from sfkit.protocol.utils.helper_functions import confirm_authentication
 
 
 def setup_networking():

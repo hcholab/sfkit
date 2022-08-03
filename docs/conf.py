@@ -2,7 +2,7 @@
 
 # -- Project information
 
-project = "sftools"
+project = "sfkit"
 copyright = "2022, Simon Mendelsohn"
 author = "Simon Mendelsohn"
 

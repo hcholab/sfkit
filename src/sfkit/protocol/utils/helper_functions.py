@@ -1,6 +1,6 @@
 import os
 import subprocess
-from sftools.protocol.utils import constants
+from sfkit.protocol.utils import constants
 
 from typing import Tuple
 

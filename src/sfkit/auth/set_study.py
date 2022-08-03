@@ -2,7 +2,7 @@
 
 
 from google.cloud import firestore
-from sftools.protocol.utils import constants
+from sfkit.protocol.utils import constants
 
 
 def set_study():
@@ -10,7 +10,7 @@ def set_study():
         email = f.readline().rstrip()
 
     print(f"You are using the following email: {email}")
-    print("(If you would like to change this, please rerun `sftools auth`)\n")
+    print("(If you would like to change this, please rerun `sfkit auth`)\n")
     collection = firestore.Client().collection("studies")
     doc_options = [doc.id for doc in collection.stream() if email in doc.to_dict()["participants"]]  # type: ignore
 

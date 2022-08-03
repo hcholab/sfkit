@@ -17,8 +17,8 @@ NEEDED_INPUT_FILES = {
     "GWAS": GWAS_RAW_INPUT_FILES,
     "PCA": SFGWAS_INPUT_FILES,
 }
-SFTOOLS_DIR = os.path.expanduser("~/.config/sftools")
-AUTH_FILE = os.path.join(SFTOOLS_DIR, "auth.txt")
+sfkit_DIR = os.path.expanduser("~/.config/sfkit")
+AUTH_FILE = os.path.join(sfkit_DIR, "auth.txt")
 
 BROAD_VM_SOURCE_IP_RANGES = [
     "69.173.112.0/21",

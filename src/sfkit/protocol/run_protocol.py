@@ -1,11 +1,11 @@
 import time
 
 from google.cloud import firestore
-from sftools.protocol.utils import constants
-from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
-from sftools.protocol.utils.gwas_protocol import run_gwas_protocol
-from sftools.protocol.utils.helper_functions import confirm_authentication
-from sftools.protocol.utils.sfgwas_protocol import run_sfgwas_protocol
+from sfkit.protocol.utils import constants
+from sfkit.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
+from sfkit.protocol.utils.gwas_protocol import run_gwas_protocol
+from sfkit.protocol.utils.helper_functions import confirm_authentication
+from sfkit.protocol.utils.sfgwas_protocol import run_sfgwas_protocol
 
 
 def run_protocol() -> None:

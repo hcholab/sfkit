@@ -1,1 +1,1 @@
-Welcome to sftools's documentation!
+Welcome to sfkit's documentation!

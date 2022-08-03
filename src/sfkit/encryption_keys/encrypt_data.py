@@ -8,12 +8,12 @@ import nacl.utils
 from google.cloud import firestore
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
-from sftools.encryption_keys.random_number_generator import PseudoRandomNumberGenerator
+from sfkit.encryption_keys.random_number_generator import PseudoRandomNumberGenerator
 from tqdm import tqdm
-from sftools.protocol.utils import constants
+from sfkit.protocol.utils import constants
 
-from sftools.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
-from sftools.protocol.utils.helper_functions import confirm_authentication
+from sfkit.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
+from sfkit.protocol.utils.helper_functions import confirm_authentication
 
 BASE_P = 1461501637330902918203684832716283019655932542929
 
@@ -114,14 +114,14 @@ def encrypt_data() -> None:
     other_public_key = PublicKey(other_public_key, encoder=HexEncoder)
 
     print("Generating shared keys...")
-    private_key_path = os.path.join(constants.SFTOOLS_DIR, "my_private_key.txt")
+    private_key_path = os.path.join(constants.sfkit_DIR, "my_private_key.txt")
     with open(private_key_path, "r") as f:
         my_private_key = PrivateKey(f.readline().rstrip(), encoder=HexEncoder)  # type: ignore
     assert my_private_key != other_public_key, "Private and public keys must be different"
 
     shared_keys = get_shared_keys(my_private_key, other_public_key)
 
-    input_dir_path = os.path.join(constants.SFTOOLS_DIR, "data_path.txt")
+    input_dir_path = os.path.join(constants.sfkit_DIR, "data_path.txt")
     with open(input_dir_path, "r") as f:
         input_dir = f.readline().rstrip()
 

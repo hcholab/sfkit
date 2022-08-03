@@ -3,7 +3,7 @@ import os
 
 from google.cloud import firestore
 from google.auth.transport import requests as google_requests
-from sftools.protocol.utils import constants
+from sfkit.protocol.utils import constants
 
 
 def auth():
@@ -40,7 +40,7 @@ def auth():
         exit(1)
 
     # if path to constants.AUTH_FILE does not exist, create it
-    os.makedirs(constants.SFTOOLS_DIR, exist_ok=True)
+    os.makedirs(constants.sfkit_DIR, exist_ok=True)
     with open(constants.AUTH_FILE, "w") as f:
         f.write(user_email + "\n")
         f.write(study_title + "\n")

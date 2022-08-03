@@ -1,8 +1,8 @@
 import os
 
 import toml
-from sftools.protocol.utils import constants
-from sftools.protocol.utils.helper_functions import run_command
+from sfkit.protocol.utils import constants
+from sfkit.protocol.utils.helper_functions import run_command
 
 
 def run_sfgwas_protocol(doc_ref_dict: dict, role: str) -> None:
@@ -53,7 +53,7 @@ def update_config_files(doc_ref_dict: dict, role: str) -> None:
 
 
 def update_data_path_in_config_file(role: str) -> None:
-    data_path_path = os.path.join(constants.SFTOOLS_DIR, "data_path.txt")
+    data_path_path = os.path.join(constants.sfkit_DIR, "data_path.txt")
     with open(data_path_path, "r") as f:
         data_path = f.readline().rstrip()
     config_file_path = f"sfgwas-private/config/lungGCPFinal/configLocal.Party{role}.toml"
