@@ -44,7 +44,7 @@ def run_protocol(study_title: str = "") -> None:
 
         if study_type == "GWAS":
             run_gwas_protocol(doc_ref_dict, role)
-        elif study_type == "PCA":
+        elif study_type == "SFGWAS":
             run_sfgwas_protocol(doc_ref_dict, role)
     else:
         print("You status is not ready.  Exiting now.")

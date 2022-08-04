@@ -15,7 +15,7 @@ GWAS_RAW_INPUT_FILES = ["cov.txt", "geno.txt", "pheno.txt", "pos.txt"]
 SFGWAS_INPUT_FILES = ["geno_party", "pheno_party", "cov_party", "pos.txt"]
 NEEDED_INPUT_FILES = {
     "GWAS": GWAS_RAW_INPUT_FILES,
-    "PCA": SFGWAS_INPUT_FILES,
+    "SFGWAS": SFGWAS_INPUT_FILES,
 }
 sfkit_DIR = os.path.expanduser("~/.config/sfkit")
 AUTH_FILE = os.path.join(sfkit_DIR, "auth.txt")

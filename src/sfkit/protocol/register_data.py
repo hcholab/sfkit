@@ -47,7 +47,7 @@ def validate_data(data_path: str, study_type: str, role: str = "") -> int:
         assert rows == sum(1 for _ in open(os.path.join(data_path, "geno.txt")))
         assert rows == sum(1 for _ in open(os.path.join(data_path, "pheno.txt")))
         return rows
-    elif study_type == "PCA":
+    elif study_type == "SFGWAS":
         rows = sum(1 for _ in open(os.path.join(data_path, f"lung_split/pheno_party{role}.txt")))
         assert rows == sum(1 for _ in open(os.path.join(data_path, f"lung_split/cov_party{role}.txt")))
         return rows
