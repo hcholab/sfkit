@@ -8,8 +8,11 @@ from sfkit.protocol.utils.helper_functions import confirm_authentication
 from sfkit.protocol.utils.sfgwas_protocol import run_sfgwas_protocol
 
 
-def run_protocol() -> None:
-    email, study_title = confirm_authentication()
+def run_protocol(study_title: str = "") -> None:
+    if not study_title:
+        email, study_title = confirm_authentication()
+    else:
+        email = "Broad"
 
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()  # type: ignore

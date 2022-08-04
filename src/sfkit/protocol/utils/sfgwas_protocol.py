@@ -1,3 +1,4 @@
+import fileinput
 import os
 
 import toml
@@ -10,6 +11,7 @@ def run_sfgwas_protocol(doc_ref_dict: dict, role: str) -> None:
     install_sfgwas()
     update_config_files(doc_ref_dict, role)
     build_sfgwas()
+    update_batch_run(role)
     start_sfgwas()
 
 
@@ -95,7 +97,12 @@ def build_sfgwas() -> None:
     print("\n\n Finished building sfgwas code \n\n")
 
 
-# TODO: edit batch_run.sh to correspond to current role
+def update_batch_run(role: str) -> None:
+    for line in fileinput.input(inplace=True):
+        if "START=" in line or "END=" in line:
+            print(f"START={role}")
+        else:
+            print(line)
 
 
 def start_sfgwas() -> None:
