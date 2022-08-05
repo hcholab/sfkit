@@ -89,6 +89,13 @@ def update_ip_addresses_and_ports_in_config_fille(doc_ref_dict):
 
 
 def build_sfgwas() -> None:
+    # update main_test.go TODO: should be already done
+    for line in fileinput.input(files="sfgwas-private/main_test.go", inplace=True):
+        if "var defaultConfigPath = " in line:
+            print('var defaultConfigPath = "config/lungGCPFinal"')
+        else:
+            print(line, end="")
+
     print("\n\n Building sfgwas code \n\n")
     command = """cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private &&\
                 go build &&\
@@ -98,15 +105,19 @@ def build_sfgwas() -> None:
 
 
 def update_batch_run(role: str) -> None:
-    for line in fileinput.input(inplace=True):
-        if "START=" in line or "END=" in line:
+    for line in fileinput.input(files="sfgwas-private/batch_run.sh", inplace=True):
+        if "START=" in line:
             print(f"START={role}")
+        elif "END=" in line:
+            print(f"END={role}")
+        elif "TESTNAME=" in line:
+            print("TESTNAME=TestGwas")
         else:
-            print(line)
+            print(line, end="")
 
 
 def start_sfgwas() -> None:
     print("Begin SFGWAS protocol")
-    command = "bash batch_run.sh"
+    command = "cd sfgwas-private && bash batch_run.sh"
     run_command(command)
     print("\n\n Finished SFGWAS protocol \n\n")
