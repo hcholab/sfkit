@@ -19,7 +19,7 @@ Usage: sfkit <auth | setup_networking | generate_personal_keys | register_data |
 - setup_networking: Setup the networking, including your IP address and any relevant ports.
 - generate_personal_keys: Generate your public and private cryptographic keys for use in encrypting the data.
 - register_data: Register and validate your data.
-- encrypt_data: Encrypt your data.
+- encrypt_data: Encrypt your data. (used only in the MPC GWAS protocol)
 - run_protocol: Run the protocol. As this command may be long-running, it is recommended that you run it using nohup. This will prevent it from terminating if you close this window/terminal. For example, `nohup sfkit run_protocol & tail -f nohup.out`. You can also use a tool like screen or tmux.
 
 ### Questions

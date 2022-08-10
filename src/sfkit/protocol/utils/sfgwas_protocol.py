@@ -7,16 +7,18 @@ from sfkit.protocol.utils.helper_functions import run_command
 
 
 def run_sfgwas_protocol(doc_ref_dict: dict, role: str) -> None:
-    print("\n\n Begin running SFGWAS protocol \n\n")
+    configuration = "lungPgen"
+
+    print(f"Begin running SFGWAS protocol with {configuration} configuration.")
     install_sfgwas()
-    update_config_files(doc_ref_dict, role)
-    build_sfgwas()
+    update_config_files(doc_ref_dict, role, configuration)
+    build_sfgwas(configuration)
     update_batch_run(role)
     start_sfgwas()
 
 
 def install_sfgwas() -> None:
-    print("\n\n Begin installing dependencies \n\n")
+    print("Begin installing dependencies")
     commands = """sudo apt-get update -y
                     sudo apt-get install python3-pip wget git -y
                     sudo wget https://golang.org/dl/go1.18.1.linux-amd64.tar.gz
@@ -28,36 +30,42 @@ def install_sfgwas() -> None:
         run_command(command)
 
     if os.path.isdir("lattigo"):
-        print("\n\n lattigo already exists \n\n")
+        print("lattigo already exists")
     else:
-        print("\n\n Installing lattigo \n\n")
+        print("Installing lattigo")
         run_command("git clone https://github.com/hcholab/lattigo && cd lattigo && git switch lattigo_pca")
 
     if os.path.isdir("mpc-core"):
-        print("\n\n mpc-core already exists \n\n")
+        print("mpc-core already exists")
     else:
-        print("\n\n Installing mpc-core \n\n")
+        print("Installing mpc-core")
         run_command("git clone https://github.com/hhcho/mpc-core")
 
     if os.path.isdir("sfgwas-private"):
-        print("\n\n sfgwas-private already exists \n\n")
+        print("sfgwas-private already exists")
     else:
-        print("\n\n Installing sfgwas-private \n\n")
+        print("Installing sfgwas-private")
         run_command("git clone https://github.com/hhcho/sfgwas-private && cd sfgwas-private && git switch release")
 
-    print("\n\n Finished installing dependencies \n\n")
+    print("Finished installing dependencies")
 
 
-def update_config_files(doc_ref_dict: dict, role: str) -> None:
-    print("\n\n Begin updating config files \n\n")
-    update_data_path_in_config_file(role)
-    update_ip_addresses_and_ports_in_config_fille(doc_ref_dict)
+def update_config_files(doc_ref_dict: dict, role: str, configuration: str) -> None:
+    print("Begin updating config files")
+    if role != "0":
+        data_path_path = os.path.join(constants.sfkit_DIR, "data_path.txt")
+        with open(data_path_path, "r") as f:
+            data_path = f.readline().rstrip()
+        if configuration == "lungGCPFinal":
+            update_data_path_in_config_file_lungGCPFinal(role, data_path)
+        elif configuration == "lungPgen":
+            update_data_path_in_config_file_lungPgen(role, data_path)
+        else:
+            raise ValueError(f"unknown configuration: {configuration}")
+    update_ip_addresses_and_ports_in_config_fille(doc_ref_dict, configuration)
 
 
-def update_data_path_in_config_file(role: str) -> None:
-    data_path_path = os.path.join(constants.sfkit_DIR, "data_path.txt")
-    with open(data_path_path, "r") as f:
-        data_path = f.readline().rstrip()
+def update_data_path_in_config_file_lungGCPFinal(role: str, data_path: str) -> None:
     config_file_path = f"sfgwas-private/config/lungGCPFinal/configLocal.Party{role}.toml"
     data = toml.load(config_file_path)
     data["geno_binary_file_prefix"] = f"{data_path}/lung_split/geno_party{role}"
@@ -69,9 +77,27 @@ def update_data_path_in_config_file(role: str) -> None:
         toml.dump(data, f)
 
 
-def update_ip_addresses_and_ports_in_config_fille(doc_ref_dict):
-    config_file_path = "sfgwas-private/config/lungGCPFinal/configGlobal.toml"
+def update_data_path_in_config_file_lungPgen(role: str, data_path: str) -> None:
+    config_file_path = f"sfgwas-private/config/lungPgen/configLocal.Party{role}.toml"
     data = toml.load(config_file_path)
+    data["geno_binary_file_prefix"] = f"{data_path}/lung/pgen_converted/party{role}/geno/lung_party{role}_chr%d"
+    data["geno_block_size_file"] = f"{data_path}/lung/pgen_converted/party{role}/chrom_sizes.txt"
+    data["pheno_file"] = f"{data_path}/lung/pgen_converted/party{role}/pheno_party{role}.txt"
+    data["covar_file"] = f"{data_path}/lung/pgen_converted/party{role}/cov_party{role}.txt"
+    data["snp_position_file"] = f"{data_path}/lung/pgen_converted/party{role}/snp_pos.txt"
+    data["sample_keep_file"] = f"{data_path}/lung/pgen_converted/party{role}/sample_keep.txt"
+    data["snp_ids_file"] = f"{data_path}/lung/pgen_converted/party{role}/snp_ids.txt"
+    data["geno_count_file"] = f"{data_path}/lung/pgen_converted/party{role}/all.gcount.transpose.bin"
+    with open(config_file_path, "w") as f:
+        toml.dump(data, f)
+
+
+def update_ip_addresses_and_ports_in_config_fille(doc_ref_dict: dict, configuration: str) -> None:
+    config_file_path = f"sfgwas-private/config/{configuration}/configGlobal.toml"
+    data = toml.load(config_file_path)
+
+    data["use_precomputed_geno_count"] = True
+    data["num_inds"] = [0, 4585, 4513]
 
     for i, participant in enumerate(doc_ref_dict["participants"]):
         ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
@@ -88,20 +114,20 @@ def update_ip_addresses_and_ports_in_config_fille(doc_ref_dict):
         toml.dump(data, f)
 
 
-def build_sfgwas() -> None:
+def build_sfgwas(configuration: str) -> None:
     # update main_test.go TODO: should be already done
     for line in fileinput.input(files="sfgwas-private/main_test.go", inplace=True):
         if "var defaultConfigPath = " in line:
-            print('var defaultConfigPath = "config/lungGCPFinal"')
+            print(f'var defaultConfigPath = "config/{configuration}"')
         else:
             print(line, end="")
 
-    print("\n\n Building sfgwas code \n\n")
+    print("Building sfgwas code")
     command = """cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private &&\
                 go build &&\
                 mkdir -p stdout"""
     run_command(command)
-    print("\n\n Finished building sfgwas code \n\n")
+    print("Finished building sfgwas code")
 
 
 def update_batch_run(role: str) -> None:
@@ -120,4 +146,4 @@ def start_sfgwas() -> None:
     print("Begin SFGWAS protocol")
     command = "cd sfgwas-private && bash batch_run.sh"
     run_command(command)
-    print("\n\n Finished SFGWAS protocol \n\n")
+    print("Finished SFGWAS protocol")

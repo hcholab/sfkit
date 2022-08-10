@@ -13,9 +13,19 @@ PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
 # DATA_VALIDATION_CONSTANT = 4 * len(BASE_P)
 GWAS_RAW_INPUT_FILES = ["cov.txt", "geno.txt", "pheno.txt", "pos.txt"]
 SFGWAS_INPUT_FILES = ["geno_party", "pheno_party", "cov_party", "pos.txt"]
+SFGWAS_PGEN_INPUT_FILES = [
+    "_chr",
+    "chrom_sizes.txt",
+    "pheno_party",
+    "cov_party",
+    "snp_pos.txt",
+    "snp_ids.txt",
+    "all.gcount.transpose.bin",
+]
 NEEDED_INPUT_FILES = {
     "GWAS": GWAS_RAW_INPUT_FILES,
     "SFGWAS": SFGWAS_INPUT_FILES,
+    "SFGWAS_pgen": SFGWAS_PGEN_INPUT_FILES,
 }
 sfkit_DIR = os.path.expanduser("~/.config/sfkit")
 AUTH_FILE = os.path.join(sfkit_DIR, "auth.txt")

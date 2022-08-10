@@ -1,3 +1,4 @@
+import glob
 import os
 import time
 
@@ -35,21 +36,28 @@ def register_data() -> bool:
 
 def validate_data(data_path: str, study_type: str, role: str = "") -> int:
     print(f"Validating data for {study_type} study...")
-    files_list = list(os.walk(data_path))  # consider using glob.glob
-    # check that we have all the necessary files
-    for needed_file in constants.NEEDED_INPUT_FILES[study_type]:
+
+    files_list = glob.glob(f"{data_path}/**", recursive=True)
+    pgen = "pgen" if any(f.endswith(".pgen") for f in files_list) else ""
+    for needed_file in constants.NEEDED_INPUT_FILES[f"{study_type}_{pgen}"]:
         if all(needed_file not in str(file) for file in files_list):
             print(f"You are missing the file {needed_file}.")
             exit(1)
 
-    if study_type == "GWAS":
-        rows = sum(1 for _ in open(os.path.join(data_path, "cov.txt")))
-        assert rows == sum(1 for _ in open(os.path.join(data_path, "geno.txt")))
-        assert rows == sum(1 for _ in open(os.path.join(data_path, "pheno.txt")))
+    if pgen:
+        pheno_party_file = next(f for f in files_list if f.endswith(f"pheno_party{role}.txt"))
+        rows = sum(1 for _ in open(pheno_party_file))
+        cov_party_file = next(f for f in files_list if f.endswith(f"cov_party{role}.txt"))
+        assert rows == sum(1 for _ in open(cov_party_file))
         return rows
     elif study_type == "SFGWAS":
         rows = sum(1 for _ in open(os.path.join(data_path, f"lung_split/pheno_party{role}.txt")))
         assert rows == sum(1 for _ in open(os.path.join(data_path, f"lung_split/cov_party{role}.txt")))
+        return rows
+    elif study_type == "GWAS":
+        rows = sum(1 for _ in open(os.path.join(data_path, "cov.txt")))
+        assert rows == sum(1 for _ in open(os.path.join(data_path, "geno.txt")))
+        assert rows == sum(1 for _ in open(os.path.join(data_path, "pheno.txt")))
         return rows
     else:
         print("Unknown study type.")

@@ -23,7 +23,7 @@ def main():
     subparsers.add_parser("register_data", help="Register and validate your data.")
     runprotocol = subparsers.add_parser(
         "run_protocol",
-        help="Run the protocol. As this command may be long-running, it is recommended that you run it using nohup. This will prevent it from terminating if you close this window/terminal. For example, `nohup sfkit run_protocol & tail -f nohup.out`. You can also use a tool like screen or tmux",
+        help="Run the protocol. As this command may be long-running, it is recommended that you run it using nohup (`touch nohup.out; nohup sfkit run_protocol & tail -f nohup.out`) or a tool like screen or tmux",
     )
     runprotocol.add_argument("--study_title", help=argparse.SUPPRESS)
     args = parser.parse_args()
