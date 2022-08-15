@@ -40,7 +40,7 @@ def auth():
         exit(1)
 
     # if path to constants.AUTH_FILE does not exist, create it
-    os.makedirs(constants.sfkit_DIR, exist_ok=True)
+    os.makedirs(constants.SFKIT_DIR, exist_ok=True)
     with open(constants.AUTH_FILE, "w") as f:
         f.write(user_email + "\n")
         f.write(study_title + "\n")

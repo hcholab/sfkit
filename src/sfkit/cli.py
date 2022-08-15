@@ -4,7 +4,6 @@ from sfkit.auth.auth import auth
 from sfkit.auth.setup_networking import setup_networking
 from sfkit.encryption_keys.encrypt_data import encrypt_data
 from sfkit.encryption_keys.generate_personal_keys import generate_personal_keys
-from sfkit.encryption_keys.generate_shared_key import generate_shared_key
 from sfkit.protocol.register_data import register_data
 from sfkit.protocol.run_protocol import run_protocol
 
@@ -17,11 +16,11 @@ def main():
         "setup_networking", help="Setup the networking, including your IP address and any relevant ports"
     )
     subparsers.add_parser("encrypt_data", help="Encrypt your MPC-GWAS data")
-    subparsers.add_parser(
+    generatepersonalkeys = subparsers.add_parser(
         "generate_personal_keys",
         help="Generate your public and private cryptographic keys for use in encrypting the data",
     )
-    subparsers.add_parser("generate_shared_key", help="Generate the shared key for SFGWAS")
+    generatepersonalkeys.add_argument("--study_title", help=argparse.SUPPRESS)
     subparsers.add_parser("register_data", help="Register and validate your data.")
     runprotocol = subparsers.add_parser(
         "run_protocol",
@@ -35,18 +34,15 @@ def main():
     elif args.command == "setup_networking":
         setup_networking()
     elif args.command == "generate_personal_keys":
-        generate_personal_keys()
-    elif args.command == "generate_shared_key":
-        generate_shared_key()
+        study_title: str = args.study_title or ""
+        generate_personal_keys(study_title)
     elif args.command == "encrypt_data":
         encrypt_data()
     elif args.command == "register_data":
         register_data()
     elif args.command == "run_protocol":
-        if args.study_title:
-            run_protocol(study_title=args.study_title)
-        else:
-            run_protocol()
+        study_title: str = args.study_title or ""
+        run_protocol(study_title)
     else:
         parser.print_help()
 

@@ -27,7 +27,7 @@ def register_data() -> bool:
     data_hash = checksumdir.dirhash(data_path, "md5")
     gcloudPubsub.publish(f"update_firestore::DATA_HASH={data_hash}::{study_title}::{email}")
 
-    with open(os.path.join(constants.sfkit_DIR, "data_path.txt"), "w") as f:
+    with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "w") as f:
         f.write(data_path + "\n")
 
     print("Successfully registered and validated data!")
@@ -48,7 +48,9 @@ def validate_data(data_path: str, study_type: str, role: str = "") -> int:
         cov_party_file = next(f for f in files_list if f.endswith(f"cov_party{role}.txt"))
         assert rows == num_rows(cov_party_file)
 
-        return num_rows(next(f for f in files_list if f.endswith("sample_keep.txt")))
+        result = num_rows(next(f for f in files_list if f.endswith("sample_keep.txt")))
+        print("The number of rows in the sample_keep file is: ", result)
+        return result
     elif study_type == "SFGWAS":
         rows = num_rows(os.path.join(data_path, f"lung_split/pheno_party{role}.txt"))
         assert rows == num_rows(os.path.join(data_path, f"lung_split/cov_party{role}.txt"))

@@ -15,7 +15,7 @@ def run_protocol(study_title: str = "") -> None:
         email = "Broad"
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
 
-    doc_ref_dict: dict = doc_ref.get().to_dict()  # type: ignore
+    doc_ref_dict: dict = doc_ref.get().to_dict() or {}
     role: str = str(doc_ref_dict["participants"].index(email))
     study_type: str = doc_ref_dict["type"]
     statuses: dict = doc_ref_dict["status"]
@@ -29,20 +29,19 @@ def run_protocol(study_title: str = "") -> None:
         gcloudPubsub.publish(f"update_firestore::status=ready::{study_title}::{email}")
     while any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"]):
         print("The other participant is not yet ready.  Waiting... (press CTRL-C to cancel)")
-
         time.sleep(5)
         statuses = doc_ref.get().to_dict()["status"]  # type: ignore
     if statuses[email] == ["ready"]:
-        gcloudPubsub.publish(f"update_firestore::status=running::{study_title}::{email}")
-
         if role == "1":
             print("Asking cp0 to set up their part as well...")
-            time.sleep(1)
             gcloudPubsub.publish(f"run_protocol_for_cp0::{study_title}")
+
+        time.sleep(1)
+        gcloudPubsub.publish(f"update_firestore::status=running::{study_title}::{email}")
         if study_type in {"GWAS", "gwas"}:
             run_gwas_protocol(doc_ref_dict, role)
         elif study_type in {"SFGWAS", "sfgwas"}:
-            run_sfgwas_protocol(doc_ref_dict, role)
+            run_sfgwas_protocol(doc_ref, role)
     else:
         print("You status is not ready.  Exiting now.")
         return

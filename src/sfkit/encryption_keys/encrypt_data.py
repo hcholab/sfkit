@@ -1,3 +1,5 @@
+# for MPC GWAS
+
 import os
 import shutil
 import sys
@@ -67,7 +69,7 @@ def encrypt_GMP(prng, input_dir, output_dir="./encrypted_data"):  # sourcery ski
     p_file.close()
 
 
-def get_shared_keys(my_private_key, other_public_key, debug=False):
+def get_shared_mpcgwas_keys(my_private_key, other_public_key, debug=False):
     """
     Given the private key of the user and the public key of the other user, generate 2 shared keys.
     The first is for the user with role 1 and the second is for the user with role 2.
@@ -114,14 +116,14 @@ def encrypt_data() -> None:
     other_public_key = PublicKey(other_public_key, encoder=HexEncoder)
 
     print("Generating shared keys...")
-    private_key_path = os.path.join(constants.sfkit_DIR, "my_private_key.txt")
+    private_key_path = os.path.join(constants.SFKIT_DIR, "my_private_key.txt")
     with open(private_key_path, "r") as f:
         my_private_key = PrivateKey(f.readline().rstrip(), encoder=HexEncoder)  # type: ignore
     assert my_private_key != other_public_key, "Private and public keys must be different"
 
-    shared_keys = get_shared_keys(my_private_key, other_public_key)
+    shared_keys = get_shared_mpcgwas_keys(my_private_key, other_public_key)
 
-    input_dir_path = os.path.join(constants.sfkit_DIR, "data_path.txt")
+    input_dir_path = os.path.join(constants.SFKIT_DIR, "data_path.txt")
     with open(input_dir_path, "r") as f:
         input_dir = f.readline().rstrip()
 

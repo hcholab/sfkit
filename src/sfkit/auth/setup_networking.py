@@ -22,7 +22,7 @@ def setup_networking():
 
     # get port from user if role 1
     if role == "1":
-        port = input("Enter the port number you want to use: ")  # used to communicate with P2
+        port = input("Enter the port number you want to use (recommended is 8060): ")  # used to communicate with P2
         ports = ["null", "null", port]
         gcloudPubsub.publish(f"update_firestore::PORTS={','.join(ports)}::{study_title}::{email}")
 
