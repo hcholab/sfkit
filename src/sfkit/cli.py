@@ -4,6 +4,7 @@ from sfkit.auth.auth import auth
 from sfkit.auth.setup_networking import setup_networking
 from sfkit.encryption_keys.encrypt_data import encrypt_data
 from sfkit.encryption_keys.generate_personal_keys import generate_personal_keys
+from sfkit.encryption_keys.generate_shared_key import generate_shared_key
 from sfkit.protocol.register_data import register_data
 from sfkit.protocol.run_protocol import run_protocol
 
@@ -15,11 +16,12 @@ def main():
     subparsers.add_parser(
         "setup_networking", help="Setup the networking, including your IP address and any relevant ports"
     )
-    subparsers.add_parser("encrypt_data", help="Encrypt your data")
+    subparsers.add_parser("encrypt_data", help="Encrypt your MPC-GWAS data")
     subparsers.add_parser(
         "generate_personal_keys",
         help="Generate your public and private cryptographic keys for use in encrypting the data",
     )
+    subparsers.add_parser("generate_shared_key", help="Generate the shared key for SFGWAS")
     subparsers.add_parser("register_data", help="Register and validate your data.")
     runprotocol = subparsers.add_parser(
         "run_protocol",
@@ -34,6 +36,8 @@ def main():
         setup_networking()
     elif args.command == "generate_personal_keys":
         generate_personal_keys()
+    elif args.command == "generate_shared_key":
+        generate_shared_key()
     elif args.command == "encrypt_data":
         encrypt_data()
     elif args.command == "register_data":
