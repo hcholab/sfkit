@@ -11,6 +11,7 @@ def setup_networking():
     # send pubsub to the website with my ip address and port
     # internal_ip_address: str = socket.gethostbyname(socket.gethostname()) # this is internal ip_address
     external_ip_address: str = get("https://api.ipify.org").content.decode("utf-8")
+    print("Using external ip address:", external_ip_address)
 
     print("Processing...")
 

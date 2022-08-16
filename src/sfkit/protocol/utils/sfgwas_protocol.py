@@ -101,14 +101,15 @@ def update_config_files(doc_ref, role: str, configuration: str) -> None:
     doc_ref_dict: dict = doc_ref.get().to_dict() or {}
     print("Begin updating config files")
     data_path_path: str = os.path.join(constants.SFKIT_DIR, "data_path.txt")
-    data_path: str = ""
+    geno_file_prefix, data_path = "", ""
     if role != "0":
         with open(data_path_path, "r") as f:
+            geno_file_prefix = f.readline().rstrip()
             data_path = f.readline().rstrip()
     if configuration == "lungGCPFinal":
         update_data_path_in_config_file_lungGCPFinal(role, data_path)
     elif configuration == "lungPgen":
-        update_data_path_in_config_file_lungPgen(role, data_path)
+        update_data_path_in_config_file_lungPgen(role, geno_file_prefix, data_path)
     else:
         raise ValueError(f"unknown configuration: {configuration}")
     update_configGlobal(doc_ref_dict, configuration)
@@ -127,19 +128,19 @@ def update_data_path_in_config_file_lungGCPFinal(role: str, data_path: str) -> N
             toml.dump(data, f)
 
 
-def update_data_path_in_config_file_lungPgen(role: str, data_path: str) -> None:
+def update_data_path_in_config_file_lungPgen(role: str, geno_file_prefix, data_path: str) -> None:
     config_file_path = f"sfgwas-private/config/lungPgen/configLocal.Party{role}.toml"
     data = toml.load(config_file_path)
 
     if role != "0":
-        data["geno_binary_file_prefix"] = f"{data_path}/lung/pgen_converted/party{role}/geno/lung_party{role}_chr%d"
-        data["geno_block_size_file"] = f"{data_path}/lung/pgen_converted/party{role}/chrom_sizes.txt"
-        data["pheno_file"] = f"{data_path}/lung/pgen_converted/party{role}/pheno_party{role}.txt"
-        data["covar_file"] = f"{data_path}/lung/pgen_converted/party{role}/cov_party{role}.txt"
-        data["snp_position_file"] = f"{data_path}/lung/pgen_converted/party{role}/snp_pos.txt"
-        data["sample_keep_file"] = f"{data_path}/lung/pgen_converted/party{role}/sample_keep.txt"
-        data["snp_ids_file"] = f"{data_path}/lung/pgen_converted/party{role}/snp_ids.txt"
-        data["geno_count_file"] = f"{data_path}/lung/pgen_converted/party{role}/all.gcount.transpose.bin"
+        data["geno_binary_file_prefix"] = f"{geno_file_prefix}"
+        data["geno_block_size_file"] = f"{data_path}/chrom_sizes.txt"
+        data["pheno_file"] = f"{data_path}/pheno.txt"
+        data["covar_file"] = f"{data_path}/cov.txt"
+        data["snp_position_file"] = f"{data_path}/snp_pos.txt"
+        data["sample_keep_file"] = f"{data_path}/sample_keep.txt"
+        data["snp_ids_file"] = f"{data_path}/snp_ids.txt"
+        data["geno_count_file"] = f"{data_path}/all.gcount.transpose.bin"
 
     data["shared_keys_path"] = constants.SFKIT_DIR
 
@@ -151,9 +152,8 @@ def update_configGlobal(doc_ref_dict: dict, configuration: str) -> None:
     config_file_path = f"sfgwas-private/config/{configuration}/configGlobal.toml"
     data = toml.load(config_file_path)
 
-    # TODO: remove these when the config files are already upadated?
-    data["use_precomputed_geno_count"] = True
-    data["num_inds"] = [0, 4585, 4513]
+    # data["use_precomputed_geno_count"] = True
+    # data["num_inds"] = [0, 4585, 4513]
 
     print("Checking NUM_INDS")
     for i, participant in enumerate(doc_ref_dict["participants"]):
@@ -179,19 +179,17 @@ def update_configGlobal(doc_ref_dict: dict, configuration: str) -> None:
 
 
 def build_sfgwas(configuration: str) -> None:
-    # update main_test.go TODO: should be already done
-    for line in fileinput.input(files="sfgwas-private/main_test.go", inplace=True):
-        if "var defaultConfigPath = " in line:
-            print(f'var defaultConfigPath = "config/{configuration}"')
-        elif "func TestGwas(t *testing.T) {" in line:
-            print("func TestGwasSimonDemo(t *testing.T) {")
-        else:
-            print(line, end="")
+    # for line in fileinput.input(files="sfgwas-private/main_test.go", inplace=True):
+    # if "var defaultConfigPath = " in line:
+    #     print(f'var defaultConfigPath = "config/{configuration}"')
+    # elif "func TestGwas(t *testing.T) {" in line:
+    #     print("func TestGwasSimonDemo(t *testing.T) {")
+    # else:
+    #     print(line, end="")
 
     print("Building sfgwas code")
-    command = """source .bashrc && cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private &&\
-                go build &&\
-                mkdir -p stdout"""
+    run_command("pwd")
+    command = """source .bashrc && cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private && go build && mkdir -p stdout"""
     run_command(command)
     print("Finished building sfgwas code")
 
@@ -202,8 +200,8 @@ def update_batch_run(role: str) -> None:
             print(f"START={role}")
         elif "END=" in line:
             print(f"END={role}")
-        elif "TESTNAME=" in line:
-            print("TESTNAME=TestGwasSimonDemo")
+        # elif "TESTNAME=" in line:
+        #     print("TESTNAME=TestGwasSimonDemo")
         else:
             print(line, end="")
 

@@ -9,7 +9,7 @@ from sfkit.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
 from sfkit.protocol.utils.helper_functions import confirm_authentication
 
 
-def register_data() -> bool:
+def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     email, study_title = confirm_authentication()
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
@@ -18,7 +18,12 @@ def register_data() -> bool:
 
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
 
-    data_path = input("Enter the (absolute) path to your data files: ")
+    if not geno_binary_file_prefix:
+        geno_binary_file_prefix = input(
+            "Enter absolute path to geno binary file prefix (e.g. 'for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%d'): "
+        )
+    if not data_path:
+        data_path = input("Enter the (absolute) path to your data files: ")
     num_inds = validate_data(data_path, study_type, role=role)
     gcloudPubsub.publish(f"update_firestore::NUM_INDS={num_inds}::{study_title}::{email}")
     time.sleep(1)
@@ -28,6 +33,7 @@ def register_data() -> bool:
     gcloudPubsub.publish(f"update_firestore::DATA_HASH={data_hash}::{study_title}::{email}")
 
     with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "w") as f:
+        f.write(geno_binary_file_prefix + "\n")
         f.write(data_path + "\n")
 
     print("Successfully registered and validated data!")
@@ -43,9 +49,9 @@ def validate_data(data_path: str, study_type: str, role: str = "") -> int:
             print(f"You are missing the file {needed_file}.")
             exit(1)
     if pgen:
-        pheno_party_file = next(f for f in files_list if f.endswith(f"pheno_party{role}.txt"))
+        pheno_party_file = next(f for f in files_list if f.endswith("pheno.txt"))
         rows = num_rows(pheno_party_file)
-        cov_party_file = next(f for f in files_list if f.endswith(f"cov_party{role}.txt"))
+        cov_party_file = next(f for f in files_list if f.endswith("cov.txt"))
         assert rows == num_rows(cov_party_file)
 
         result = num_rows(next(f for f in files_list if f.endswith("sample_keep.txt")))
