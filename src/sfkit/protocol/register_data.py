@@ -10,6 +10,7 @@ from sfkit.protocol.utils.helper_functions import confirm_authentication
 
 
 def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
+
     email, study_title = confirm_authentication()
     doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
@@ -20,10 +21,20 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
 
     if not geno_binary_file_prefix:
         geno_binary_file_prefix = input(
-            "Enter absolute path to geno binary file prefix (e.g. 'for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%d'): "
-        )
+            f"Enter absolute path to geno binary file prefix (e.g. '/home/smendels/for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%d'): "
+        )  # sourcery skip: remove-redundant-fstring
+    if not os.path.isabs(geno_binary_file_prefix):
+        print("I need an ABSOLUTE path for the geno_binary_file_prefix.")
+        exit(1)
+    # if not os.path.exists(geno_binary_file_prefix):
+    #     print("I need a valid path for the geno_binary_file_prefix.")
+    #     exit(1)
+
     if not data_path:
-        data_path = input("Enter the (absolute) path to your data files: ")
+        data_path = input("Enter the (absolute) path to your data files (e.g. /home/smendels/for_sfgwas): ")
+    if not os.path.isabs(data_path):
+        print("I need an ABSOLUTE path for the data_path.")
+        exit(1)
     num_inds = validate_data(data_path, study_type, role=role)
     gcloudPubsub.publish(f"update_firestore::NUM_INDS={num_inds}::{study_title}::{email}")
     time.sleep(1)
@@ -52,11 +63,11 @@ def validate_data(data_path: str, study_type: str, role: str = "") -> int:
         pheno_party_file = next(f for f in files_list if f.endswith("pheno.txt"))
         rows = num_rows(pheno_party_file)
         cov_party_file = next(f for f in files_list if f.endswith("cov.txt"))
-        assert rows == num_rows(cov_party_file)
-
-        result = num_rows(next(f for f in files_list if f.endswith("sample_keep.txt")))
-        print("The number of rows in the sample_keep file is: ", result)
-        return result
+        assert rows == num_rows(cov_party_file), "pheno and cov files have different number of lines"
+        sample_keep_file = num_rows(next(f for f in files_list if f.endswith("sample_keep.txt")))
+        assert rows == sample_keep_file, "sample_keep and pheno/cov files have different number of lines"
+        print(f"The number of lines/rows is: {rows}")
+        return rows
     elif study_type == "SFGWAS":
         rows = num_rows(os.path.join(data_path, f"lung_split/pheno_party{role}.txt"))
         assert rows == num_rows(os.path.join(data_path, f"lung_split/cov_party{role}.txt"))

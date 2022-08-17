@@ -21,14 +21,16 @@ def main():
         help="Generate your public and private cryptographic keys for use in encrypting the data",
     )
     generatekeysparser.add_argument("--study_title", help=argparse.SUPPRESS)
-    registerdataparser = subparsers.add_parser("register_data", help="Register and validate your data.")
-    registerdataparser.add_argument(
-        "--geno_binary_file_prefix",
-        help="Path to the genotype binary file prefix (e.g. 'for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%d'",
+    registerdataparser = subparsers.add_parser(
+        "register_data", help="Register and validate your data.", description="Register and validate your data."
     )
     registerdataparser.add_argument(
+        "--geno_binary_file_prefix",
+        help="Path to the genotype binary file prefix (e.g. 'for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%%d'",
+    )  # two percent-signs to escape the first one
+    registerdataparser.add_argument(
         "--data_path",
-        help="Directory containing the data files (chrom_sizes.txt, pheno.txt, cov.txt, snp_pos.txt, sample_keep.txt, snp_ids.txt, all.gcount.transpose,bin)",
+        help="Directory containing the data files (chrom_sizes.txt, pheno.txt, cov.txt, snp_pos.txt, sample_keep.txt, snp_ids.txt, all.gcount.transpose.bin)",
     )
     runprotocol = subparsers.add_parser(
         "run_protocol",

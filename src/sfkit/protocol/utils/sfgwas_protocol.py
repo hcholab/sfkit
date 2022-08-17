@@ -1,6 +1,5 @@
 import fileinput
 import os
-import sys
 import time
 
 import toml
@@ -26,17 +25,19 @@ def run_sfgwas_protocol(doc_ref, role: str) -> None:
 
 def install_sfgwas() -> None:
     print("Begin installing dependencies")
-    commands = """sudo apt-get update -y
-                    sudo apt-get install python3-pip wget git zip unzip -y
-                    sudo wget https://golang.org/dl/go1.18.1.linux-amd64.tar.gz
-                    sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz
-                    sudo wget https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20220603.zip
-                    sudo unzip -o plink2_linux_avx2_20220603.zip -d /usr/local
-                    sudo echo 'export PATH=$PATH:/usr/local/' >> .bashrc 
-                    sudo echo 'export PATH=$PATH:/usr/local/go/bin' >> .bashrc 
-                    source .bashrc # cannot use sudo because source is a shell command, not an independent program
-                    sudo pip3 install numpy"""
-    for command in commands.split("\n"):
+    commands = [
+        "sudo apt-get update -y",
+        "sudo apt-get install python3-pip wget git zip unzip -y",
+        "sudo wget https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
+        "sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz",
+        "sudo wget https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20220603.zip",
+        "sudo unzip -o plink2_linux_avx2_20220603.zip -d /usr/local",
+        "sudo echo 'export PATH=$PATH:/usr/local/' >> .bashrc",
+        "sudo echo 'export PATH=$PATH:/usr/local/go/bin' >> .bashrc",
+        "source .bashrc # cannot use sudo because source is a shell command, not an independent program",
+        "sudo pip3 install numpy",
+    ]
+    for command in commands:
         run_command(command)
 
     if os.path.isdir("lattigo"):

@@ -12,7 +12,7 @@
 
 ## Usage
 
-Usage: sfkit <auth | setup_networking | generate_personal_keys | register_data | encrypt_data | run_protocol>
+Usage: sfkit <auth | setup_networking | generate_personal_keys | register_data | encrypt_data (MPC-only) | run_protocol>
 
 - auth: Authenticate with the CLI.
 - set_study (deprecated): Set the study you are using.
