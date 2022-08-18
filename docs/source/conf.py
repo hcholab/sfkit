@@ -1,5 +1,10 @@
 # Configuration file for the Sphinx documentation builder.
 
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath("../.."))
+
 # -- Project information
 
 project = "sfkit"
@@ -17,7 +22,10 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
+    "sphinxarg.ext",
 ]
+
+autosummary_generate = True
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),

@@ -34,6 +34,7 @@ def install_sfgwas() -> None:
         "sudo unzip -o plink2_linux_avx2_20220603.zip -d /usr/local",
         "sudo echo 'export PATH=$PATH:/usr/local/' >> .bashrc",
         "sudo echo 'export PATH=$PATH:/usr/local/go/bin' >> .bashrc",
+        "sudo echo 'export PYTHONUNBUFFERED=TRUE' >> .bashrc",
         "source .bashrc # cannot use sudo because source is a shell command, not an independent program",
         "sudo pip3 install numpy",
     ]

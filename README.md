@@ -2,6 +2,10 @@
 
 `sfkit` is a collection of CLI tools to help run certain types of secure multi-party computation on genomic data. It is a companion to the website [here](https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/).
 
+## Documentation
+
+You can read the full documentation [here](https://sfkit.readthedocs.io/en/latest/).
+
 ## Prerequisites
 
 [python3](https://www.python.org/downloads/)

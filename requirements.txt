@@ -7,6 +7,9 @@ google-cloud-storage
 ipaddr
 pydata_google_auth
 PyNaCl
+sphinx
+sphinx-rtd-theme
+sphinx-argparse
 tenacity
 toml
 tqdm

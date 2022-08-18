@@ -7,6 +7,10 @@ from sfkit.protocol.utils import constants
 
 
 def auth(sa_key_file: str, study_title: str) -> None:
+    """
+    Authenticate a GCP service account from the study with the sfkit CLI.
+    """
+
     if not sa_key_file:
         sa_key_file = input("Enter absolute path to service account private key file: ")
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_key_file

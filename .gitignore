@@ -12,3 +12,5 @@ old_code/
 practice.py
 .vscode
 */*.egg*
+dist/*
+docs/build/*
