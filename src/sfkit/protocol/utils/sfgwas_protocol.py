@@ -3,21 +3,21 @@ import os
 import time
 
 import toml
-from google.cloud import firestore
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
 from sfkit.protocol.utils import constants
 from sfkit.protocol.utils.helper_functions import run_command
+from sfkit.api import get_doc_ref_dict, get_github_token
 
 
-def run_sfgwas_protocol(doc_ref, role: str) -> None:
-    configuration = "lungPgen"
+def run_sfgwas_protocol(study_title: str, role: str) -> None:
+    configuration = "aouTest"
 
     print(f"Begin running SFGWAS protocol with {configuration} configuration.")
     install_sfgwas()
 
-    generate_shared_keys(doc_ref, int(role))
-    update_config_files(doc_ref, role, configuration)
+    generate_shared_keys(study_title, int(role))
+    update_config_files(study_title, role, configuration)
     build_sfgwas(configuration)
     update_batch_run(role)
     start_sfgwas()
@@ -26,17 +26,16 @@ def run_sfgwas_protocol(doc_ref, role: str) -> None:
 def install_sfgwas() -> None:
     print("Begin installing dependencies")
     commands = [
-        "sudo apt-get update -y",
-        "sudo apt-get install python3-pip wget git zip unzip -y",
-        "sudo wget https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
-        "sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz",
-        "sudo wget https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20220603.zip",
-        "sudo unzip -o plink2_linux_avx2_20220603.zip -d /usr/local",
-        "sudo echo 'export PATH=$PATH:/usr/local/' >> .bashrc",
-        "sudo echo 'export PATH=$PATH:/usr/local/go/bin' >> .bashrc",
-        "sudo echo 'export PYTHONUNBUFFERED=TRUE' >> .bashrc",
-        "source .bashrc # cannot use sudo because source is a shell command, not an independent program",
-        "sudo pip3 install numpy",
+        # "sudo apt-get update -y",
+        # "sudo apt-get install python3-pip wget git zip unzip -y",
+        "wget https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
+        "mkdir -p ~/local",
+        "tar -C ~/local -xzf go1.18.1.linux-amd64.tar.gz",
+        "wget https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20220603.zip",
+        "unzip -o plink2_linux_avx2_20220603.zip -d ~/local",
+        "echo 'export PATH=~/local:~/local/go/bin:$PATH' >> ~/.bashrc",
+        "echo 'export PYTHONUNBUFFERED=TRUE' >> ~/.bashrc",
+        "pip3 install numpy",
     ]
     for command in commands:
         run_command(command)
@@ -48,9 +47,7 @@ def install_sfgwas() -> None:
         run_command("git clone https://github.com/hcholab/lattigo && cd lattigo && git switch lattigo_pca")
 
     # need to get token since the repos are currently private
-    doc_ref = firestore.Client().collection("meta").document("token")
-    doc_ref_dict: dict = doc_ref.get().to_dict() or {}
-    [(username, token)] = doc_ref_dict.items()
+    [(username, token)] = get_github_token().items()
 
     if os.path.isdir("mpc-core"):
         print("mpc-core already exists")
@@ -69,8 +66,8 @@ def install_sfgwas() -> None:
     print("Finished installing dependencies")
 
 
-def generate_shared_keys(doc_ref, role: int) -> None:
-    doc_ref_dict: dict = doc_ref.get().to_dict() or {}
+def generate_shared_keys(study_title, role: int) -> None:
+    doc_ref_dict: dict = get_doc_ref_dict(study_title)
     print("Generating shared keys...")
 
     private_key_path = os.path.join(constants.SFKIT_DIR, "my_private_key.txt")
@@ -87,7 +84,7 @@ def generate_shared_keys(doc_ref, role: int) -> None:
             else:
                 print(f"No public key found for {other_email}.  Waiting...")
             time.sleep(5)
-            doc_ref_dict: dict = doc_ref.get().to_dict() or {}
+            doc_ref_dict: dict = get_doc_ref_dict(study_title)
             other_public_key_str: str = doc_ref_dict["personal_parameters"][other_email]["PUBLIC_KEY"]["value"]
         other_public_key = PublicKey(other_public_key_str.encode(), encoder=HexEncoder)
         assert my_private_key != other_public_key, "Private and public keys must be different"
@@ -99,8 +96,8 @@ def generate_shared_keys(doc_ref, role: int) -> None:
     print(f"Shared keys generated and saved to {constants.SFKIT_DIR}.")
 
 
-def update_config_files(doc_ref, role: str, configuration: str) -> None:
-    doc_ref_dict: dict = doc_ref.get().to_dict() or {}
+def update_config_files(study_title: str, role: str, configuration: str) -> None:
+    doc_ref_dict: dict = get_doc_ref_dict(study_title)
     print("Begin updating config files")
     data_path_path: str = os.path.join(constants.SFKIT_DIR, "data_path.txt")
     geno_file_prefix, data_path = "", ""
@@ -110,8 +107,8 @@ def update_config_files(doc_ref, role: str, configuration: str) -> None:
             data_path = f.readline().rstrip()
     if configuration == "lungGCPFinal":
         update_data_path_in_config_file_lungGCPFinal(role, data_path)
-    elif configuration == "lungPgen":
-        update_data_path_in_config_file_lungPgen(role, geno_file_prefix, data_path)
+    elif configuration == "aouTest":
+        update_data_path_in_config_file_aouTest(role, geno_file_prefix, data_path)
     else:
         raise ValueError(f"unknown configuration: {configuration}")
     update_configGlobal(doc_ref_dict, configuration)
@@ -130,8 +127,8 @@ def update_data_path_in_config_file_lungGCPFinal(role: str, data_path: str) -> N
             toml.dump(data, f)
 
 
-def update_data_path_in_config_file_lungPgen(role: str, geno_file_prefix, data_path: str) -> None:
-    config_file_path = f"sfgwas-private/config/lungPgen/configLocal.Party{role}.toml"
+def update_data_path_in_config_file_aouTest(role: str, geno_file_prefix, data_path: str) -> None:
+    config_file_path = f"sfgwas-private/config/aouTest/configLocal.Party{role}.toml"
     data = toml.load(config_file_path)
 
     if role != "0":
@@ -191,7 +188,7 @@ def build_sfgwas(configuration: str) -> None:
 
     print("Building sfgwas code")
     run_command("pwd")
-    command = """source .bashrc && cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private && go build && mkdir -p stdout"""
+    command = """source ~/.bashrc && cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private && go build && mkdir -p stdout"""
     run_command(command)
     print("Finished building sfgwas code")
 
@@ -202,14 +199,12 @@ def update_batch_run(role: str) -> None:
             print(f"START={role}")
         elif "END=" in line:
             print(f"END={role}")
-        # elif "TESTNAME=" in line:
-        #     print("TESTNAME=TestGwasSimonDemo")
         else:
             print(line, end="")
 
 
 def start_sfgwas() -> None:
     print("Begin SFGWAS protocol")
-    command = "source .bashrc && cd sfgwas-private && bash batch_run.sh"
+    command = "source ~/.bashrc && cd sfgwas-private && bash batch_run.sh"
     run_command(command)
     print("Finished SFGWAS protocol")

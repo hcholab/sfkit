@@ -1,15 +1,11 @@
 black
 checksumdir
-google-api-python-client
-google-cloud-firestore
-google-cloud-pubsub
-google-cloud-storage
+google-auth
 ipaddr
-pydata_google_auth
 PyNaCl
+requests
 sphinx
 sphinx-rtd-theme
 sphinx-argparse
-tenacity
 toml
 tqdm

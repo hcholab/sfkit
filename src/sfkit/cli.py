@@ -12,9 +12,8 @@ def main():
     args = parser.parse_args()
 
     if args.command == "auth":
-        sa_key = args.sa_key or ""
         study_title = args.study_title or ""
-        auth(sa_key, study_title)
+        auth(study_title)
     elif args.command == "networking":
         setup_networking()
     elif args.command == "generate_keys":

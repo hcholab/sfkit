@@ -1,5 +1,11 @@
 import os
 
+WEBSITE_URL = "https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app"
+METADATA_VM_IDENTITY_URL = (
+    "http://metadata.google.internal/computeMetadata/v1/"
+    "instance/service-accounts/default/identity?"
+    "audience={}&format={}&licenses={}"
+)
 SERVER_GCP_PROJECT = "broad-cho-priv1"
 SERVER_REGION = "us-central1"
 SERVER_ZONE = f"{SERVER_REGION}-a"

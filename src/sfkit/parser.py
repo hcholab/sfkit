@@ -5,7 +5,6 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Run workflow with sfkit.  Start with `sfkit auth` to authenticate.")
     subparsers = parser.add_subparsers(dest="command")
     authparser = subparsers.add_parser("auth", help="Authenticate with the CLI")
-    authparser.add_argument("--sa_key", help="Path to the service account key file")
     authparser.add_argument("--study_title", help=argparse.SUPPRESS)
     subparsers.add_parser("networking", help="Setup the networking, including your IP address and any relevant ports")
     subparsers.add_parser("encrypt_data", help="Encrypt your MPC-GWAS data")

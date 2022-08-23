@@ -7,15 +7,15 @@ import sys
 import checksumdir
 import nacl.secret
 import nacl.utils
-from google.cloud import firestore
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
 from sfkit.encryption_keys.random_number_generator import PseudoRandomNumberGenerator
-from tqdm import tqdm
 from sfkit.protocol.utils import constants
-
-from sfkit.protocol.utils.google_cloud_pubsub import GoogleCloudPubsub
 from sfkit.protocol.utils.helper_functions import confirm_authentication
+from sfkit.api import get_doc_ref_dict
+from tqdm import tqdm
+
+from sfkit.api import update_firestore
 
 BASE_P = 1461501637330902918203684832716283019655932542929
 
@@ -104,8 +104,7 @@ def encrypt_data() -> None:
     email, study_title = confirm_authentication()
 
     print("Downloading other party's public key...")
-    doc_ref = firestore.Client().collection("studies").document(study_title.replace(" ", "").lower())
-    doc_ref_dict = doc_ref.get().to_dict() or {}  # type: ignore
+    doc_ref_dict: dict = get_doc_ref_dict(study_title)
     role = doc_ref_dict["participants"].index(email)
     other_public_key = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][3 - role]]["PUBLIC_KEY"][
         "value"
@@ -137,8 +136,7 @@ def encrypt_data() -> None:
         f.write(shared_keys[3 - role])
     shutil.copyfile(f"{input_dir}/pos.txt", "./encrypted_data/pos.txt")
 
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, str(role), study_title)
-    gcloudPubsub.publish(f"update_firestore::status=not ready::{study_title}::{email}")
+    update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
 
     print("\n\nThe encryption is complete.")
 
