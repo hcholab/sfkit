@@ -3,15 +3,15 @@ import os
 
 import checksumdir
 from sfkit.protocol.utils import constants
-from sfkit.protocol.utils.helper_functions import confirm_authentication
+from sfkit.protocol.utils.helper_functions import get_authentication
 from sfkit.api import get_doc_ref_dict
 from sfkit.api import update_firestore
 
 
 def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
 
-    email, study_title = confirm_authentication()
-    doc_ref_dict: dict = get_doc_ref_dict(study_title)
+    email, study_title = get_authentication()
+    doc_ref_dict: dict = get_doc_ref_dict()
     role: str = str(doc_ref_dict["participants"].index(email))
     study_type: str = doc_ref_dict["type"]
 

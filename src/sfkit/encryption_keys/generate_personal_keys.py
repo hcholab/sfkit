@@ -3,7 +3,7 @@ import os
 from nacl.encoding import HexEncoder
 from nacl.public import PrivateKey
 from sfkit.protocol.utils import constants
-from sfkit.protocol.utils.helper_functions import confirm_authentication
+from sfkit.protocol.utils.helper_functions import get_authentication
 from sfkit.api import update_firestore
 
 
@@ -24,7 +24,7 @@ def generate_personal_keys(study_title: str = "") -> None:
         f.write(private_key.encode(encoder=HexEncoder).decode() + "\n")  # type: ignore
 
     if not study_title:
-        email, study_title = confirm_authentication()
+        email, study_title = get_authentication()
     else:
         email = "Broad"
 

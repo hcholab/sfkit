@@ -28,10 +28,10 @@ def install_sfgwas() -> None:
     commands = [
         # "sudo apt-get update -y",
         # "sudo apt-get install python3-pip wget git zip unzip -y",
-        "wget https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
+        "wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
         "mkdir -p ~/local",
         "tar -C ~/local -xzf go1.18.1.linux-amd64.tar.gz",
-        "wget https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20220603.zip",
+        "wget -nc https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20220603.zip",
         "unzip -o plink2_linux_avx2_20220603.zip -d ~/local",
         "echo 'export PATH=~/local:~/local/go/bin:$PATH' >> ~/.bashrc",
         "echo 'export PYTHONUNBUFFERED=TRUE' >> ~/.bashrc",
@@ -67,7 +67,7 @@ def install_sfgwas() -> None:
 
 
 def generate_shared_keys(study_title, role: int) -> None:
-    doc_ref_dict: dict = get_doc_ref_dict(study_title)
+    doc_ref_dict: dict = get_doc_ref_dict()
     print("Generating shared keys...")
 
     private_key_path = os.path.join(constants.SFKIT_DIR, "my_private_key.txt")
@@ -84,7 +84,7 @@ def generate_shared_keys(study_title, role: int) -> None:
             else:
                 print(f"No public key found for {other_email}.  Waiting...")
             time.sleep(5)
-            doc_ref_dict: dict = get_doc_ref_dict(study_title)
+            doc_ref_dict: dict = get_doc_ref_dict()
             other_public_key_str: str = doc_ref_dict["personal_parameters"][other_email]["PUBLIC_KEY"]["value"]
         other_public_key = PublicKey(other_public_key_str.encode(), encoder=HexEncoder)
         assert my_private_key != other_public_key, "Private and public keys must be different"
@@ -97,7 +97,8 @@ def generate_shared_keys(study_title, role: int) -> None:
 
 
 def update_config_files(study_title: str, role: str, configuration: str) -> None:
-    doc_ref_dict: dict = get_doc_ref_dict(study_title)
+    # sourcery skip: switch
+    doc_ref_dict: dict = get_doc_ref_dict()
     print("Begin updating config files")
     data_path_path: str = os.path.join(constants.SFKIT_DIR, "data_path.txt")
     geno_file_prefix, data_path = "", ""
@@ -166,9 +167,9 @@ def update_configGlobal(doc_ref_dict: dict, configuration: str) -> None:
         ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
         data["servers"][f"party{i}"]["ipaddr"] = ip_addr
 
-    _, p1, p2 = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][0]]["PORTS"]["value"].split(",")
-    data["servers"]["party0"]["ports"]["party1"] = p1
-    data["servers"]["party0"]["ports"]["party2"] = p2
+    # _, p1, p2 = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][0]]["PORTS"]["value"].split(",")
+    # data["servers"]["party0"]["ports"]["party1"] = p1
+    # data["servers"]["party0"]["ports"]["party2"] = p2
 
     _, _, p2 = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][1]]["PORTS"]["value"].split(",")
     data["servers"]["party1"]["ports"]["party2"] = p2
@@ -188,7 +189,8 @@ def build_sfgwas(configuration: str) -> None:
 
     print("Building sfgwas code")
     run_command("pwd")
-    command = """source ~/.bashrc && cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private && go build && mkdir -p stdout"""
+    run_command("source ~/.bashrc")
+    command = """source ~/.bashrc; cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private && go build && mkdir -p stdout"""
     run_command(command)
     print("Finished building sfgwas code")
 

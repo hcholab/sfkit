@@ -4,7 +4,7 @@ from sfkit.protocol.utils import constants
 from typing import Tuple
 
 
-def confirm_authentication() -> Tuple[str, str]:
+def get_authentication() -> Tuple[str, str]:
     with open(constants.AUTH_FILE, "r") as f:
         email = f.readline().rstrip()
         study_title = f.readline().rstrip()

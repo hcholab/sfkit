@@ -1,11 +1,11 @@
 from requests import get
-from sfkit.protocol.utils.helper_functions import confirm_authentication
+from sfkit.protocol.utils.helper_functions import get_authentication
 from sfkit.api import get_doc_ref_dict
 from sfkit.api import update_firestore
 
 
 def setup_networking():
-    email, study_title = confirm_authentication()
+    email, study_title = get_authentication()
 
     # internal_ip_address: str = socket.gethostbyname(socket.gethostname()) # this is internal ip_address
     external_ip_address: str = get("https://api.ipify.org").content.decode("utf-8")
@@ -13,7 +13,7 @@ def setup_networking():
 
     print("Processing...")
 
-    doc_ref_dict: dict = get_doc_ref_dict(study_title)
+    doc_ref_dict: dict = get_doc_ref_dict()
     role: str = str(doc_ref_dict["participants"].index(email))
     update_firestore(f"update_firestore::IP_ADDRESS={external_ip_address}::{study_title}::{email}")
 

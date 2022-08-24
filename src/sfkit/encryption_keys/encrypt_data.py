@@ -11,7 +11,7 @@ from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
 from sfkit.encryption_keys.random_number_generator import PseudoRandomNumberGenerator
 from sfkit.protocol.utils import constants
-from sfkit.protocol.utils.helper_functions import confirm_authentication
+from sfkit.protocol.utils.helper_functions import get_authentication
 from sfkit.api import get_doc_ref_dict
 from tqdm import tqdm
 
@@ -101,10 +101,10 @@ def get_shared_mpcgwas_keys(my_private_key, other_public_key, debug=False):
 
 
 def encrypt_data() -> None:
-    email, study_title = confirm_authentication()
+    email, study_title = get_authentication()
 
     print("Downloading other party's public key...")
-    doc_ref_dict: dict = get_doc_ref_dict(study_title)
+    doc_ref_dict: dict = get_doc_ref_dict()
     role = doc_ref_dict["participants"].index(email)
     other_public_key = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][3 - role]]["PUBLIC_KEY"][
         "value"

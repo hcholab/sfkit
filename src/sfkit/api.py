@@ -1,9 +1,14 @@
 import requests
 
 from sfkit.protocol.utils import constants
+from sfkit.protocol.utils.helper_functions import get_authentication
 
 
-def website_get(request_type: str, params: dict) -> requests.Response:
+def website_get(request_type: str, params: dict, user_auth=True) -> requests.Response:
+    if user_auth:
+        user, study_title = get_authentication()
+        params |= {"study_title": study_title.replace(" ", "").lower(), "user": user}
+
     url = f"{constants.WEBSITE_URL}/{request_type}"
     headers = {
         "Authorization": f"Bearer {generate_jwt()}",
@@ -12,13 +17,13 @@ def website_get(request_type: str, params: dict) -> requests.Response:
     return requests.get(url, headers=headers, params=params)
 
 
-def get_doc_ref_dict(study_title: str) -> dict:
-    response = website_get("get_doc_ref_dict", {"study_title": study_title.replace(" ", "").lower()})
+def get_doc_ref_dict() -> dict:
+    response = website_get("get_doc_ref_dict", {})
     return response.json()
 
 
 def get_study_options() -> list:
-    response = website_get("get_study_options", {})
+    response = website_get("get_study_options", {}, user_auth=False)
     return response.json().get("options")
 
 
