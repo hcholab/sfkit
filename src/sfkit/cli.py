@@ -27,7 +27,8 @@ def main():
         register_data(geno_binary_file_prefix, data_path)
     elif args.command == "run_protocol":
         study_title: str = args.study_title or ""
-        run_protocol(study_title)
+        phase: str = args.phase or ""
+        run_protocol(study_title, phase)
     else:
         parser.print_help()
 

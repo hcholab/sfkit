@@ -16,7 +16,9 @@ def auth(study_title: str) -> None:
 
         options = get_study_options()
         if not options:
-            print("Error finding your study.  Please make sure you are part of a study.")
+            print(
+                "Error finding your study.  Please make sure you are part of a study and have uploaded your service account email to the website."
+            )
             exit(1)
         if len(options) == 1:
             study_title, user_email = options[0]

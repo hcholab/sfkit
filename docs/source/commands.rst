@@ -63,7 +63,7 @@ Encrypt your data (used only in the MPC GWAS protocol).
 run_protocol
 ------------
 
-Run the protocol. As this command may be long-running, it is recommended that you run it using nohup. This will prevent it from terminating if you close this window/terminal. For example, :code:`nohup sfkit run_protocol & tail -f nohup.out`. You can also use a tool like screen or tmux.
+Run the protocol. As this command may be long-running, it is recommended that you run it using nohup or a tool like screen or tmux to prevent it from terminating if you close this window/terminal. For example, :code:`nohup sfkit run_protocol`.
 
 .. code-block:: console
    

@@ -17,9 +17,13 @@ def setup_networking():
     role: str = str(doc_ref_dict["participants"].index(email))
     update_firestore(f"update_firestore::IP_ADDRESS={external_ip_address}::{study_title}::{email}")
 
-    # get port from user if role 1
-    if role == "1":
-        port = input("Enter the port number you want to use (recommended is 8060): ")  # used to communicate with P2
+    if role == "0":
+        port1: str = input("Enter port for Party 1: ")
+        port2: str = input("Enter port for Party 2: ")
+        ports = ["null", port1, port2]
+        update_firestore(f"update_firestore::PORTS={','.join(ports)}::{study_title}::{email}")
+    elif role == "1":
+        port = input("Enter the port number you want to use to communicate with Party 2: ")
         ports = ["null", "null", port]
         update_firestore(f"update_firestore::PORTS={','.join(ports)}::{study_title}::{email}")
 

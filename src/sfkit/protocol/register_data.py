@@ -17,7 +17,7 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
 
     if not geno_binary_file_prefix:
         geno_binary_file_prefix = input(
-            f"Enter absolute path to geno binary file prefix (e.g. '/home/smendels/for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%d'): "
+            f"Enter absolute path to geno binary file prefix (e.g. '/home/smendels/for_sfgwas/geno/lung_party1_chr%d'): "
         )  # sourcery skip: remove-redundant-fstring
     if not os.path.isabs(geno_binary_file_prefix):
         print("I need an ABSOLUTE path for the geno_binary_file_prefix.")

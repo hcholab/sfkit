@@ -10,16 +10,16 @@ from sfkit.protocol.utils.helper_functions import run_command
 from sfkit.api import get_doc_ref_dict, get_github_token
 
 
-def run_sfgwas_protocol(study_title: str, role: str) -> None:
+def run_sfgwas_protocol(study_title: str, role: str, phase: str = "") -> None:
     configuration = "aouTest"
 
     print(f"Begin running SFGWAS protocol with {configuration} configuration.")
-    install_sfgwas()
 
+    install_sfgwas()
     generate_shared_keys(study_title, int(role))
-    update_config_files(study_title, role, configuration)
+    update_config_files(role, configuration, phase)
     build_sfgwas(configuration)
-    update_batch_run(role)
+    update_batch_run(role, phase)
     start_sfgwas()
 
 
@@ -96,8 +96,7 @@ def generate_shared_keys(study_title, role: int) -> None:
     print(f"Shared keys generated and saved to {constants.SFKIT_DIR}.")
 
 
-def update_config_files(study_title: str, role: str, configuration: str) -> None:
-    # sourcery skip: switch
+def update_config_files(role: str, configuration: str, phase) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     print("Begin updating config files")
     data_path_path: str = os.path.join(constants.SFKIT_DIR, "data_path.txt")
@@ -106,30 +105,25 @@ def update_config_files(study_title: str, role: str, configuration: str) -> None
         with open(data_path_path, "r") as f:
             geno_file_prefix = f.readline().rstrip()
             data_path = f.readline().rstrip()
-    if configuration == "lungGCPFinal":
-        update_data_path_in_config_file_lungGCPFinal(role, data_path)
-    elif configuration == "aouTest":
-        update_data_path_in_config_file_aouTest(role, geno_file_prefix, data_path)
-    else:
-        raise ValueError(f"unknown configuration: {configuration}")
-    update_configGlobal(doc_ref_dict, configuration)
+    update_configParty(configuration, role, geno_file_prefix, data_path)
+    update_configGlobal(doc_ref_dict, configuration, phase)
 
 
-def update_data_path_in_config_file_lungGCPFinal(role: str, data_path: str) -> None:
-    if role != "0":
-        config_file_path = f"sfgwas-private/config/lungGCPFinal/configLocal.Party{role}.toml"
-        data = toml.load(config_file_path)
-        data["geno_binary_file_prefix"] = f"{data_path}/lung_split/geno_party{role}"
-        data["geno_block_size_file"] = f"{data_path}/lung_split/geno_party{role}.blockSizes.txt"
-        data["pheno_file"] = f"{data_path}/lung_split/pheno_party{role}.txt"
-        data["covar_file"] = f"{data_path}/lung_split/cov_party{role}.txt"
-        data["snp_position_file"] = f"{data_path}/lung/pos.txt"
-        with open(config_file_path, "w") as f:
-            toml.dump(data, f)
+# def update_data_path_in_config_file_lungGCPFinal(role: str, data_path: str) -> None:
+#     if role != "0":
+#         config_file_path = f"sfgwas-private/config/lungGCPFinal/configLocal.Party{role}.toml"
+#         data = toml.load(config_file_path)
+#         data["geno_binary_file_prefix"] = f"{data_path}/lung_split/geno_party{role}"
+#         data["geno_block_size_file"] = f"{data_path}/lung_split/geno_party{role}.blockSizes.txt"
+#         data["pheno_file"] = f"{data_path}/lung_split/pheno_party{role}.txt"
+#         data["covar_file"] = f"{data_path}/lung_split/cov_party{role}.txt"
+#         data["snp_position_file"] = f"{data_path}/lung/pos.txt"
+#         with open(config_file_path, "w") as f:
+#             toml.dump(data, f)
 
 
-def update_data_path_in_config_file_aouTest(role: str, geno_file_prefix, data_path: str) -> None:
-    config_file_path = f"sfgwas-private/config/aouTest/configLocal.Party{role}.toml"
+def update_configParty(configuration: str, role: str, geno_file_prefix, data_path: str) -> None:
+    config_file_path = f"sfgwas-private/config/{configuration}/configLocal.Party{role}.toml"
     data = toml.load(config_file_path)
 
     if role != "0":
@@ -148,12 +142,9 @@ def update_data_path_in_config_file_aouTest(role: str, geno_file_prefix, data_pa
         toml.dump(data, f)
 
 
-def update_configGlobal(doc_ref_dict: dict, configuration: str) -> None:
+def update_configGlobal(doc_ref_dict: dict, configuration: str, phase) -> None:
     config_file_path = f"sfgwas-private/config/{configuration}/configGlobal.toml"
     data = toml.load(config_file_path)
-
-    # data["use_precomputed_geno_count"] = True
-    # data["num_inds"] = [0, 4585, 4513]
 
     print("Checking NUM_INDS")
     for i, participant in enumerate(doc_ref_dict["participants"]):
@@ -162,14 +153,20 @@ def update_configGlobal(doc_ref_dict: dict, configuration: str) -> None:
             f"but should be {data['num_inds'][i]}"
         )
 
+    if phase == "2":
+        data["use_cached_qc"] = True
+    if phase == "3":
+        data["use_cached_qc"] = True
+        data["use_cached_pca"] = True
+
     # Update the ip addresses and ports
     for i, participant in enumerate(doc_ref_dict["participants"]):
         ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
         data["servers"][f"party{i}"]["ipaddr"] = ip_addr
 
-    # _, p1, p2 = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][0]]["PORTS"]["value"].split(",")
-    # data["servers"]["party0"]["ports"]["party1"] = p1
-    # data["servers"]["party0"]["ports"]["party2"] = p2
+    _, p1, p2 = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][0]]["PORTS"]["value"].split(",")
+    data["servers"]["party0"]["ports"]["party1"] = p1
+    data["servers"]["party0"]["ports"]["party2"] = p2
 
     _, _, p2 = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][1]]["PORTS"]["value"].split(",")
     data["servers"]["party1"]["ports"]["party2"] = p2
@@ -195,9 +192,13 @@ def build_sfgwas(configuration: str) -> None:
     print("Finished building sfgwas code")
 
 
-def update_batch_run(role: str) -> None:
+def update_batch_run(role: str, phase) -> None:
     for line in fileinput.input(files="sfgwas-private/batch_run.sh", inplace=True):
-        if "START=" in line:
+        if phase == "1" and "TESTNAME=" in line:
+            print("TESTNAME=TestGwasSimonPhase1")
+        elif phase == "2" and "TESTNAME=" in line:
+            print("TESTNAME=TestGwasSimonPhase12")
+        elif "START=" in line:
             print(f"START={role}")
         elif "END=" in line:
             print(f"END={role}")

@@ -7,7 +7,10 @@ from sfkit.api import get_doc_ref_dict
 from sfkit.api import update_firestore
 
 
-def run_protocol(study_title: str = "") -> None:
+def run_protocol(study_title: str = "", phase: str = "") -> None:
+    if phase and phase not in ["1", "2", "3"]:
+        raise ValueError("phase must be 1, 2, or 3")
+
     if not study_title:
         email, study_title = get_authentication()
     else:
@@ -20,7 +23,7 @@ def run_protocol(study_title: str = "") -> None:
         print("You have not successfully validated your data.  Please do so before proceeding.")
         return
 
-    if statuses[email] == ["not ready"]:
+    if statuses[email] in [["not ready"], ["running1"], ["running2"]]:
         statuses[email] = ["ready"]
         update_firestore(f"update_firestore::status=ready::{study_title}::{email}")
     while any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"]):
@@ -29,11 +32,11 @@ def run_protocol(study_title: str = "") -> None:
         doc_ref_dict: dict = get_doc_ref_dict()
         statuses: dict = doc_ref_dict["status"]
     if statuses[email] == ["ready"]:
-        update_firestore(f"update_firestore::status=running::{study_title}::{email}")
+        update_firestore(f"update_firestore::status=running{phase}::{study_title}::{email}")
         if study_type in {"GWAS", "gwas"}:
             run_gwas_protocol(doc_ref_dict, role)
         elif study_type in {"SFGWAS", "sfgwas"}:
-            run_sfgwas_protocol(study_title, role)
+            run_sfgwas_protocol(study_title, role, phase)
     else:
         print("You status is not ready.  Exiting now.")
         return

@@ -29,5 +29,8 @@ def get_parser():
         help="Run the protocol. As this command may be long-running, it is recommended that you run it using nohup (`touch nohup.out; nohup sfkit run_protocol & tail -f nohup.out`) or a tool like screen or tmux",
     )
     runprotocol.add_argument("--study_title", help=argparse.SUPPRESS)
+    runprotocol.add_argument(
+        "--phase", help="Phase of the protocol to run (e.g. '1' for QC, 2 for PCA, 3 for Association Statistics)"
+    )
 
     return parser
