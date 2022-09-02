@@ -4,7 +4,7 @@ Welcome to sfkit's documentation!
 **sfkit** is a collection of CLI tools to help run certain types of secure multi-party computation on genomic data.  
 It is a companion to the website `here <https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/>`_.
 
-Check out the :doc:`usage` section for further information, including :ref:`installation` of the project.
+Check out the :doc:`workflows` section for further information or :doc:`installation` for installation instructions.
 
 .. note::
 
@@ -14,10 +14,12 @@ Contents
 --------
 
 .. toctree::
+   :maxdepth: 3
 
-   usage
+   installation
+   tutorial
+   workflows
    commands
-   api
 
 Questions?
 ----------

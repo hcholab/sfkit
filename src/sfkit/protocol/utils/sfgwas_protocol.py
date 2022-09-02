@@ -11,7 +11,7 @@ from sfkit.api import get_doc_ref_dict, get_github_token
 
 
 def run_sfgwas_protocol(study_title: str, role: str, phase: str = "") -> None:
-    configuration = "aouTest"
+    configuration = "lungPgen"
 
     print(f"Begin running SFGWAS protocol with {configuration} configuration.")
 
@@ -187,7 +187,7 @@ def build_sfgwas(configuration: str) -> None:
     print("Building sfgwas code")
     run_command("pwd")
     run_command("source ~/.bashrc")
-    command = """source ~/.bashrc; cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private && go build && mkdir -p stdout"""
+    command = """source ~/.bashrc && cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private && go build && mkdir -p stdout"""
     run_command(command)
     print("Finished building sfgwas code")
 
