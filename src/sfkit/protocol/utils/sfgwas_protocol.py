@@ -27,14 +27,13 @@ def install_sfgwas() -> None:
     print("Begin installing dependencies")
     commands = [
         # "sudo apt-get update -y",
-        # "sudo apt-get install python3-pip wget git zip unzip -y",
+        # "sudo apt-get install python3-pip wget git zip unzip golang -y",
         "wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
-        "mkdir -p ~/local",
-        "tar -C ~/local -xzf go1.18.1.linux-amd64.tar.gz",
+        "mkdir -p ~/.local/bin && mkdir -p ~/.local/lib",
+        "tar -C ~/.local/lib -xzf go1.18.1.linux-amd64.tar.gz && mv ~/.local/lib/go/bin/go ~/.local/bin/go",
         "wget -nc https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20220603.zip",
-        "unzip -o plink2_linux_avx2_20220603.zip -d ~/local",
-        "echo 'export PATH=~/local:~/local/go/bin:$PATH' >> ~/.bashrc",
-        "echo 'export PYTHONUNBUFFERED=TRUE' >> ~/.bashrc",
+        "unzip -o plink2_linux_avx2_20220603.zip -d ~/.local/bin",
+        "echo 'export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go' >> ~/.bashrc && source ~/.bashrc",
         "pip3 install numpy",
     ]
     for command in commands:
@@ -185,9 +184,7 @@ def build_sfgwas(configuration: str) -> None:
     #     print(line, end="")
 
     print("Building sfgwas code")
-    run_command("pwd")
-    run_command("source ~/.bashrc")
-    command = """source ~/.bashrc && cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private && go build && mkdir -p stdout"""
+    command = """export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private && go build && mkdir -p stdout"""
     run_command(command)
     print("Finished building sfgwas code")
 
@@ -195,7 +192,7 @@ def build_sfgwas(configuration: str) -> None:
 def update_batch_run(role: str, phase) -> None:
     for line in fileinput.input(files="sfgwas-private/batch_run.sh", inplace=True):
         if phase == "1" and "TESTNAME=" in line:
-            print("TESTNAME=TestGwasSimonPhase1")
+            print("TESTNAME=TestGwasSimonPhase1Only")
         elif phase == "2" and "TESTNAME=" in line:
             print("TESTNAME=TestGwasSimonPhase12")
         elif "START=" in line:
@@ -208,6 +205,6 @@ def update_batch_run(role: str, phase) -> None:
 
 def start_sfgwas() -> None:
     print("Begin SFGWAS protocol")
-    command = "source ~/.bashrc && cd sfgwas-private && bash batch_run.sh"
+    command = "export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas-private && bash batch_run.sh"
     run_command(command)
     print("Finished SFGWAS protocol")
