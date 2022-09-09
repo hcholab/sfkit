@@ -1,7 +1,7 @@
 from sfkit.auth.auth import auth
 from sfkit.auth.setup_networking import setup_networking
-from sfkit.encryption_keys.encrypt_data import encrypt_data
-from sfkit.encryption_keys.generate_personal_keys import generate_personal_keys
+from sfkit.encryption.mpc.encrypt_data import encrypt_data
+from sfkit.encryption.generate_personal_keys import generate_personal_keys
 from sfkit.parser import get_parser
 from sfkit.protocol.register_data import register_data
 from sfkit.protocol.run_protocol import run_protocol
@@ -17,8 +17,7 @@ def main():
     elif args.command == "networking":
         setup_networking()
     elif args.command == "generate_keys":
-        study_title: str = args.study_title or ""
-        generate_personal_keys(study_title)
+        generate_personal_keys()
     elif args.command == "encrypt_data":
         encrypt_data()
     elif args.command == "register_data":
@@ -26,9 +25,8 @@ def main():
         data_path = args.data_path or ""
         register_data(geno_binary_file_prefix, data_path)
     elif args.command == "run_protocol":
-        study_title: str = args.study_title or ""
         phase: str = args.phase or ""
-        run_protocol(study_title, phase)
+        run_protocol(phase)
     else:
         parser.print_help()
 

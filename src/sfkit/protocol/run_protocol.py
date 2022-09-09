@@ -7,14 +7,12 @@ from sfkit.api import get_doc_ref_dict
 from sfkit.api import update_firestore
 
 
-def run_protocol(study_title: str = "", phase: str = "") -> None:
+def run_protocol(phase: str = "") -> None:
     if phase and phase not in ["1", "2", "3"]:
         raise ValueError("phase must be 1, 2, or 3")
 
-    if not study_title:
-        email, study_title = get_authentication()
-    else:
-        email = "Broad"
+    email, study_title = get_authentication()
+
     doc_ref_dict: dict = get_doc_ref_dict()
     role: str = str(doc_ref_dict["participants"].index(email))
     study_type: str = doc_ref_dict["type"]

@@ -195,6 +195,8 @@ def update_batch_run(role: str, phase) -> None:
             print("TESTNAME=TestGwasSimonPhase1Only")
         elif phase == "2" and "TESTNAME=" in line:
             print("TESTNAME=TestGwasSimonPhase12")
+        elif phase == "3" and "TESTNAME=" in line:
+            print("TESTNAME=TestGwasSimonDemo")
         elif "START=" in line:
             print(f"START={role}")
         elif "END=" in line:

@@ -1,14 +1,12 @@
 import subprocess
 from sfkit.protocol.utils import constants
 
-from typing import Tuple
 
-
-def get_authentication() -> Tuple[str, str]:
+def get_authentication() -> tuple[str, str]:
     with open(constants.AUTH_FILE, "r") as f:
-        email = f.readline().rstrip()
-        study_title = f.readline().rstrip()
-    return email, study_title
+        email: str = f.readline().rstrip()
+        study_title: str = f.readline().rstrip()
+    return (email, study_title)
 
 
 def run_command(command: str) -> None:

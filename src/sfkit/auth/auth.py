@@ -28,7 +28,6 @@ def auth(study_title: str) -> None:
                 print(f"{i}: {option[0]}")
             study_title, user_email = options[int(input("Enter your selection: "))]
 
-    # if path to constants.AUTH_FILE does not exist, create it
     os.makedirs(constants.SFKIT_DIR, exist_ok=True)
     with open(constants.AUTH_FILE, "w") as f:
         f.write(user_email + "\n")

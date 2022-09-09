@@ -9,7 +9,7 @@ import nacl.secret
 import nacl.utils
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
-from sfkit.encryption_keys.random_number_generator import PseudoRandomNumberGenerator
+from sfkit.encryption.mpc.random_number_generator import PseudoRandomNumberGenerator
 from sfkit.protocol.utils import constants
 from sfkit.protocol.utils.helper_functions import get_authentication
 from sfkit.api import get_doc_ref_dict

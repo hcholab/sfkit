@@ -8,11 +8,7 @@ def get_parser():
     authparser.add_argument("--study_title", help=argparse.SUPPRESS)
     subparsers.add_parser("networking", help="Setup the networking, including your IP address and any relevant ports")
     subparsers.add_parser("encrypt_data", help="Encrypt your MPC-GWAS data")
-    generatekeysparser = subparsers.add_parser(
-        "generate_keys",
-        help="Generate your public and private cryptographic keys for use in encrypting the data",
-    )
-    generatekeysparser.add_argument("--study_title", help=argparse.SUPPRESS)
+    subparsers.add_parser("generate_keys", help="Generate your public and private cryptographic keys")
     registerdataparser = subparsers.add_parser(
         "register_data", help="Register and validate your data.", description="Register and validate your data."
     )
@@ -28,7 +24,6 @@ def get_parser():
         "run_protocol",
         help="Run the protocol. As this command may be long-running, it is recommended that you run it using nohup (`touch nohup.out; nohup sfkit run_protocol & tail -f nohup.out`) or a tool like screen or tmux",
     )
-    runprotocol.add_argument("--study_title", help=argparse.SUPPRESS)
     runprotocol.add_argument(
         "--phase", help="Phase of the protocol to run (e.g. '1' for QC, 2 for PCA, 3 for Association Statistics)"
     )

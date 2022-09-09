@@ -9,43 +9,47 @@ from sfkit.api import update_firestore
 
 
 def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
+    """
+    Register data with the server and validate that the data formatting looks correct.
+    """
 
     email, study_title = get_authentication()
     doc_ref_dict: dict = get_doc_ref_dict()
-    role: str = str(doc_ref_dict["participants"].index(email))
-    study_type: str = doc_ref_dict["type"]
+    study_type = doc_ref_dict["type"]
 
-    if not geno_binary_file_prefix:
-        geno_binary_file_prefix = input(
-            f"Enter absolute path to geno binary file prefix (e.g. '/home/smendels/for_sfgwas/geno/lung_party1_chr%d'): "
-        )  # sourcery skip: remove-redundant-fstring
-    if not os.path.isabs(geno_binary_file_prefix):
-        print("I need an ABSOLUTE path for the geno_binary_file_prefix.")
-        exit(1)
-    # if not os.path.exists(geno_binary_file_prefix):
-    #     print("I need a valid path for the geno_binary_file_prefix.")
-    #     exit(1)
+    if study_type == "SFGWAS":
+        if not geno_binary_file_prefix:
+            geno_binary_file_prefix = input(
+                f"Enter absolute path to geno binary file prefix (e.g. '/home/smendels/for_sfgwas/geno/lung_party1_chr%d'): "
+            )  # sourcery skip: remove-redundant-fstring
+        if not os.path.isabs(geno_binary_file_prefix):
+            print("I need an ABSOLUTE path for the geno_binary_file_prefix.")
+            exit(1)
 
     if not data_path:
         data_path = input("Enter the (absolute) path to your data files (e.g. /home/smendels/for_sfgwas): ")
     if not os.path.isabs(data_path):
         print("I need an ABSOLUTE path for the data_path.")
         exit(1)
-    num_inds = validate_data(data_path, study_type, role=role)
+
+    num_inds = validate_data(data_path, study_type, role=doc_ref_dict["participants"].index(email))
     update_firestore(f"update_firestore::NUM_INDS={num_inds}::{study_title}::{email}")
+
     update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
+
     data_hash = checksumdir.dirhash(data_path, "md5")
     update_firestore(f"update_firestore::DATA_HASH={data_hash}::{study_title}::{email}")
 
     with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "w") as f:
-        f.write(geno_binary_file_prefix + "\n")
+        if study_type == "SFGWAS":
+            f.write(geno_binary_file_prefix + "\n")
         f.write(data_path + "\n")
 
     print("Successfully registered and validated data!")
     return True
 
 
-def validate_data(data_path: str, study_type: str, role: str = "") -> int:
+def validate_data(data_path: str, study_type: str, role: int) -> int:
     print(f"Validating data for {study_type} study...")
     files_list = glob.glob(f"{data_path}/**", recursive=True)
     pgen = True  # "pgen" if any(f.endswith(".pgen") for f in files_list) else ""
@@ -53,7 +57,7 @@ def validate_data(data_path: str, study_type: str, role: str = "") -> int:
     #     if all(needed_file not in str(file) for file in files_list):
     #         print(f"You are missing the file {needed_file}.")
     #         exit(1)
-    if pgen:
+    if pgen and study_type == "SFGWAS":
         pheno_party_file = next(f for f in files_list if f.endswith("pheno.txt"))
         rows = num_rows(pheno_party_file)
         cov_party_file = next(f for f in files_list if f.endswith("cov.txt"))
