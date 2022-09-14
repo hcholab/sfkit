@@ -1,26 +1,21 @@
-import fileinput
 import os
+import random
 import time
 
 import toml
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
+from sfkit.api import get_doc_ref_dict
 from sfkit.protocol.utils import constants
 from sfkit.protocol.utils.helper_functions import run_command
-from sfkit.api import get_doc_ref_dict, get_github_token
 
 
-def run_sfgwas_protocol(study_title: str, role: str, phase: str = "") -> None:
-    configuration = "lungPgen"
-
-    print(f"Begin running SFGWAS protocol with {configuration} configuration.")
-
+def run_sfgwas_protocol(role: str, phase: str = "") -> None:
     install_sfgwas()
-    generate_shared_keys(study_title, int(role))
-    update_config_files(role, configuration, phase)
-    build_sfgwas(configuration)
-    update_batch_run(role, phase)
-    start_sfgwas()
+    generate_shared_keys(int(role))
+    update_config_files(role, phase)
+    build_sfgwas()
+    start_sfgwas(role)
 
 
 def install_sfgwas() -> None:
@@ -45,27 +40,22 @@ def install_sfgwas() -> None:
         print("Installing lattigo")
         run_command("git clone https://github.com/hcholab/lattigo && cd lattigo && git switch lattigo_pca")
 
-    # need to get token since the repos are currently private
-    [(username, token)] = get_github_token().items()
-
     if os.path.isdir("mpc-core"):
         print("mpc-core already exists")
     else:
         print("Installing mpc-core")
-        run_command(f"git clone https://{username}:{token}@github.com/hhcho/mpc-core")
+        run_command("git clone https://github.com/hhcho/mpc-core")
 
-    if os.path.isdir("sfgwas-private"):
-        print("sfgwas-private already exists")
+    if os.path.isdir("sfgwas"):
+        print("sfgwas already exists")
     else:
-        print("Installing sfgwas-private")
-        run_command(
-            f"git clone https://{username}:{token}@github.com/hhcho/sfgwas-private && cd sfgwas-private && git switch simon-shared-keys"  # TODO: git switch release
-        )
+        print("Installing sfgwas")
+        run_command("git clone https://github.com/simonjmendelsohn/sfgwas && cd sfgwas")
 
     print("Finished installing dependencies")
 
 
-def generate_shared_keys(study_title, role: int) -> None:
+def generate_shared_keys(role: int) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     print("Generating shared keys...")
 
@@ -88,14 +78,19 @@ def generate_shared_keys(study_title, role: int) -> None:
         other_public_key = PublicKey(other_public_key_str.encode(), encoder=HexEncoder)
         assert my_private_key != other_public_key, "Private and public keys must be different"
         shared_key = Box(my_private_key, other_public_key).shared_key()
-        shared_key_path = os.path.join(constants.SFKIT_DIR, f"shared_key{min(role, i)}{max(role, i)}.txt")
+        shared_key_path = os.path.join(constants.SFKIT_DIR, f"shared_key_{min(role, i)}_{max(role, i)}.bin")
         with open(shared_key_path, "wb") as f:
             f.write(shared_key)
+
+    random.seed(doc_ref_dict["personal_parameters"]["Broad"]["PUBLIC_KEY"]["value"])
+    global_shared_key = random.getrandbits(256).to_bytes(32, "big")
+    with open(os.path.join(constants.SFKIT_DIR, "shared_key_global.bin"), "wb") as f:
+        f.write(global_shared_key)
 
     print(f"Shared keys generated and saved to {constants.SFKIT_DIR}.")
 
 
-def update_config_files(role: str, configuration: str, phase) -> None:
+def update_config_files(role: str, phase) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     print("Begin updating config files")
     data_path_path: str = os.path.join(constants.SFKIT_DIR, "data_path.txt")
@@ -104,13 +99,13 @@ def update_config_files(role: str, configuration: str, phase) -> None:
         with open(data_path_path, "r") as f:
             geno_file_prefix = f.readline().rstrip()
             data_path = f.readline().rstrip()
-    update_configParty(configuration, role, geno_file_prefix, data_path)
-    update_configGlobal(doc_ref_dict, configuration, phase)
+    update_configParty(role, geno_file_prefix, data_path)
+    update_configGlobal(doc_ref_dict, phase)
 
 
 # def update_data_path_in_config_file_lungGCPFinal(role: str, data_path: str) -> None:
 #     if role != "0":
-#         config_file_path = f"sfgwas-private/config/lungGCPFinal/configLocal.Party{role}.toml"
+#         config_file_path = f"sfgwas/config/configLocal.Party{role}.toml"
 #         data = toml.load(config_file_path)
 #         data["geno_binary_file_prefix"] = f"{data_path}/lung_split/geno_party{role}"
 #         data["geno_block_size_file"] = f"{data_path}/lung_split/geno_party{role}.blockSizes.txt"
@@ -121,8 +116,8 @@ def update_config_files(role: str, configuration: str, phase) -> None:
 #             toml.dump(data, f)
 
 
-def update_configParty(configuration: str, role: str, geno_file_prefix, data_path: str) -> None:
-    config_file_path = f"sfgwas-private/config/{configuration}/configLocal.Party{role}.toml"
+def update_configParty(role: str, geno_file_prefix, data_path: str) -> None:
+    config_file_path = f"sfgwas/config/configLocal.Party{role}.toml"
     data = toml.load(config_file_path)
 
     if role != "0":
@@ -141,17 +136,20 @@ def update_configParty(configuration: str, role: str, geno_file_prefix, data_pat
         toml.dump(data, f)
 
 
-def update_configGlobal(doc_ref_dict: dict, configuration: str, phase) -> None:
-    config_file_path = f"sfgwas-private/config/{configuration}/configGlobal.toml"
+def update_configGlobal(doc_ref_dict: dict, phase) -> None:
+    config_file_path = "sfgwas/config/configGlobal.toml"
     data = toml.load(config_file_path)
 
-    print("Checking NUM_INDS")
+    print("Updating NUM_INDS and NUM_SNPS")
     for i, participant in enumerate(doc_ref_dict["participants"]):
-        assert doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"] == str(data["num_inds"][i]), (
-            f"NUM_INDS for {participant} is {doc_ref_dict['personal_parameters'][participant]['NUM_INDS']['value']}, "
-            f"but should be {data['num_inds'][i]}"
-        )
+        data["num_inds"][i] = int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"])
+        print("NUM_INDS for", participant, "is", data["num_inds"][i])
+        assert i == 0 or data["num_inds"][i] > 0, "NUM_INDS must be greater than 0"
+    data["num_snps"] = int(doc_ref_dict["parameters"]["NUM_SNPS"]["value"])
+    print("NUM_SNPS is", data["num_snps"])
+    assert data["num_snps"] > 0, "NUM_SNPS must be greater than 0"
 
+    data["phase"] = phase
     if phase == "2":
         data["use_cached_qc"] = True
     if phase == "3":
@@ -174,39 +172,16 @@ def update_configGlobal(doc_ref_dict: dict, configuration: str, phase) -> None:
         toml.dump(data, f)
 
 
-def build_sfgwas(configuration: str) -> None:
-    # for line in fileinput.input(files="sfgwas-private/main_test.go", inplace=True):
-    # if "var defaultConfigPath = " in line:
-    #     print(f'var defaultConfigPath = "config/{configuration}"')
-    # elif "func TestGwas(t *testing.T) {" in line:
-    #     print("func TestGwasSimonDemo(t *testing.T) {")
-    # else:
-    #     print(line, end="")
-
+def build_sfgwas() -> None:
     print("Building sfgwas code")
-    command = """export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas-private && go get -t github.com/hhcho/sfgwas-private && go build && mkdir -p stdout"""
+    command = """export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas && go get -t github.com/simonjmendelsohn/sfgwas && go build"""
     run_command(command)
     print("Finished building sfgwas code")
 
 
-def update_batch_run(role: str, phase) -> None:
-    for line in fileinput.input(files="sfgwas-private/batch_run.sh", inplace=True):
-        if phase == "1" and "TESTNAME=" in line:
-            print("TESTNAME=TestGwasSimonPhase1Only")
-        elif phase == "2" and "TESTNAME=" in line:
-            print("TESTNAME=TestGwasSimonPhase12")
-        elif phase == "3" and "TESTNAME=" in line:
-            print("TESTNAME=TestGwasSimonDemo")
-        elif "START=" in line:
-            print(f"START={role}")
-        elif "END=" in line:
-            print(f"END={role}")
-        else:
-            print(line, end="")
-
-
-def start_sfgwas() -> None:
+def start_sfgwas(role: str) -> None:
     print("Begin SFGWAS protocol")
-    command = "export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas-private && bash batch_run.sh"
+    protocol_command = f"export PID={role} && go run sfgwas.go | tee /dev/tty > stdout_party{role}.txt"
+    command = f"export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas && {protocol_command}"
     run_command(command)
     print("Finished SFGWAS protocol")

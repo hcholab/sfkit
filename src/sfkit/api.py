@@ -32,11 +32,6 @@ def update_firestore(msg: str) -> bool:
     return response.status_code == 200
 
 
-def get_github_token() -> dict:
-    response = website_get("get_github_token", {})
-    return response.json()
-
-
 def generate_jwt() -> str:
     url: str = constants.METADATA_VM_IDENTITY_URL.format(constants.WEBSITE_URL, "full", "TRUE")
     response: requests.Response = requests.get(url, headers={"Metadata-Flavor": "Google"})

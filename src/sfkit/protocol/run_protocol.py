@@ -34,7 +34,7 @@ def run_protocol(phase: str = "") -> None:
         if study_type in {"GWAS", "gwas"}:
             run_gwas_protocol(doc_ref_dict, role)
         elif study_type in {"SFGWAS", "sfgwas"}:
-            run_sfgwas_protocol(study_title, role, phase)
+            run_sfgwas_protocol(role, phase)
     else:
         print("You status is not ready.  Exiting now.")
         return

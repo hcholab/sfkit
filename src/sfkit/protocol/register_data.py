@@ -34,6 +34,8 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
 
     num_inds = validate_data(data_path, study_type, role=doc_ref_dict["participants"].index(email))
     update_firestore(f"update_firestore::NUM_INDS={num_inds}::{study_title}::{email}")
+    num_snps = num_rows(os.path.join(data_path, "snp_ids.txt"))
+    update_firestore(f"update_firestore::NUM_SNPS={num_snps}::{study_title}::{email}")
 
     update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
 
