@@ -1,7 +1,7 @@
 import argparse
 
 
-def get_parser():
+def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run workflow with sfkit.  Start with `sfkit auth` to authenticate.")
     subparsers = parser.add_subparsers(dest="command")
     authparser = subparsers.add_parser("auth", help="Authenticate with the CLI")
@@ -22,10 +22,11 @@ def get_parser():
     )
     runprotocol = subparsers.add_parser(
         "run_protocol",
-        help="Run the protocol. As this command may be long-running, it is recommended that you run it using nohup (`touch nohup.out; nohup sfkit run_protocol & tail -f nohup.out`) or a tool like screen or tmux",
+        help="Run the protocol. As this command may be long-running, you may want to run it using nohup or screen or tmux",
     )
     runprotocol.add_argument(
         "--phase", help="Phase of the protocol to run (e.g. '1' for QC, 2 for PCA, 3 for Association Statistics)"
     )
+    runprotocol.add_argument("--demo", help="Run the demo protocol", action="store_true")
 
     return parser

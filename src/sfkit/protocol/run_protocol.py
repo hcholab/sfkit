@@ -7,7 +7,7 @@ from sfkit.api import get_doc_ref_dict
 from sfkit.api import update_firestore
 
 
-def run_protocol(phase: str = "") -> None:
+def run_protocol(phase: str = "", demo: bool = False) -> None:
     if phase and phase not in ["1", "2", "3"]:
         raise ValueError("phase must be 1, 2, or 3")
 
@@ -34,7 +34,7 @@ def run_protocol(phase: str = "") -> None:
         if study_type in {"GWAS", "gwas"}:
             run_gwas_protocol(doc_ref_dict, role)
         elif study_type in {"SFGWAS", "sfgwas"}:
-            run_sfgwas_protocol(role, phase)
+            run_sfgwas_protocol(role, phase, demo)
     else:
         print("You status is not ready.  Exiting now.")
         return

@@ -7,7 +7,7 @@ from sfkit.protocol.register_data import register_data
 from sfkit.protocol.run_protocol import run_protocol
 
 
-def main():
+def main() -> None:
     parser = get_parser()
     args = parser.parse_args()
 
@@ -26,7 +26,8 @@ def main():
         register_data(geno_binary_file_prefix, data_path)
     elif args.command == "run_protocol":
         phase: str = args.phase or ""
-        run_protocol(phase)
+        demo: bool = args.demo or False
+        run_protocol(phase, demo)
     else:
         parser.print_help()
 

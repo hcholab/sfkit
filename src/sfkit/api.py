@@ -4,7 +4,7 @@ from sfkit.protocol.utils import constants
 from sfkit.protocol.utils.helper_functions import get_authentication
 
 
-def website_get(request_type: str, params: dict, user_auth=True) -> requests.Response:
+def website_get(request_type: str, params: dict, user_auth: bool = True) -> requests.Response:
     if user_auth:
         user, study_title = get_authentication()
         params |= {"study_title": study_title.replace(" ", "").lower(), "user": user}

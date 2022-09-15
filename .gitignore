@@ -14,3 +14,4 @@ practice.py
 */*.egg*
 dist/*
 docs/build/*
+.sourcery.yaml

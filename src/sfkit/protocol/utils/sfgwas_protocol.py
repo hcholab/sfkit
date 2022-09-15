@@ -1,3 +1,7 @@
+"""
+Run the sfgwas protocol
+"""
+
 import os
 import random
 import time
@@ -10,15 +14,28 @@ from sfkit.protocol.utils import constants
 from sfkit.protocol.utils.helper_functions import run_command
 
 
-def run_sfgwas_protocol(role: str, phase: str = "") -> None:
+def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
+    """
+    Run the sfgwas protocol
+    :param role: 0, 1, 2
+    :param phase: "", "1", "2", "3"
+    :param demo: True or False
+    """
     install_sfgwas()
-    generate_shared_keys(int(role))
-    update_config_files(role, phase)
+    if not demo:
+        generate_shared_keys(int(role))
+        print("Begin updating config files")
+        update_config_party(role)
+        update_config_global()
+    update_config_global_phase(phase)
     build_sfgwas()
-    start_sfgwas(role)
+    start_sfgwas(role, demo)
 
 
 def install_sfgwas() -> None:
+    """
+    Install sfgwas and its dependencies
+    """
     print("Begin installing dependencies")
     commands = [
         # "sudo apt-get update -y",
@@ -56,6 +73,10 @@ def install_sfgwas() -> None:
 
 
 def generate_shared_keys(role: int) -> None:
+    """
+    Generate shared keys for the sfgwas protocol
+    :param role: 0, 1, 2
+    """
     doc_ref_dict: dict = get_doc_ref_dict()
     print("Generating shared keys...")
 
@@ -90,19 +111,6 @@ def generate_shared_keys(role: int) -> None:
     print(f"Shared keys generated and saved to {constants.SFKIT_DIR}.")
 
 
-def update_config_files(role: str, phase) -> None:
-    doc_ref_dict: dict = get_doc_ref_dict()
-    print("Begin updating config files")
-    data_path_path: str = os.path.join(constants.SFKIT_DIR, "data_path.txt")
-    geno_file_prefix, data_path = "", ""
-    if role != "0":
-        with open(data_path_path, "r") as f:
-            geno_file_prefix = f.readline().rstrip()
-            data_path = f.readline().rstrip()
-    update_configParty(role, geno_file_prefix, data_path)
-    update_configGlobal(doc_ref_dict, phase)
-
-
 # def update_data_path_in_config_file_lungGCPFinal(role: str, data_path: str) -> None:
 #     if role != "0":
 #         config_file_path = f"sfgwas/config/configLocal.Party{role}.toml"
@@ -116,11 +124,19 @@ def update_config_files(role: str, phase) -> None:
 #             toml.dump(data, f)
 
 
-def update_configParty(role: str, geno_file_prefix, data_path: str) -> None:
+def update_config_party(role: str) -> None:
+    """
+    Update configLocal.Party{role}.toml
+    :param role: 0, 1, 2
+    """
     config_file_path = f"sfgwas/config/configLocal.Party{role}.toml"
     data = toml.load(config_file_path)
 
     if role != "0":
+        with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
+            geno_file_prefix = f.readline().rstrip()
+            data_path = f.readline().rstrip()
+
         data["geno_binary_file_prefix"] = f"{geno_file_prefix}"
         data["geno_block_size_file"] = f"{data_path}/chrom_sizes.txt"
         data["pheno_file"] = f"{data_path}/pheno.txt"
@@ -136,7 +152,11 @@ def update_configParty(role: str, geno_file_prefix, data_path: str) -> None:
         toml.dump(data, f)
 
 
-def update_configGlobal(doc_ref_dict: dict, phase) -> None:
+def update_config_global() -> None:
+    """
+    Update configGlobal.toml
+    """
+    doc_ref_dict: dict = get_doc_ref_dict()
     config_file_path = "sfgwas/config/configGlobal.toml"
     data = toml.load(config_file_path)
 
@@ -148,13 +168,6 @@ def update_configGlobal(doc_ref_dict: dict, phase) -> None:
     data["num_snps"] = int(doc_ref_dict["parameters"]["NUM_SNPS"]["value"])
     print("NUM_SNPS is", data["num_snps"])
     assert data["num_snps"] > 0, "NUM_SNPS must be greater than 0"
-
-    data["phase"] = phase
-    if phase == "2":
-        data["use_cached_qc"] = True
-    if phase == "3":
-        data["use_cached_qc"] = True
-        data["use_cached_pca"] = True
 
     # Update the ip addresses and ports
     for i, participant in enumerate(doc_ref_dict["participants"]):
@@ -172,16 +185,45 @@ def update_configGlobal(doc_ref_dict: dict, phase) -> None:
         toml.dump(data, f)
 
 
+def update_config_global_phase(phase: str) -> None:
+    """
+    Update based on phase in configGlobal.toml
+    :param phase: "1", "2", "3"
+    """
+    config_file_path = "sfgwas/config/configGlobal.toml"
+    data = toml.load(config_file_path)
+
+    data["phase"] = phase
+    if phase == "2":
+        data["use_cached_qc"] = True
+    elif phase == "3":
+        data["use_cached_qc"] = True
+        data["use_cached_pca"] = True
+
+    with open(config_file_path, "w") as f:
+        toml.dump(data, f)
+
+
 def build_sfgwas() -> None:
+    """
+    build/compile sfgwas
+    """
     print("Building sfgwas code")
     command = """export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas && go get -t github.com/simonjmendelsohn/sfgwas && go build"""
     run_command(command)
     print("Finished building sfgwas code")
 
 
-def start_sfgwas(role: str) -> None:
+def start_sfgwas(role: str, demo: bool = False) -> None:
+    """
+    Start the actual sfgwas program
+    :param role: 0, 1, 2
+    :param demo: True if running demo
+    """
     print("Begin SFGWAS protocol")
     protocol_command = f"export PID={role} && go run sfgwas.go | tee /dev/tty > stdout_party{role}.txt"
+    if demo:
+        protocol_command = "bash run_example.sh"
     command = f"export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas && {protocol_command}"
     run_command(command)
     print("Finished SFGWAS protocol")

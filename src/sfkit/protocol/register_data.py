@@ -22,6 +22,11 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
             geno_binary_file_prefix = input(
                 f"Enter absolute path to geno binary file prefix (e.g. '/home/smendels/for_sfgwas/geno/lung_party1_chr%d'): "
             )  # sourcery skip: remove-redundant-fstring
+        if geno_binary_file_prefix == "demo":
+            update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
+            print("Skipped data registration and validation!")
+            print("Successfully registered and validated data!")
+            return True
         if not os.path.isabs(geno_binary_file_prefix):
             print("I need an ABSOLUTE path for the geno_binary_file_prefix.")
             exit(1)

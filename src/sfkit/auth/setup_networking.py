@@ -4,7 +4,7 @@ from sfkit.api import get_doc_ref_dict
 from sfkit.api import update_firestore
 
 
-def setup_networking():
+def setup_networking() -> None:
     (email, study_title) = get_authentication()
 
     # internal_ip_address: str = socket.gethostbyname(socket.gethostname())
@@ -26,4 +26,4 @@ def setup_networking():
         ports: list[str] = ["null", "null", port]
         update_firestore(f"update_firestore::PORTS={','.join(ports)}::{study_title}::{email}")
 
-    print("Your networking options have been updated in the study parameters.")
+    print("Successfully communicated networking information!")
