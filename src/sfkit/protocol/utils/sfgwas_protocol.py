@@ -2,6 +2,7 @@
 Run the sfgwas protocol
 """
 
+import fileinput
 import os
 import random
 import time
@@ -27,7 +28,8 @@ def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
         print("Begin updating config files")
         update_config_party(role)
         update_config_global()
-    update_config_global_phase(phase)
+    update_config_global_phase(phase, demo)
+    update_sfgwas_go("gwas")
     build_sfgwas()
     start_sfgwas(role, demo)
 
@@ -124,12 +126,12 @@ def generate_shared_keys(role: int) -> None:
 #             toml.dump(data, f)
 
 
-def update_config_party(role: str) -> None:
+def update_config_party(role: str, protocol: str = "gwas") -> None:
     """
     Update configLocal.Party{role}.toml
     :param role: 0, 1, 2
     """
-    config_file_path = f"sfgwas/config/configLocal.Party{role}.toml"
+    config_file_path = f"sfgwas/config/{protocol}/configLocal.Party{role}.toml"
     data = toml.load(config_file_path)
 
     if role != "0":
@@ -152,12 +154,12 @@ def update_config_party(role: str) -> None:
         toml.dump(data, f)
 
 
-def update_config_global() -> None:
+def update_config_global(protocol: str = "") -> None:
     """
     Update configGlobal.toml
     """
     doc_ref_dict: dict = get_doc_ref_dict()
-    config_file_path = "sfgwas/config/configGlobal.toml"
+    config_file_path = f"sfgwas/config/{protocol}configGlobal.toml"
     data = toml.load(config_file_path)
 
     print("Updating NUM_INDS and NUM_SNPS")
@@ -185,12 +187,12 @@ def update_config_global() -> None:
         toml.dump(data, f)
 
 
-def update_config_global_phase(phase: str) -> None:
+def update_config_global_phase(phase: str, demo: bool, protocol: str = "gwas") -> None:
     """
     Update based on phase in configGlobal.toml
     :param phase: "1", "2", "3"
     """
-    config_file_path = "sfgwas/config/configGlobal.toml"
+    config_file_path = f"sfgwas/config/{protocol}/configGlobal.toml"
     data = toml.load(config_file_path)
 
     data["phase"] = phase
@@ -200,8 +202,24 @@ def update_config_global_phase(phase: str) -> None:
         data["use_cached_qc"] = True
         data["use_cached_pca"] = True
 
+    if demo:
+        data["num_power_iters"] = 2
+        data["iter_per_eigenval"] = 2
+        data["num_pcs_to_remove"] = 2
+
     with open(config_file_path, "w") as f:
         toml.dump(data, f)
+
+
+def update_sfgwas_go(protocol: str = "gwas") -> None:
+    """
+    Update sfgwas.go
+    """
+    for line in fileinput.input("sfgwas/sfgwas.go", inplace=True):
+        if "CONFIG_PATH = " in line:
+            print(f'var CONFIG_PATH = "config/{protocol}"')
+        else:
+            print(line, end="")
 
 
 def build_sfgwas() -> None:

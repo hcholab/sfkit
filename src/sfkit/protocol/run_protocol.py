@@ -3,6 +3,7 @@ import time
 from sfkit.protocol.utils.gwas_protocol import run_gwas_protocol
 from sfkit.protocol.utils.helper_functions import get_authentication
 from sfkit.protocol.utils.sfgwas_protocol import run_sfgwas_protocol
+from sfkit.protocol.utils.pca_protocol import run_pca_protocol
 from sfkit.api import get_doc_ref_dict
 from sfkit.api import update_firestore
 
@@ -24,7 +25,10 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
     if statuses[email] in [["not ready"], ["running1"], ["running2"]]:
         statuses[email] = ["ready"]
         update_firestore(f"update_firestore::status=ready::{study_title}::{email}")
-    while any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"]):
+    while (
+        any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"])
+        and not demo
+    ):
         print("The other participant is not yet ready.  Waiting... (press CTRL-C to cancel)")
         time.sleep(5)
         doc_ref_dict: dict = get_doc_ref_dict()
@@ -35,6 +39,10 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
             run_gwas_protocol(doc_ref_dict, role)
         elif study_type in {"SFGWAS", "sfgwas"}:
             run_sfgwas_protocol(role, phase, demo)
+        elif study_type in {"PCA", "pca"}:
+            run_pca_protocol(role)
+        else:
+            raise ValueError(f"Unknown study type: {study_type}")
     else:
         print("You status is not ready.  Exiting now.")
         return

@@ -17,13 +17,20 @@ def setup_networking() -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     role: str = str(doc_ref_dict["participants"].index(email))
     if role == "0":
-        port1: str = input("Enter port for Party 1: ")
-        port2: str = input("Enter port for Party 2: ")
+        port1: str = validate_port(input("Enter port for Party 1: "))
+        port2: str = validate_port(input("Enter port for Party 2: "))
         ports: list[str] = ["null", port1, port2]
         update_firestore(f"update_firestore::PORTS={','.join(ports)}::{study_title}::{email}")
     elif role == "1":
-        port = input("Enter the port number you want to use to communicate with Party 2: ")
+        port = validate_port(input("Enter the port number you want to use to communicate with Party 2: "))
         ports: list[str] = ["null", "null", port]
         update_firestore(f"update_firestore::PORTS={','.join(ports)}::{study_title}::{email}")
 
     print("Successfully communicated networking information!")
+
+
+def validate_port(port: str) -> str:
+    if port.isdigit() and 1024 <= int(port) <= 65535:
+        return port
+    print("Invalid port number.  Please enter a number between 1024 and 65535.")
+    exit(1)

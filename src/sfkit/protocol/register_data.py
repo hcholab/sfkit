@@ -1,4 +1,3 @@
-import glob
 import os
 
 import checksumdir
@@ -16,34 +15,37 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     email, study_title = get_authentication()
     doc_ref_dict: dict = get_doc_ref_dict()
     study_type = doc_ref_dict["type"]
+    num_inds: int
 
     if study_type == "SFGWAS":
-        if not geno_binary_file_prefix:
-            geno_binary_file_prefix = input(
-                f"Enter absolute path to geno binary file prefix (e.g. '/home/smendels/for_sfgwas/geno/lung_party1_chr%d'): "
-            )  # sourcery skip: remove-redundant-fstring
-        if geno_binary_file_prefix == "demo":
-            update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
-            print("Skipped data registration and validation!")
-            print("Successfully registered and validated data!")
-            return True
-        if not os.path.isabs(geno_binary_file_prefix):
-            print("I need an ABSOLUTE path for the geno_binary_file_prefix.")
-            exit(1)
+        geno_binary_file_prefix = validate_geno_binary_file_prefix(geno_binary_file_prefix)
+        data_path = validate_data_path(data_path)
 
-    if not data_path:
-        data_path = input("Enter the (absolute) path to your data files (e.g. /home/smendels/for_sfgwas): ")
-    if not os.path.isabs(data_path):
-        print("I need an ABSOLUTE path for the data_path.")
-        exit(1)
+        if data_path == "demo":
+            return using_demo(study_title, email)
 
-    num_inds = validate_data(data_path, study_type, role=doc_ref_dict["participants"].index(email))
+        num_inds = validate_sfgwas_data(geno_binary_file_prefix, data_path)
+        num_snps = num_rows(os.path.join(data_path, "snp_ids.txt"))
+        update_firestore(f"update_firestore::NUM_SNPS={num_snps}::{study_title}::{email}")
+    elif study_type == "MPCGWAS":
+        data_path = validate_data_path(data_path)
+
+        if data_path == "demo":
+            return using_demo(study_title, email)
+
+        num_inds = validate_mpcgwas_data(data_path)
+    elif study_type == "PCA":
+        data_path = validate_data_path(data_path)
+
+        if data_path == "demo":
+            return using_demo(study_title, email)
+
+        num_inds = num_rows(os.path.join(data_path, "geno.txt"))
+    else:
+        raise ValueError(f"Unknown study type: {study_type}")
+
     update_firestore(f"update_firestore::NUM_INDS={num_inds}::{study_title}::{email}")
-    num_snps = num_rows(os.path.join(data_path, "snp_ids.txt"))
-    update_firestore(f"update_firestore::NUM_SNPS={num_snps}::{study_title}::{email}")
-
     update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
-
     data_hash = checksumdir.dirhash(data_path, "md5")
     update_firestore(f"update_firestore::DATA_HASH={data_hash}::{study_title}::{email}")
 
@@ -56,36 +58,49 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     return True
 
 
-def validate_data(data_path: str, study_type: str, role: int) -> int:
-    print(f"Validating data for {study_type} study...")
-    files_list = glob.glob(f"{data_path}/**", recursive=True)
-    pgen = True  # "pgen" if any(f.endswith(".pgen") for f in files_list) else ""
-    # for needed_file in constants.NEEDED_INPUT_FILES[f"{study_type}_{pgen}"]:
-    #     if all(needed_file not in str(file) for file in files_list):
-    #         print(f"You are missing the file {needed_file}.")
-    #         exit(1)
-    if pgen and study_type == "SFGWAS":
-        pheno_party_file = next(f for f in files_list if f.endswith("pheno.txt"))
-        rows = num_rows(pheno_party_file)
-        cov_party_file = next(f for f in files_list if f.endswith("cov.txt"))
-        assert rows == num_rows(cov_party_file), "pheno and cov files have different number of lines"
-        sample_keep_file = num_rows(next(f for f in files_list if f.endswith("sample_keep.txt")))
-        assert rows == sample_keep_file, "sample_keep and pheno/cov files have different number of lines"
-        print(f"The number of lines/rows is: {rows}")
-        return rows
-    elif study_type == "SFGWAS":
-        rows = num_rows(os.path.join(data_path, f"lung_split/pheno_party{role}.txt"))
-        assert rows == num_rows(os.path.join(data_path, f"lung_split/cov_party{role}.txt"))
-        return rows
-    elif study_type == "GWAS":
-        rows = num_rows(os.path.join(data_path, "cov.txt"))
-        assert rows == num_rows(os.path.join(data_path, "geno.txt"))
-        assert rows == num_rows(os.path.join(data_path, "pheno.txt"))
-        return rows
-    else:
-        print("Unknown study type.")
+def validate_geno_binary_file_prefix(geno_binary_file_prefix: str) -> str:
+    if not geno_binary_file_prefix:
+        geno_binary_file_prefix = input(
+            f"Enter absolute path to geno binary file prefix (e.g. '/home/smendels/for_sfgwas/geno/lung_party1_chr%d'): "
+        )  # sourcery skip: remove-redundant-fstring
+    if geno_binary_file_prefix != "demo" and not os.path.isabs(geno_binary_file_prefix):
+        print("I need an ABSOLUTE path for the geno_binary_file_prefix.")
         exit(1)
+    return geno_binary_file_prefix
+
+
+def validate_data_path(data_path: str) -> str:
+    if not data_path:
+        data_path = input("Enter the (absolute) path to your data files (e.g. /home/smendels/for_sfgwas): ")
+    if data_path != "demo" and not os.path.isabs(data_path):
+        print("I need an ABSOLUTE path for the data_path.")
+        exit(1)
+    return data_path
+
+
+def validate_sfgwas_data(geno_binary_file_prefix: str, data_path: str) -> int:
+    # TODO: check geno_binary_file stuff too
+    rows = num_rows(os.path.join(data_path, "pheno.txt"))
+    assert rows == num_rows(os.path.join(data_path, "cov.txt")), "pheno and cov have different number of rows"
+    assert rows == num_rows(os.path.join(data_path, "sample_keep.txt")), "pheno and sample_keep differ in num-rows"
+    print(f"The number of lines/rows is: {rows}")
+    return rows
+
+
+def validate_mpcgwas_data(data_path: str) -> int:
+    rows = num_rows(os.path.join(data_path, "cov.txt"))
+    assert rows == num_rows(os.path.join(data_path, "geno.txt"))
+    assert rows == num_rows(os.path.join(data_path, "pheno.txt"))
+    print(f"The number of lines/rows is: {rows}")
+    return rows
 
 
 def num_rows(file_path: str) -> int:
     return sum(1 for _ in open(file_path))
+
+
+def using_demo(study_title: str, email: str) -> bool:
+    update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
+    print("Using demo data!")
+    print("Successfully registered and validated data!")
+    return True

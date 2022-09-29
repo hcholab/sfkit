@@ -26,7 +26,11 @@ def auth(study_title: str) -> None:
             print("Please select your study:")
             for i, option in enumerate(options):
                 print(f"{i}: {option[0]}")
-            study_title, user_email = options[int(input("Enter your selection: "))]
+            try:
+                study_title, user_email = options[int(input("Enter your selection: "))]
+            except (ValueError, IndexError):
+                print("Invalid selection.  Please enter a number from the list.")
+                exit(1)
 
     os.makedirs(constants.SFKIT_DIR, exist_ok=True)
     with open(constants.AUTH_FILE, "w") as f:

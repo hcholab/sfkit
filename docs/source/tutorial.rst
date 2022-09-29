@@ -8,6 +8,22 @@ sfkit is a command line tool made to facilitate secure collaboration for certain
 
 There are two main components to the sfkit workflow: the website and the sfkit client. The website is a web application that serves to provide a convenient UI for the study participants to create a joint study and set up the study parameters. The sfkit client is a command line tool that is used to perform the actual analysis.  The sfkit CLI is run on a machine controlled by the study coordinator.  The sfkit website is run by the Broad Institute.
 
+Prerequisites
+-------------
+
+Before you begin, you will need access to a Google Cloud VM instance where you can run the protocol.  
+
+.. note::
+
+    If you are deciding what VM size you want/need, we generally recommend using the *e2-highmem-16* (16 vCPUs, 128 GB memory) as a reasonable default.  This size has worked well for us on datasets with <30,000 samples and <700,000 SNPs for SFGWAS.  If you are running a larger dataset, you may need to increase the size of the VM.  On a dataset with ~10 million SNPs, we have used the larger *n2-highmem-64* or *n2-highmem-128*. If you are running a smaller dataset, you may be able to get away with a smaller VM.  Feel free to reach out if you have further questions or concerns.  
+
+Networking
+----------
+
+.. note:: 
+    
+    When running a real study, you will need to coordinate with the other study participants to set up your networking/firewall such that your machines can communicate with one another.  This may include whitelisting each other's IP address on specific ports that you will specify for TCP connections during the course of the protocol.  For the purposes of this tutorial, we will be running the protocol on a single machine, so we will not need to worry about this.
+
 Website
 -------
 
@@ -45,7 +61,7 @@ This will authenticate your VM with the website.  It does this by making a get r
 
     $ sfkit networking
 
-This will communicate your IP address to the website so that all study participants will be able to communicate with your VM.  It may also ask your for a preferred port number to use when direct socket connections are made between participants.  If you get a message saying "Successfully communicated networking information!", then you are good to go.
+This will communicate your IP address to the website so that all study participants will be able to communicate with your VM.  It may also ask your for a preferred port number to use when direct socket connections are made between participants.  If you are doing the demo by yourself, you can choose any port number (e.g. 8060).  If you get a message saying "Successfully communicated networking information!", then you are good to go.
 
 4. Run 
 
@@ -61,20 +77,72 @@ This will use a secure key generation protocol to generate a pair of keys for yo
     
     $ sfkit register_data
 
-This will validate that your input data for the protocol is in the correct format.  It will ask you for the paths to your input data.  For this tutorial, you can enter "demo" and this process will be skipped.  If you get a message saying "Successfully registered and validated data!", then you are good to go.
+This will validate that your input data for the protocol is in the correct format.  It will ask you for the paths to your input data.  For this tutorial, you can enter "demo" for both data paths and the demo data will be used.  If you get a message saying "Successfully registered and validated data!", then you are good to go.
 
 6. Run 
 
 .. code-block:: console 
     
-    $ sfkit run_protocol --demo --phase 1
+    $ sfkit run_protocol --demo
 
+This will run the entire secure federated gwas protocol.  It should take about half an hour on the dummy data.  
 
-This will run the first phase of the secure federated gwas protocol.  It should take about 5 minutes.  If you remove the "--phase 1", then it will run the entire protocol, which should take a couple of hours. If you get a message saying "Finished SFGWAS protocol", then it was successful.
+The output should end something like this: 
+
+.. code-block:: console
+
+    2022/10/04 15:06:21 [watchdog] gc finished; heap watchdog stats: heap_alloc: 817217048, heap_marked: 398932464, next_gc: 797864928, policy_next_gc: 20408608500, gogc: 100
+    1!: assoc.go:761 (gwas.(*AssocTest).GetAssociationStats) - 2022-10-04T15:06:22Z Computed stdev
+    1!: gwas.go:373 (gwas.(*ProtocolInfo).Phase3) - 2022-10-04T15:06:22Z Finished association tests
+    Network log for party 0
+    544477704 bytes to party 2
+    32 bytes to party 1
+    32 bytes from party 1
+    16 bytes from party 2
+    1!: gwas.go:393 (gwas.(*ProtocolInfo).Phase3) - 2022-10-04T15:06:22Z Output collectively decrypted and saved to: out/party0/assoc.txt
+    2022/10/04 15:06:22 [watchdog] gc finished; heap watchdog stats: heap_alloc: 747472368, heap_marked: 373767528, next_gc: 747535056, policy_next_gc: 20373736160, gogc: 100
+    2022/10/04 15:06:22 [watchdog] gc finished; heap watchdog stats: heap_alloc: 8488531216, heap_marked: 4422075328, next_gc: 8844150656, policy_next_gc: 24244265584, gogc: 100
+    2022/10/04 15:06:26 [watchdog] gc finished; heap watchdog stats: heap_alloc: 8365741616, heap_marked: 4340468136, next_gc: 8680936272, policy_next_gc: 24182870784, gogc: 100
+    1!: assoc.go:761 (gwas.(*AssocTest).GetAssociationStats) - 2022-10-04T15:06:28Z Computed stdev
+    1!: assoc.go:761 (gwas.(*AssocTest).GetAssociationStats) - 2022-10-04T15:06:28Z Computed stdev
+    1!: assoc.go:774 (gwas.(*AssocTest).GetAssociationStats) - 2022-10-04T15:06:30Z All done!
+    1!: gwas.go:373 (gwas.(*ProtocolInfo).Phase3) - 2022-10-04T15:06:30Z Finished association tests
+    Network log for party 2
+    16 bytes to party 0
+    2066021021 bytes to party 1
+    2052916261 bytes from party 1
+    544477704 bytes from party 0
+    1!: assoc.go:774 (gwas.(*AssocTest).GetAssociationStats) - 2022-10-04T15:06:30Z All done!
+    1!: gwas.go:373 (gwas.(*ProtocolInfo).Phase3) - 2022-10-04T15:06:30Z Finished association tests
+    Network log for party 1
+    2052913989 bytes to party 2
+    32 bytes to party 0
+    2066023165 bytes from party 2
+    32 bytes from party 0
+    2022/10/04 15:06:31 [watchdog] gc finished; heap watchdog stats: heap_alloc: 7554051560, heap_marked: 4316176560, next_gc: 8632353120, policy_next_gc: 23777025756, gogc: 100
+    1!: gwas.go:393 (gwas.(*ProtocolInfo).Phase3) - 2022-10-04T15:06:32Z Output collectively decrypted and saved to: out/party2/assoc.txt
+    1!: gwas.go:393 (gwas.(*ProtocolInfo).Phase3) - 2022-10-04T15:06:32Z Output collectively decrypted and saved to: out/party1/assoc.txt
+    Finished SFGWAS protocol
+
+And if you look in sfgwas/out/party1, you should see a file called assoc.txt that looks something like this:
+
+.. code-block:: console
+
+    smendels@simon-0:~$ head sfgwas/out/party1/assoc.txt
+    2.214016e-02
+    4.138482e-03
+    -3.585493e-02
+    -6.841428e-03
+    2.023826e-02
+    1.094795e-03
+    4.876583e-02
+    1.222332e-02
+    -7.845751e-03
+    8.301471e-04
 
 .. note::
 
    If you are running a real study, you will want to run the protocol without the ``--demo`` flag.  If you tried this right now, it would stall with the message "The other participant is not yet ready.  Waiting... (press CTRL-C to cancel)" as it expects another participant to join the study.  
 
 
-**You have finished the demo!  Go ahead and try this process for a real study.**
+**Click "Next" to go to the Workflows page and read more details on what run_protocol is doing!**
