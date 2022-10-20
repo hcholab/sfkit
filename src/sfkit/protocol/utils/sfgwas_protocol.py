@@ -154,12 +154,12 @@ def update_config_party(role: str, protocol: str = "gwas") -> None:
         toml.dump(data, f)
 
 
-def update_config_global(protocol: str = "") -> None:
+def update_config_global(protocol: str = "gwas") -> None:
     """
     Update configGlobal.toml
     """
     doc_ref_dict: dict = get_doc_ref_dict()
-    config_file_path = f"sfgwas/config/{protocol}configGlobal.toml"
+    config_file_path = f"sfgwas/config/{protocol}/configGlobal.toml"
     data = toml.load(config_file_path)
 
     print("Updating NUM_INDS and NUM_SNPS")
@@ -232,7 +232,7 @@ def build_sfgwas() -> None:
     print("Finished building sfgwas code")
 
 
-def start_sfgwas(role: str, demo: bool = False) -> None:
+def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> None:
     """
     Start the actual sfgwas program
     :param role: 0, 1, 2
@@ -244,4 +244,4 @@ def start_sfgwas(role: str, demo: bool = False) -> None:
         protocol_command = "bash run_example.sh"
     command = f"export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas && {protocol_command}"
     run_command(command)
-    print("Finished SFGWAS protocol")
+    print(f"Finished {protocol} protocol")

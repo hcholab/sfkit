@@ -1,3 +1,7 @@
+# TODO: update parameter files based on website
+#       do the 'connect_to_other_vms' with the ports from website
+
+import fileinput
 import subprocess
 import time
 
@@ -9,7 +13,8 @@ def run_gwas_protocol(doc_ref_dict: dict, role: str) -> None:
     install_ntl_library()
     compile_gwas_code()
     connect_to_other_vms(doc_ref_dict, role)
-    copy_data_to_gwas_repo("./encrypted_data", role)
+    if role != "0":
+        copy_data_to_gwas_repo("./encrypted_data", role)
     start_datasharing(role)
     start_gwas(role)
 
@@ -75,32 +80,28 @@ def connect_to_other_vms(doc_ref_dict: dict, role: str) -> None:
         doc_ref_dict["personal_parameters"][user]["IP_ADDRESS"]["value"] for user in doc_ref_dict["participants"]
     ]
     print("IP addresses:", ip_addresses)
-    ports = [
-        doc_ref_dict["personal_parameters"][user]["PORTS"]["value"].split(",") for user in doc_ref_dict["participants"]
-    ]
-    # print("Ports:", ports)
-    print("Using port 8055 for testing")
-    if role == "1":
-        # command = f"nc -k -l -p '{ports[1][2]}' &"
-        command = "nc -k -l -p 8055 &"
-        if subprocess.run(command, shell=True).returncode != 0:
-            print(f"Failed to perform command {command}")
-            exit(1)
-        # command = f"nc -w 5 -v -z '{ip_addresses[0]}' '{ports[0][1]}'"
-        command = f"nc -w 5 -v -z '{ip_addresses[0]}' '8055'"
+
+    for line in fileinput.input(f"secure-gwas/par/test.par.{role}.txt", inplace=True):
+        if "IP_ADDR_P0" in line:
+            print(f"IP_ADDR_P0 {ip_addresses[0]}")
+        elif "IP_ADDR_P1" in line:
+            print(f"IP_ADDR_P1 {ip_addresses[1]}")
+        elif "IP_ADDR_P2" in line:
+            print(f"IP_ADDR_P2 {ip_addresses[2]}")
+        else:
+            print(line, end="")
+    print("\n\n Finished updating parameter files \n\n")
+
+    print("Using port 8055 to test connections")
+    command = "nc -k -l -p 8055 &"
+    if subprocess.run(command, shell=True).returncode != 0:
+        print(f"Failed to perform command {command}")
+        exit(1)
+    for i in range(int(role)):
+        command = f"nc -w 5 -v -z {ip_addresses[i]} 8055 &>/dev/null"
         while subprocess.run(command, shell=True).returncode != 0:
+            print(f"Failed to perform command {command}. Trying again...")
             time.sleep(5)
-    elif role == "2":
-        # command = f"nc -w 5 -v -z '{ip_addresses[0]}' '{ports[0][2]}'"
-        command = f"nc -w 5 -v -z '{ip_addresses[0]}' '8055'"
-        while subprocess.run(command, shell=True).returncode != 0:
-            time.sleep(5)
-        # command = f"nc -w 5 -v -z '{ip_addresses[1]}' '{ports[1][2]}'"
-        command = f"nc -w 5 -v -z '{ip_addresses[0]}' '8055'"
-        while subprocess.run(command, shell=True).returncode != 0:
-            time.sleep(5)
-    else:
-        raise ValueError("Invalid role")
     print("\n\n Finished connecting to other VMs \n\n")
 
 
@@ -110,8 +111,7 @@ def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
     cp '{data_path}'/m.bin secure-gwas/test_data/m.bin 
     cp '{data_path}'/p.bin secure-gwas/test_data/p.bin 
     cp '{data_path}'/other_shared_key.bin secure-gwas/test_data/other_shared_key.bin 
-    cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt 
-    gsutil cp gs://secure-gwas-data/test.par.'{role}'.txt secure-gwas/par/test.par.'{role}'.txt"""
+    cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"""
     for command in commands.split("\n"):
         if subprocess.run(command, shell=True).returncode != 0:
             print(f"Failed to perform command {command}")
@@ -123,7 +123,9 @@ def start_datasharing(role: str) -> None:
     print("Sleeping before starting datasharing")
     time.sleep(30 * int(role))
     print("\n\n Begin starting data sharing \n\n")
-    command = f"cd secure-gwas/code && bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt ../test_data/"
+    command = f"cd secure-gwas/code && bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
+    if role != "0":
+        command += " ../test_data/"
     if subprocess.run(command, shell=True).returncode != 0:
         print(f"Failed to perform command {command}")
         exit(1)
