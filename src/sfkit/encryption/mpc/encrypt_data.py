@@ -1,5 +1,7 @@
 # for MPC GWAS
 
+# TODO: move ./encrypted_data to the data directory
+
 import os
 import shutil
 import sys
@@ -20,7 +22,9 @@ from sfkit.api import update_firestore
 BASE_P = 1461501637330902918203684832716283019655932542929
 
 
-def encrypt_GMP(prng, input_dir, output_dir="./encrypted_data"):  # sourcery skip: ensure-file-closed, switch
+def encrypt_GMP(
+    prng: PseudoRandomNumberGenerator, input_dir: str, output_dir: str = "./encrypted_data"
+) -> None:  # sourcery skip: avoid-global-variables, avoid-single-character-names-variables, ensure-file-closed, snake-case-functions, switch
     """
     Converts the data to GMP vectors (genotype, missing data, phenotype), encrypts
     them, and writes them to files.
@@ -69,7 +73,7 @@ def encrypt_GMP(prng, input_dir, output_dir="./encrypted_data"):  # sourcery ski
     p_file.close()
 
 
-def get_shared_mpcgwas_keys(my_private_key, other_public_key, debug=False):
+def get_shared_mpcgwas_keys(my_private_key: PrivateKey, other_public_key: PublicKey, debug: bool = False) -> list:
     """
     Given the private key of the user and the public key of the other user, generate 2 shared keys.
     The first is for the user with role 1 and the second is for the user with role 2.
@@ -141,7 +145,7 @@ def encrypt_data() -> None:
     print("\n\nThe encryption is complete.")
 
 
-def main():
+def main() -> None:
     encrypt_data()
 
 

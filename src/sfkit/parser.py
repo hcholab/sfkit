@@ -6,20 +6,26 @@ def get_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command")
     authparser = subparsers.add_parser("auth", help="Authenticate with the CLI")
     authparser.add_argument("--study_title", help=argparse.SUPPRESS)
-    subparsers.add_parser("networking", help="Setup the networking, including your IP address and any relevant ports")
-    subparsers.add_parser("encrypt_data", help="Encrypt your MPC-GWAS data")
+    networking = subparsers.add_parser(
+        "networking", help="Setup the networking, including your IP address and any relevant ports"
+    )
+    networking.add_argument(
+        "--ports",
+        help="Comma-separated list of ports to use for communication.  If not provided, you will be prompted to enter them.",
+    )
     subparsers.add_parser("generate_keys", help="Generate your public and private cryptographic keys")
     registerdataparser = subparsers.add_parser(
         "register_data", help="Register and validate your data.", description="Register and validate your data."
     )
     registerdataparser.add_argument(
         "--geno_binary_file_prefix",
-        help="Path to the genotype binary file prefix (e.g. 'for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%%d'",
+        help="Path to the genotype binary file prefix (e.g. 'for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%%d')",
     )  # two percent-signs to escape the first one
     registerdataparser.add_argument(
         "--data_path",
         help="Directory containing the data files (chrom_sizes.txt, pheno.txt, cov.txt, snp_pos.txt, sample_keep.txt, snp_ids.txt, all.gcount.transpose.bin)",
     )
+    subparsers.add_parser("encrypt_data", help="Encrypt your MPC-GWAS data")
     runprotocol = subparsers.add_parser(
         "run_protocol",
         help="Run the protocol. As this command may be long-running, you may want to run it using nohup or screen or tmux",

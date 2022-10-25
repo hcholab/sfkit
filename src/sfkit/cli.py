@@ -15,7 +15,8 @@ def main() -> None:
         study_title = args.study_title or ""
         auth(study_title)
     elif args.command == "networking":
-        setup_networking()
+        ports = args.ports or ""
+        setup_networking(ports)
     elif args.command == "generate_keys":
         generate_personal_keys()
     elif args.command == "encrypt_data":

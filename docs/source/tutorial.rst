@@ -11,7 +11,7 @@ There are two main components to the sfkit workflow: the website and the sfkit c
 Prerequisites
 -------------
 
-Before you begin, you will need access to a Google Cloud VM instance where you can run the protocol.  
+Before you begin, you will need access to a Google Cloud VM instance where you can run the protocol.  If you are unfamiliar with Google Cloud Compute, you may find the documentation `here <https://cloud.google.com/compute>`_.
 
 .. note::
 

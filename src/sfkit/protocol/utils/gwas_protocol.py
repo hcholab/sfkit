@@ -13,8 +13,7 @@ def run_gwas_protocol(doc_ref_dict: dict, role: str) -> None:
     install_ntl_library()
     compile_gwas_code()
     connect_to_other_vms(doc_ref_dict, role)
-    if role != "0":
-        copy_data_to_gwas_repo("./encrypted_data", role)
+    copy_data_to_gwas_repo("./encrypted_data", role)
     start_datasharing(role)
     start_gwas(role)
 
@@ -112,6 +111,11 @@ def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
     cp '{data_path}'/p.bin secure-gwas/test_data/p.bin 
     cp '{data_path}'/other_shared_key.bin secure-gwas/test_data/other_shared_key.bin 
     cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"""
+
+    if role == "0":
+        # assuming CP0's pos.txt is in ./encrypted folder
+        commands = f"cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"
+
     for command in commands.split("\n"):
         if subprocess.run(command, shell=True).returncode != 0:
             print(f"Failed to perform command {command}")
@@ -141,3 +145,39 @@ def start_gwas(role: str) -> None:
         print(f"Failed to perform command {command}")
         exit(1)
     print("\n\n Finished GWAS \n\n")
+
+    # for reference when doing the TODO to update the parameter files...
+    # def update_parameters(self, file: str, study_title: str) -> None:
+    #     print(f"Updating parameters in {file}")
+
+    #     doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
+    #     doc_ref_dict: dict = doc_ref.get().to_dict()
+
+    #     pars = doc_ref_dict["parameters"]
+
+    #     file_number = file.split(".")[-2]
+    #     pars = pars | doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][int(file_number)]]
+
+    #     pars["NUM_INDS_SP_1"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][1]]["NUM_INDS"]
+    #     pars["NUM_INDS_SP_2"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][2]]["NUM_INDS"]
+    #     pars["NUM_INDS"] = {"value": ""}
+    #     pars["NUM_INDS"]["value"] = str(int(pars["NUM_INDS_SP_1"]["value"]) + int(pars["NUM_INDS_SP_2"]["value"]))
+
+    #     # update pars with ipaddresses
+    #     for i in range(3):
+    #         pars[f"IP_ADDR_P{str(i)}"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]][
+    #             "IP_ADDRESS"
+    #         ]
+    #     # update pars with ports
+    #     # pars["PORT_P0_P1"] and PORT_P0_P2 do not need to be updated as they are controlled by us (the Broad)
+    #     pars["PORT_P1_P2"] = {
+    #         "value": doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][1]]["PORTS"]["value"].split(",")[
+    #             2
+    #         ]
+    #     }
+
+    #     for line in fileinput.input(file, inplace=True):
+    #         key = str(line).split(" ")[0]
+    #         if key in pars:
+    #             line = f"{key} " + str(pars[key]["value"]) + "\n"
+    #         print(line, end="")
