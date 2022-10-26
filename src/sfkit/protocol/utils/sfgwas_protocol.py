@@ -41,13 +41,12 @@ def install_sfgwas() -> None:
     print("Begin installing dependencies")
     commands = [
         # "sudo apt-get update -y",
-        # "sudo apt-get install python3-pip wget git zip unzip golang -y",
+        # "sudo apt-get install python3-pip wget git zip unzip -y",
         "wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
-        "mkdir -p ~/.local/bin && mkdir -p ~/.local/lib",
-        "tar -C ~/.local/lib -xzf go1.18.1.linux-amd64.tar.gz && mv ~/.local/lib/go/bin/go ~/.local/bin/go",
+        "sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz",
         "wget -nc https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20220603.zip",
+        "mkdir -p ~/.local/bin",
         "unzip -o plink2_linux_avx2_20220603.zip -d ~/.local/bin",
-        "echo 'export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go' >> ~/.bashrc && source ~/.bashrc",
         "pip3 install numpy",
     ]
     for command in commands:
@@ -227,7 +226,7 @@ def build_sfgwas() -> None:
     build/compile sfgwas
     """
     print("Building sfgwas code")
-    command = """export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas && go get -t github.com/simonjmendelsohn/sfgwas && go build"""
+    command = """export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && go get -t github.com/simonjmendelsohn/sfgwas && go build"""
     run_command(command)
     print("Finished building sfgwas code")
 
@@ -242,6 +241,6 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     protocol_command = f"export PID={role} && go run sfgwas.go | tee /dev/tty > stdout_party{role}.txt"
     if demo:
         protocol_command = "bash run_example.sh"
-    command = f"export PYTHONUNBUFFERED=TRUE && export GOROOT=~/.local/lib/go && cd sfgwas && {protocol_command}"
+    command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && {protocol_command}"
     run_command(command)
     print(f"Finished {protocol} protocol")

@@ -1,3 +1,4 @@
+import socket
 from requests import get
 from sfkit.protocol.utils.helper_functions import get_authentication
 from sfkit.api import get_doc_ref_dict
@@ -7,12 +8,15 @@ from sfkit.api import update_firestore
 def setup_networking(ports_str: str) -> None:
     (email, study_title) = get_authentication()
 
-    # internal_ip_address: str = socket.gethostbyname(socket.gethostname())
-    external_ip_address: str = get("https://api.ipify.org").content.decode("utf-8")
-    print("Using external ip address:", external_ip_address)
+    if ports_str:  # if ports are specified we're using website and internal ip_addresses
+        ip_address: str = socket.gethostbyname(socket.gethostname())
+        print("Using internal ip address:", ip_address)
+    else:
+        ip_address: str = get("https://api.ipify.org").content.decode("utf-8")
+        print("Using external ip address:", ip_address)
 
     print("Processing...")
-    update_firestore(f"update_firestore::IP_ADDRESS={external_ip_address}::{study_title}::{email}")
+    update_firestore(f"update_firestore::IP_ADDRESS={ip_address}::{study_title}::{email}")
 
     doc_ref_dict: dict = get_doc_ref_dict()
     role: str = str(doc_ref_dict["participants"].index(email))
