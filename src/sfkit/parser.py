@@ -25,7 +25,6 @@ def get_parser() -> argparse.ArgumentParser:
         "--data_path",
         help="Directory containing the data files (chrom_sizes.txt, pheno.txt, cov.txt, snp_pos.txt, sample_keep.txt, snp_ids.txt, all.gcount.transpose.bin)",
     )
-    subparsers.add_parser("encrypt_data", help="Encrypt your MPC-GWAS data")
     runprotocol = subparsers.add_parser(
         "run_protocol",
         help="Run the protocol. As this command may be long-running, you may want to run it using nohup or screen or tmux",

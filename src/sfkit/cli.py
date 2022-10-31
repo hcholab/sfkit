@@ -1,6 +1,5 @@
 from sfkit.auth.auth import auth
 from sfkit.auth.setup_networking import setup_networking
-from sfkit.encryption.mpc.encrypt_data import encrypt_data
 from sfkit.encryption.generate_personal_keys import generate_personal_keys
 from sfkit.parser import get_parser
 from sfkit.protocol.register_data import register_data
@@ -19,8 +18,6 @@ def main() -> None:
         setup_networking(ports)
     elif args.command == "generate_keys":
         generate_personal_keys()
-    elif args.command == "encrypt_data":
-        encrypt_data()
     elif args.command == "register_data":
         geno_binary_file_prefix = args.geno_binary_file_prefix or ""
         data_path = args.data_path or ""

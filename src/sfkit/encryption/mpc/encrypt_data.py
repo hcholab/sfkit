@@ -140,7 +140,7 @@ def encrypt_data() -> None:
         f.write(shared_keys[3 - role])
     shutil.copyfile(f"{input_dir}/pos.txt", "./encrypted_data/pos.txt")
 
-    update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
+    # update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
 
     print("\n\nThe encryption is complete.")
 

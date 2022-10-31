@@ -5,6 +5,8 @@ import fileinput
 import subprocess
 import time
 
+from src.sfkit.encryption.mpc.encrypt_data import encrypt_data
+
 
 def run_gwas_protocol(doc_ref_dict: dict, role: str) -> None:
     print("\n\n Begin running GWAS protocol \n\n")
@@ -13,6 +15,7 @@ def run_gwas_protocol(doc_ref_dict: dict, role: str) -> None:
     install_ntl_library()
     compile_gwas_code()
     connect_to_other_vms(doc_ref_dict, role)
+    encrypt_or_prepare_data("./encrypted_data", role)
     copy_data_to_gwas_repo("./encrypted_data", role)
     start_datasharing(role)
     start_gwas(role)
@@ -102,6 +105,20 @@ def connect_to_other_vms(doc_ref_dict: dict, role: str) -> None:
             print(f"Failed to perform command {command}. Trying again...")
             time.sleep(5)
     print("\n\n Finished connecting to other VMs \n\n")
+
+
+def encrypt_or_prepare_data(data_path: str, role: str) -> None:
+    if role == "0":
+        command = f"mkdir -p {data_path}"
+        if subprocess.run(command, shell=True).returncode != 0:
+            print(f"Failed to perform command {command}")
+            exit(1)
+        command = f"gsutil cp gs://secure-gwas-data0/pos.txt {data_path}/pos.txt"
+        if subprocess.run(command, shell=True).returncode != 0:
+            print(f"Failed to perform command {command}")
+            exit(1)
+    elif role in {"1", "2"}:
+        encrypt_data()
 
 
 def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
