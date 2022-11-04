@@ -2,15 +2,18 @@ import os
 
 from nacl.encoding import HexEncoder
 from nacl.public import PrivateKey
-from sfkit.protocol.utils import constants
-from sfkit.protocol.utils.helper_functions import get_authentication
+
 from sfkit.api import update_firestore
+from sfkit.protocol.utils import constants
+from src.sfkit.protocol.utils.helper_functions import authenticate_user
 
 
 def generate_personal_keys() -> None:
     """
     Generate and save a new keypair (public and private keys) for the user.
     """
+    authenticate_user()
+
     private_key: PrivateKey = PrivateKey.generate()
     public_key: str = private_key.public_key.encode(encoder=HexEncoder).decode()
 
@@ -24,6 +27,5 @@ def generate_personal_keys() -> None:
         f.write(private_key.encode(encoder=HexEncoder).decode() + "\n")
     print(f"Your public and private keys have been generated and saved to {constants.SFKIT_DIR}.")
 
-    email, study_title = get_authentication()
-    update_firestore(f"update_firestore::PUBLIC_KEY={public_key}::{study_title}::{email}")
+    update_firestore(f"update_firestore::PUBLIC_KEY={public_key}")
     print("Your public key has been uploaded to the website and is available for all participants in your study.")

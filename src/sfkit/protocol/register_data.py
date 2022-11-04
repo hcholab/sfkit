@@ -1,10 +1,10 @@
 import os
 
 import checksumdir
+
+from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.protocol.utils import constants
-from sfkit.protocol.utils.helper_functions import get_authentication
-from sfkit.api import get_doc_ref_dict
-from sfkit.api import update_firestore
+from src.sfkit.protocol.utils.helper_functions import authenticate_user
 
 
 def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
@@ -12,7 +12,8 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     Register data with the server and validate that the data formatting looks correct.
     """
 
-    email, study_title = get_authentication()
+    authenticate_user()
+
     doc_ref_dict: dict = get_doc_ref_dict()
     study_type = doc_ref_dict["study_type"]
     num_inds: int
@@ -22,39 +23,39 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
         data_path = validate_data_path(data_path)
 
         if data_path == "demo":
-            return using_demo(study_title, email)
+            return using_demo()
 
         num_inds = validate_sfgwas_data(geno_binary_file_prefix, data_path)
         num_snps = num_rows(os.path.join(data_path, "snp_ids.txt"))
-        update_firestore(f"update_firestore::NUM_INDS={num_inds}::{study_title}::{email}")
-        update_firestore(f"update_firestore::NUM_SNPS={num_snps}::{study_title}::{email}")
+        update_firestore(f"update_firestore::NUM_INDS={num_inds}")
+        update_firestore(f"update_firestore::NUM_SNPS={num_snps}")
         print(f"Your data has {num_inds} individuals and {num_snps} SNPs.")
     elif study_type == "MPCGWAS":
         data_path = validate_data_path(data_path)
 
         if data_path == "demo":
-            return using_demo(study_title, email)
+            return using_demo()
 
         num_inds = validate_mpcgwas_data(data_path)
-        update_firestore(f"update_firestore::NUM_INDS={num_inds}::{study_title}::{email}")
+        update_firestore(f"update_firestore::NUM_INDS={num_inds}")
         print(f"Your data has {num_inds} individuals.")
     elif study_type == "PCA":
         data_path = validate_data_path(data_path)
 
         if data_path == "demo":
-            return using_demo(study_title, email)
+            return using_demo()
 
         number_of_rows = num_rows(os.path.join(data_path, "data.txt"))
         number_of_cols = num_cols(os.path.join(data_path, "data.txt"))
-        update_firestore(f"update_firestore::NUM_INDS={number_of_rows}::{study_title}::{email}")
-        update_firestore(f"update_firestore::NUM_SNPS={number_of_cols}::{study_title}::{email}")
+        update_firestore(f"update_firestore::NUM_INDS={number_of_rows}")
+        update_firestore(f"update_firestore::NUM_SNPS={number_of_cols}")
         print(f"Your data has {number_of_rows} rows and {number_of_cols} columns.")
     else:
         raise ValueError(f"Unknown study type: {study_type}")
 
-    update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
+    update_firestore("update_firestore::status=not ready")
     data_hash = checksumdir.dirhash(data_path, "md5")
-    update_firestore(f"update_firestore::DATA_HASH={data_hash}::{study_title}::{email}")
+    update_firestore(f"update_firestore::DATA_HASH={data_hash}")
 
     with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "w") as f:
         if study_type == "SFGWAS":
@@ -110,8 +111,8 @@ def num_cols(file_path: str) -> int:
     return len(open(file_path).readline().split())
 
 
-def using_demo(study_title: str, email: str) -> bool:
-    update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
+def using_demo() -> bool:
+    update_firestore("update_firestore::status=not ready")
     print("Using demo data!")
     print("Successfully registered and validated data!")
     return True

@@ -1,12 +1,14 @@
 import socket
+
 from requests import get
-from sfkit.protocol.utils.helper_functions import get_authentication
-from sfkit.api import get_doc_ref_dict
-from sfkit.api import update_firestore
+
+from sfkit.api import get_doc_ref_dict, update_firestore
+from src.sfkit.api import get_user_email
+from src.sfkit.protocol.utils.helper_functions import authenticate_user
 
 
 def setup_networking(ports_str: str) -> None:
-    (email, study_title) = get_authentication()
+    authenticate_user()
 
     if ports_str:  # if ports are specified we're using website and internal ip_addresses
         ip_address: str = socket.gethostbyname(socket.gethostname())
@@ -16,9 +18,10 @@ def setup_networking(ports_str: str) -> None:
         print("Using external ip address:", ip_address)
 
     print("Processing...")
-    update_firestore(f"update_firestore::IP_ADDRESS={ip_address}::{study_title}::{email}")
+    update_firestore(f"update_firestore::IP_ADDRESS={ip_address}")
 
     doc_ref_dict: dict = get_doc_ref_dict()
+    email: str = get_user_email()
     role: str = str(doc_ref_dict["participants"].index(email))
     if role == "0":
         if not ports_str:
@@ -26,13 +29,13 @@ def setup_networking(ports_str: str) -> None:
             port2: str = validate_port(input("Enter port for Party 2: "))
             ports: list[str] = ["null", port1, port2]
             ports_str = ",".join(ports)
-        update_firestore(f"update_firestore::PORTS={ports_str}::{study_title}::{email}")
+        update_firestore(f"update_firestore::PORTS={ports_str}")
     elif role == "1":
         if not ports_str:
             port = validate_port(input("Enter the port number you want to use to communicate with Party 2: "))
             ports: list[str] = ["null", "null", port]
             ports_str = ",".join(ports)
-        update_firestore(f"update_firestore::PORTS={ports_str}::{study_title}::{email}")
+        update_firestore(f"update_firestore::PORTS={ports_str}")
 
     print("Successfully communicated networking information!")
 

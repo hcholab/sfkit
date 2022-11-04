@@ -1,40 +1,37 @@
 import os
 
 from sfkit.protocol.utils import constants
-from sfkit.api import get_study_options
+from src.sfkit.api import get_doc_ref_dict
 
 
-def auth(study_title: str) -> None:
+def auth() -> None:
     """
     Authenticate a GCP service account from the study with the sfkit CLI.
     """
 
-    if study_title:
-        user_email = "Broad"
-    else:
-        study_title, user_email = "", ""
-
-        options = get_study_options()
-        if not options:
-            print(
-                "Error finding your study.  Please make sure you are part of a study and have uploaded your service account email to the website."
-            )
+    try:
+        with open("auth_key.txt", "r") as f:
+            auth_key = f.readline().rstrip()
+    except FileNotFoundError:
+        print("auth_key.txt not found.")
+        auth_key_path = input("Enter the path to your auth_key.txt file: ")
+        try:
+            with open(auth_key_path, "r") as f:
+                auth_key = f.readline().rstrip()
+        except FileNotFoundError:
+            print("auth_key.txt not found.  Please download the auth_key.txt file from the sfkit website.")
             exit(1)
-        if len(options) == 1:
-            study_title, user_email = options[0]
-        else:
-            print("Please select your study:")
-            for i, option in enumerate(options):
-                print(f"{i}: {option[0]}")
-            try:
-                study_title, user_email = options[int(input("Enter your selection: "))]
-            except (ValueError, IndexError):
-                print("Invalid selection.  Please enter a number from the list.")
-                exit(1)
 
     os.makedirs(constants.SFKIT_DIR, exist_ok=True)
-    with open(constants.AUTH_FILE, "w") as f:
-        f.write(user_email + "\n")
-        f.write(study_title + "\n")
+    with open(constants.AUTH_KEY, "w") as f:
+        f.write(auth_key)
+
+    try:
+        _, _ = get_doc_ref_dict()  # verify that the auth_key is valid
+    except Exception as e:
+        os.remove(constants.AUTH_KEY)
+        print("Invalid auth_key.txt file.")
+        print(e)
+        exit(1)
 
     print("Successfully authenticated!")

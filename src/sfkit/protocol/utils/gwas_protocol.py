@@ -163,6 +163,7 @@ def start_gwas(role: str) -> None:
         exit(1)
     print("\n\n Finished GWAS \n\n")
 
+    # TODO: update both firestore and param file with number of cpus for num_threads (n_cpus=$(nproc))
     # for reference when doing the TODO to update the parameter files...
     # def update_parameters(self, file: str, study_title: str) -> None:
     #     print(f"Updating parameters in {file}")

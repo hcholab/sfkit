@@ -1,12 +1,13 @@
+import os
 import subprocess
-from sfkit.protocol.utils import constants
+
+from src.sfkit.protocol.utils import constants
 
 
-def get_authentication() -> tuple[str, str]:
-    with open(constants.AUTH_FILE, "r") as f:
-        email: str = f.readline().rstrip()
-        study_title: str = f.readline().rstrip()
-    return (email, study_title)
+def authenticate_user() -> None:
+    if not os.path.exists(constants.AUTH_KEY):
+        print("You have not authenticated.  Please run 'sfkit auth' to authenticate.")
+        exit(1)
 
 
 def run_command(command: str) -> None:

@@ -4,8 +4,7 @@ import argparse
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run workflow with sfkit.  Start with `sfkit auth` to authenticate.")
     subparsers = parser.add_subparsers(dest="command")
-    authparser = subparsers.add_parser("auth", help="Authenticate with the CLI")
-    authparser.add_argument("--study_title", help=argparse.SUPPRESS)
+    subparsers.add_parser("auth", help="Authenticate with the CLI")
     networking = subparsers.add_parser(
         "networking", help="Setup the networking, including your IP address and any relevant ports"
     )
