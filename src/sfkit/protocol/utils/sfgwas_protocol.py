@@ -13,6 +13,7 @@ from nacl.public import Box, PrivateKey, PublicKey
 from sfkit.api import get_doc_ref_dict
 from sfkit.protocol.utils import constants
 from sfkit.protocol.utils.helper_functions import run_command
+from sfkit.api import update_firestore
 
 
 def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
@@ -40,8 +41,8 @@ def install_sfgwas() -> None:
     """
     print("Begin installing dependencies")
     commands = [
-        # "sudo apt-get update -y",
-        # "sudo apt-get install python3-pip wget git zip unzip -y",
+        "sudo apt-get update -y",
+        "sudo apt-get install wget git zip unzip -y",
         "wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
         "sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz",
         "wget -nc https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20220603.zip",
@@ -71,6 +72,7 @@ def install_sfgwas() -> None:
         run_command("git clone https://github.com/simonjmendelsohn/sfgwas && cd sfgwas")
 
     print("Finished installing dependencies")
+    update_firestore("update_firestore::status=finished installing dependencies")
 
 
 def generate_shared_keys(role: int) -> None:
@@ -229,6 +231,7 @@ def build_sfgwas() -> None:
     command = """export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && go get -t github.com/simonjmendelsohn/sfgwas && go build"""
     run_command(command)
     print("Finished building sfgwas code")
+    update_firestore("update_firestore::status=finished building code")
 
 
 def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> None:
@@ -238,9 +241,11 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     :param demo: True if running demo
     """
     print("Begin SFGWAS protocol")
-    protocol_command = f"export PID={role} && go run sfgwas.go | tee /dev/tty > stdout_party{role}.txt"
+    update_firestore("update_firestore::status=beginning sfgwas protocol")
+    protocol_command = f"export PID={role} && go run sfgwas.go | tee /dev/console > stdout_party{role}.txt"
     if demo:
         protocol_command = "bash run_example.sh"
     command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && {protocol_command}"
     run_command(command)
     print(f"Finished {protocol} protocol")
+    update_firestore("update_firestore::status=finished protocol")

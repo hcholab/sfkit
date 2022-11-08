@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from src.sfkit.protocol.utils import constants
+from sfkit.protocol.utils import constants
 
 
 def authenticate_user() -> None:

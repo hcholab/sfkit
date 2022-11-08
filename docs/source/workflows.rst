@@ -1,11 +1,6 @@
 Workflows
 =========
 
-MPC-GWAS Workflow (2018 version)
---------------------------------
-
-This workflows is based on the 2018 paper from nature biotechnology `Secure genome-wide association analysis using multiparty computation <https://www.nature.com/articles/nbt.4108>`__.  It is a complete workflow for GWAS analysis using `secret sharing <https://en.wikipedia.org/wiki/Secret_sharing>`__ to allow for `secure multiparty computation <https://en.wikipedia.org/wiki/Secure_multi-party_computation>`__.  
-
 SF-GWAS Workflow (2022 version)
 -------------------------------
 
@@ -22,3 +17,8 @@ SF-PCA Workflow (2022 version)
 ------------------------------
 
 This workflow consists of only Principal Component Analysis, using the same implementation as in the 2022 SF-GWAS workflow (phase 2).  It is generalized here as its own workflow to allow for PCA in domains other than GWAS.  
+
+MPC-GWAS Workflow (2018 version)
+--------------------------------
+
+This workflows is based on the 2018 paper from nature biotechnology `Secure genome-wide association analysis using multiparty computation <https://www.nature.com/articles/nbt.4108>`__.  It is a complete workflow for GWAS analysis using `secret sharing <https://en.wikipedia.org/wiki/Secret_sharing>`__ to allow for `secure multiparty computation <https://en.wikipedia.org/wiki/Secure_multi-party_computation>`__.  

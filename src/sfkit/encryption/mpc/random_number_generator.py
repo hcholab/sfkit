@@ -1,7 +1,6 @@
 # for MPC GWAS
 
 import math
-import sys
 
 import nacl.secret
 
@@ -24,7 +23,7 @@ class PseudoRandomNumberGenerator:
         self.nonce = 0
         self.buffer = []
 
-    def generate_buffer(self):
+    def generate_buffer(self) -> None:
         """
         Generates a buffer of random numbers in the range of base_p
         """
@@ -35,12 +34,12 @@ class PseudoRandomNumberGenerator:
 
         self.buffer = self.convert_byte_string_to_list_of_ints_in_range(pseudo_random_byte_string)
 
-    def next(self):
+    def next(self) -> int:
         if not self.buffer:
             self.generate_buffer()
         return self.buffer.pop(0)
 
-    def convert_byte_string_to_list_of_ints_in_range(self, byte_string):
+    def convert_byte_string_to_list_of_ints_in_range(self, byte_string) -> list:
         res = []
 
         l = len(bin(self.base_p)) - 2  # bit length; -2 to remove the "0b" prefix
@@ -67,7 +66,7 @@ class PseudoRandomNumberGenerator:
         return res
 
 
-def main():  # for testing
+def main() -> None:  # for testing
     key = bytes.fromhex("3a57393f2a2ef038d43b432c34339e0cd021a15ce25b17c8bf07a5d9eae05d13")
     prng = PseudoRandomNumberGenerator(key)
     for _ in range(2000):
@@ -75,7 +74,7 @@ def main():  # for testing
 
 
 if __name__ == "__main__":
-    global debug
-    debug = len(sys.argv) > 1 and sys.argv[1] == "debug"
+    # global debug
+    # debug = len(sys.argv) > 1 and sys.argv[1] == "debug"
 
     main()

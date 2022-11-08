@@ -59,7 +59,7 @@ def update_config_global() -> None:
         data["num_rows"][i] = int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"])
         print("num_rows for", participant, "is", data["num_rows"][i])
         assert i == 0 or data["num_rows"][i] > 0, "num_rows must be greater than 0"
-    data["num_columns"] = int(doc_ref_dict["parameters"]["NUM_SNPS"]["value"])
+    data["num_columns"] = int(doc_ref_dict["parameters"]["num_columns"]["value"])
     print("num_columns is", data["num_columns"])
     assert data["num_columns"] > 0, "num_columns must be greater than 0"
 

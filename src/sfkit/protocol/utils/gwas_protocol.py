@@ -5,7 +5,8 @@ import fileinput
 import subprocess
 import time
 
-from src.sfkit.encryption.mpc.encrypt_data import encrypt_data
+from sfkit.api import update_firestore
+from sfkit.encryption.mpc.encrypt_data import encrypt_data
 
 
 def run_gwas_protocol(doc_ref_dict: dict, role: str) -> None:
@@ -39,6 +40,7 @@ def install_gwas_dependencies() -> None:
             print(f"Failed to perform command {command}")
             exit(1)
     print("\n\n Finished installing dependencies \n\n")
+    update_firestore("update_firestore::status=finished installing dependencies")
 
 
 def install_gwas_repo() -> None:
@@ -61,6 +63,7 @@ def install_ntl_library() -> None:
             print(f"Failed to perform command {command}")
             exit(1)
     print("\n\n Finished installing NTL library \n\n")
+    update_firestore("update_firestore::status=finished installing NTL library")
 
 
 def compile_gwas_code() -> None:
@@ -105,6 +108,7 @@ def connect_to_other_vms(doc_ref_dict: dict, role: str) -> None:
             print(f"Failed to perform command {command}. Trying again...")
             time.sleep(5)
     print("\n\n Finished connecting to other VMs \n\n")
+    update_firestore("update_firestore::status=finished connecting to other VMs")
 
 
 def encrypt_or_prepare_data(data_path: str, role: str) -> None:
@@ -119,6 +123,7 @@ def encrypt_or_prepare_data(data_path: str, role: str) -> None:
             exit(1)
     elif role in {"1", "2"}:
         encrypt_data()
+    update_firestore("update_firestore::status=finished encrypting data")
 
 
 def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
@@ -151,6 +156,7 @@ def start_datasharing(role: str) -> None:
         print(f"Failed to perform command {command}")
         exit(1)
     print("\n\n Finished starting data sharing \n\n")
+    update_firestore("update_firestore::status=started data sharing protocol")
 
 
 def start_gwas(role: str) -> None:
@@ -162,6 +168,7 @@ def start_gwas(role: str) -> None:
         print(f"Failed to perform command {command}")
         exit(1)
     print("\n\n Finished GWAS \n\n")
+    update_firestore("update_firestore::status=finished protocol")
 
     # TODO: update both firestore and param file with number of cpus for num_threads (n_cpus=$(nproc))
     # for reference when doing the TODO to update the parameter files...

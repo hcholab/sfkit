@@ -3,8 +3,8 @@ import socket
 from requests import get
 
 from sfkit.api import get_doc_ref_dict, update_firestore
-from src.sfkit.api import get_user_email
-from src.sfkit.protocol.utils.helper_functions import authenticate_user
+from sfkit.api import get_user_email
+from sfkit.protocol.utils.helper_functions import authenticate_user
 
 
 def setup_networking(ports_str: str) -> None:

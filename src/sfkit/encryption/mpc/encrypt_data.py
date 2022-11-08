@@ -13,11 +13,10 @@ from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
 from sfkit.encryption.mpc.random_number_generator import PseudoRandomNumberGenerator
 from sfkit.protocol.utils import constants
-from sfkit.protocol.utils.helper_functions import get_authentication
 from sfkit.api import get_doc_ref_dict
 from tqdm import tqdm
 
-from sfkit.api import update_firestore
+from sfkit.api import get_user_email
 
 BASE_P = 1461501637330902918203684832716283019655932542929
 
@@ -105,7 +104,7 @@ def get_shared_mpcgwas_keys(my_private_key: PrivateKey, other_public_key: Public
 
 
 def encrypt_data() -> None:
-    email, study_title = get_authentication()
+    email: str = get_user_email()
 
     print("Downloading other party's public key...")
     doc_ref_dict: dict = get_doc_ref_dict()

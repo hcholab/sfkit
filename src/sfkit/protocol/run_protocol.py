@@ -4,8 +4,8 @@ from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.protocol.utils.gwas_protocol import run_gwas_protocol
 from sfkit.protocol.utils.pca_protocol import run_pca_protocol
 from sfkit.protocol.utils.sfgwas_protocol import run_sfgwas_protocol
-from src.sfkit.api import create_cp0, get_user_email
-from src.sfkit.protocol.utils.helper_functions import authenticate_user
+from sfkit.api import create_cp0, get_user_email
+from sfkit.protocol.utils.helper_functions import authenticate_user
 
 
 def run_protocol(phase: str = "", demo: bool = False) -> None:

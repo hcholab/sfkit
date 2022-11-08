@@ -23,7 +23,7 @@ def get_doc_ref_dict() -> dict:
 
 def get_user_email() -> str:
     response = website_get("get_user_email")
-    return response.json()
+    return response.json().get("user_email", "")
 
 
 def update_firestore(msg: str) -> bool:

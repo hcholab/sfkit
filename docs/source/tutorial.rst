@@ -4,14 +4,14 @@ Tutorial
 Introduction
 ------------
 
-sfkit is a command line tool made to facilitate secure collaboration for certain types of genomic analysis that utilize potentially sensitive data.  This tutorial will walk you through the steps of using sfkit to perform a secure genome-wide association study (GWAS) using the sfkit workflow.
+sfkit is a command line tool made to facilitate secure collaboration for certain types of genomic analysis that utilize potentially sensitive data.  This tutorial will walk you through the steps of using sfkit to perform a secure-federated genome-wide association study (SF-GWAS) using the sfkit workflow.
 
-There are two main components to the sfkit workflow: the website and the sfkit client. The website is a web application that serves to provide a convenient UI for the study participants to create a joint study and set up the study parameters. The sfkit client is a command line tool that is used to perform the actual analysis.  The sfkit CLI is run on a machine controlled by the study coordinator.  The sfkit website is run by the Broad Institute.
+There are two main components to the sfkit workflow: the website and the sfkit client. The website is a web application that serves to provide a convenient UI for the study participants to create a joint study and set up the study parameters. The sfkit client is a command line tool that is used to perform the actual analysis.  The sfkit CLI is run on a machine controlled by the study participant.  The sfkit website is run by the Broad Institute.
 
 Prerequisites
 -------------
 
-Before you begin, you will need access to a Google Cloud VM instance where you can run the protocol.  If you are unfamiliar with Google Cloud Compute, you may find the documentation `here <https://cloud.google.com/compute>`_.
+Before you begin, you will need access to a machine where you can run the protocol.  One option is to use GCP: if you are unfamiliar with Google Cloud Compute, you may find the documentation `here <https://cloud.google.com/compute>`_.
 
 .. note::
 
@@ -28,19 +28,15 @@ Website
 -------
 
 1. Go to the companion `website <https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/>`_ and register or login.  
-2. Go to the `studies <https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/index>`_ page to create a study on the website.  For this tutorial, you should choose the "Secure Federated GWAS Study" workflow.  You can choose to enter any title, description and study information and then click "Submit".  After a few seconds, you should see a page that looks something like this:
+2. Go to the `studies <https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/index>`_ page to create a study on the website.  For this tutorial, you should choose the "Secure Federated GWAS Study" workflow with the "User" configuration option.  You can choose to enter any title, description and study information and then click "Submit".  You can leave the parameters as they are, for now (when you run a real study, you'll want to set the parameters accordingly). After you submit, you should see a page that looks something like this:
 
 .. image:: images/study.png
 
-3. Click on "Configure Study" button, choose "User", and enter the Service Account Email where you are running the workflow.  The Service Account Email is used to validate your GCP VM when it will communicate with the website during the sfkit CLI steps.  The Service Account Email can be obtained by ssh'ing into your GCP VM instance, and then running the command ``gcloud auth list``.  The email address should be listed under the "ACTIVE ACCOUNT" section.  After you have entered the service account email, click "Save Changes".  You should see a page that looks something like this:
-
-.. image:: images/study_after_config.png
-
-You are now done with the website component and can proceed to the CLI. 
+An auth_key.txt should automatically download to your machine.  Once this happens, you can proceed to the CLI. 
 
 .. note::
 
-   When running a real study, you will want to allow multiple participants for a study.  A new participant can request to join a study by clicking "Request to Join Study" under a study on the Studies page.  At that point, the owner of the study will be able to go to their study and click "Approve Request" to allow the participant to join the study. For this tutorial, we will only be using one participant. 
+   When running a real study, you will want to allow multiple participants for a study.  A new participant can request to join a study by clicking "Request to Join Study" under a study on the Studies page.  Alternatively, you can invite a new study participant with the button on your study page.  For this tutorial, we will only be using one participant. 
 
 CLI 
 ---

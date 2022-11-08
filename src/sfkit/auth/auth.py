@@ -1,7 +1,7 @@
 import os
 
 from sfkit.protocol.utils import constants
-from src.sfkit.api import get_doc_ref_dict
+from sfkit.api import get_doc_ref_dict
 
 
 def auth() -> None:
@@ -27,7 +27,7 @@ def auth() -> None:
         f.write(auth_key)
 
     try:
-        _, _ = get_doc_ref_dict()  # verify that the auth_key is valid
+        assert get_doc_ref_dict() is not None
     except Exception as e:
         os.remove(constants.AUTH_KEY)
         print("Invalid auth_key.txt file.")

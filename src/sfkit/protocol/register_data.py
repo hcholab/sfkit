@@ -4,7 +4,8 @@ import checksumdir
 
 from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.protocol.utils import constants
-from src.sfkit.protocol.utils.helper_functions import authenticate_user
+from sfkit.protocol.utils.helper_functions import authenticate_user
+from sfkit.api import get_user_email
 
 
 def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
@@ -15,7 +16,8 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     authenticate_user()
 
     doc_ref_dict: dict = get_doc_ref_dict()
-    study_type = doc_ref_dict["study_type"]
+    email: str = get_user_email()
+    study_type: str = doc_ref_dict["study_type"]
     num_inds: int
 
     if study_type == "SFGWAS":
@@ -25,10 +27,10 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
         if data_path == "demo":
             return using_demo()
 
-        num_inds = validate_sfgwas_data(geno_binary_file_prefix, data_path)
-        num_snps = num_rows(os.path.join(data_path, "snp_ids.txt"))
-        update_firestore(f"update_firestore::NUM_INDS={num_inds}")
-        update_firestore(f"update_firestore::NUM_SNPS={num_snps}")
+        num_inds: int = validate_sfgwas_data(geno_binary_file_prefix, data_path)
+        assert num_inds == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"])
+        num_snps: int = num_rows(os.path.join(data_path, "snp_ids.txt"))
+        assert num_snps == int(doc_ref_dict["personal_parameters"][email]["NUM_SNPS"]["value"])
         print(f"Your data has {num_inds} individuals and {num_snps} SNPs.")
     elif study_type == "MPCGWAS":
         data_path = validate_data_path(data_path)
@@ -36,8 +38,8 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
         if data_path == "demo":
             return using_demo()
 
-        num_inds = validate_mpcgwas_data(data_path)
-        update_firestore(f"update_firestore::NUM_INDS={num_inds}")
+        num_inds: int = validate_mpcgwas_data(data_path)
+        assert num_inds == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"])
         print(f"Your data has {num_inds} individuals.")
     elif study_type == "PCA":
         data_path = validate_data_path(data_path)
@@ -45,10 +47,10 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
         if data_path == "demo":
             return using_demo()
 
-        number_of_rows = num_rows(os.path.join(data_path, "data.txt"))
-        number_of_cols = num_cols(os.path.join(data_path, "data.txt"))
-        update_firestore(f"update_firestore::NUM_INDS={number_of_rows}")
-        update_firestore(f"update_firestore::NUM_SNPS={number_of_cols}")
+        number_of_rows: int = num_rows(os.path.join(data_path, "data.txt"))
+        assert number_of_rows == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"])
+        number_of_cols: int = num_cols(os.path.join(data_path, "data.txt"))
+        assert number_of_cols == int(doc_ref_dict["parameters"]["num_columns"]["value"])
         print(f"Your data has {number_of_rows} rows and {number_of_cols} columns.")
     else:
         raise ValueError(f"Unknown study type: {study_type}")
