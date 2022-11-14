@@ -8,9 +8,14 @@ from sfkit.protocol.utils.helper_functions import authenticate_user
 
 
 def setup_networking(ports_str: str) -> None:
+    print("Setting up networking...")
+    print(
+        "NOTE: this step should be run after all participants have joined the study.  If you run this step before all participants have joined, you will need to re-run this step after all participants have joined."
+    )
+
     authenticate_user()
 
-    if ports_str:  # if ports are specified we're using website and internal ip_addresses
+    if ports_str:  # if ports are specified we're using auto-configuration and internal ip_addresses
         ip_address: str = socket.gethostbyname(socket.gethostname())
         print("Using internal ip address:", ip_address)
     else:
@@ -23,19 +28,13 @@ def setup_networking(ports_str: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     email: str = get_user_email()
     role: str = str(doc_ref_dict["participants"].index(email))
-    if role == "0":
-        if not ports_str:
-            port1: str = validate_port(input("Enter port for Party 1: "))
-            port2: str = validate_port(input("Enter port for Party 2: "))
-            ports: list[str] = ["null", port1, port2]
-            ports_str = ",".join(ports)
-        update_firestore(f"update_firestore::PORTS={ports_str}")
-    elif role == "1":
-        if not ports_str:
-            port = validate_port(input("Enter the port number you want to use to communicate with Party 2: "))
-            ports: list[str] = ["null", "null", port]
-            ports_str = ",".join(ports)
-        update_firestore(f"update_firestore::PORTS={ports_str}")
+
+    if not ports_str:
+        ports = ["null" for _ in range(len(doc_ref_dict["participants"]))]
+        for r in range(int(role) + 1, len(doc_ref_dict["participants"])):  # for each other participant
+            ports[r] = validate_port(input(f"Enter port you would like to use to conenct with participant #{r}: "))
+        ports_str = ",".join(ports)
+    update_firestore(f"update_firestore::PORTS={ports_str}")
 
     print("Successfully communicated networking information!")
 

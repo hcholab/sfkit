@@ -168,7 +168,9 @@ def start_gwas(role: str) -> None:
         print(f"Failed to perform command {command}")
         exit(1)
     print("\n\n Finished GWAS \n\n")
-    update_firestore("update_firestore::status=finished protocol")
+    update_firestore(
+        "update_firestore::status=Finished protocol!  You can view the results on your machine in the /secure-gwas/out directory"
+    )
 
     # TODO: update both firestore and param file with number of cpus for num_threads (n_cpus=$(nproc))
     # for reference when doing the TODO to update the parameter files...

@@ -2,6 +2,7 @@
 Run the PCA protocol
 """
 import os
+import shutil
 
 import toml
 from sfkit.api import get_doc_ref_dict
@@ -29,10 +30,17 @@ def run_pca_protocol(role: str) -> None:
 def update_config_party(role: str) -> None:
     """
     Update configLocal.Party{role}.toml
-    :param role: 0, 1, 2
+    :param role: 0, 1, 2, ...
     """
     config_file_path = f"sfgwas/config/pca/configLocal.Party{role}.toml"
-    data = toml.load(config_file_path)
+
+    try:
+        data = toml.load(config_file_path)
+    except FileNotFoundError:
+        print(f"File {config_file_path} not found.")
+        print("Creating it...")
+        shutil.copyfile("sfgwas/config/pca/configLocal.Party2.toml", config_file_path)
+        data = toml.load(config_file_path)
 
     if role != "0":
         with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
@@ -41,6 +49,8 @@ def update_config_party(role: str) -> None:
         data["geno_file"] = f"{data_path}/geno.txt"
 
     data["shared_keys_path"] = constants.SFKIT_DIR
+    data["output_dir"] = f"out/party{role}"
+    data["cache_dir"] = f"cache/party{role}"
 
     with open(config_file_path, "w") as f:
         toml.dump(data, f)
@@ -68,12 +78,9 @@ def update_config_global() -> None:
         ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
         data["servers"][f"party{i}"]["ipaddr"] = ip_addr
 
-    _, p1, p2 = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][0]]["PORTS"]["value"].split(",")
-    data["servers"]["party0"]["ports"]["party1"] = p1
-    data["servers"]["party0"]["ports"]["party2"] = p2
-
-    _, _, p2 = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][1]]["PORTS"]["value"].split(",")
-    data["servers"]["party1"]["ports"]["party2"] = p2
+        ports: list = doc_ref_dict["personal_parameters"][participant]["PORTS"]["value"].split(",")
+        for j, port in enumerate(ports):
+            data["servers"][f"party{i}"]["ports"][f"party{j}"] = port
 
     with open(config_file_path, "w") as f:
         toml.dump(data, f)

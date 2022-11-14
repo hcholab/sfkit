@@ -2,6 +2,7 @@
 Run the sfgwas protocol
 """
 
+import shutil
 import fileinput
 import os
 import random
@@ -19,7 +20,7 @@ from sfkit.api import update_firestore
 def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
     """
     Run the sfgwas protocol
-    :param role: 0, 1, 2
+    :param role: 0, 1, 2, ...
     :param phase: "", "1", "2", "3"
     :param demo: True or False
     """
@@ -78,7 +79,7 @@ def install_sfgwas() -> None:
 def generate_shared_keys(role: int) -> None:
     """
     Generate shared keys for the sfgwas protocol
-    :param role: 0, 1, 2
+    :param role: 0, 1, 2, ...
     """
     doc_ref_dict: dict = get_doc_ref_dict()
     print("Generating shared keys...")
@@ -130,10 +131,17 @@ def generate_shared_keys(role: int) -> None:
 def update_config_party(role: str, protocol: str = "gwas") -> None:
     """
     Update configLocal.Party{role}.toml
-    :param role: 0, 1, 2
+    :param role: 0, 1, 2, ...
     """
     config_file_path = f"sfgwas/config/{protocol}/configLocal.Party{role}.toml"
-    data = toml.load(config_file_path)
+
+    try:
+        data = toml.load(config_file_path)
+    except FileNotFoundError:
+        print(f"File {config_file_path} not found.")
+        print("Creating it...")
+        shutil.copyfile(f"sfgwas/config/{protocol}/configLocal.Party2.toml", config_file_path)
+        data = toml.load(config_file_path)
 
     if role != "0":
         with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
@@ -150,6 +158,8 @@ def update_config_party(role: str, protocol: str = "gwas") -> None:
         data["geno_count_file"] = f"{data_path}/all.gcount.transpose.bin"
 
     data["shared_keys_path"] = constants.SFKIT_DIR
+    data["output_dir"] = f"out/party{role}"
+    data["cache_dir"] = f"cache/party{role}"
 
     with open(config_file_path, "w") as f:
         toml.dump(data, f)
@@ -177,12 +187,9 @@ def update_config_global(protocol: str = "gwas") -> None:
         ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
         data["servers"][f"party{i}"]["ipaddr"] = ip_addr
 
-    _, p1, p2 = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][0]]["PORTS"]["value"].split(",")
-    data["servers"]["party0"]["ports"]["party1"] = p1
-    data["servers"]["party0"]["ports"]["party2"] = p2
-
-    _, _, p2 = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][1]]["PORTS"]["value"].split(",")
-    data["servers"]["party1"]["ports"]["party2"] = p2
+        ports: list = doc_ref_dict["personal_parameters"][participant]["PORTS"]["value"].split(",")
+        for j, port in enumerate(ports):
+            data["servers"][f"party{i}"]["ports"][f"party{j}"] = port
 
     with open(config_file_path, "w") as f:
         toml.dump(data, f)
@@ -237,7 +244,7 @@ def build_sfgwas() -> None:
 def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> None:
     """
     Start the actual sfgwas program
-    :param role: 0, 1, 2
+    :param role: 0, 1, 2, ...
     :param demo: True if running demo
     """
     print("Begin SFGWAS protocol")
@@ -248,4 +255,12 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && {protocol_command}"
     run_command(command)
     print(f"Finished {protocol} protocol")
-    update_firestore("update_firestore::status=finished protocol")
+
+    if protocol == "SFGWAS":
+        update_firestore(
+            f"update_firestore::status=Finished protocol!  You can view the results on your machine in the /sfgwas/out/party{role} directory"
+        )
+    elif protocol == "PCA":
+        update_firestore(
+            f"update_firestore::status=Finished protocol!  You can view the results on your machine in /sfgwas/cache/party{role}/Qpc.txt"
+        )
