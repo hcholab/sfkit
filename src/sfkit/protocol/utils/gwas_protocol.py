@@ -1,7 +1,5 @@
-# TODO: update parameter files based on website
-#       do the 'connect_to_other_vms' with the ports from website
-
 import fileinput
+import multiprocessing
 import subprocess
 import time
 
@@ -15,6 +13,7 @@ def run_gwas_protocol(doc_ref_dict: dict, role: str) -> None:
     install_gwas_repo()
     install_ntl_library()
     compile_gwas_code()
+    update_parameters(doc_ref_dict, role)
     connect_to_other_vms(doc_ref_dict, role)
     encrypt_or_prepare_data("./encrypted_data", role)
     copy_data_to_gwas_repo("./encrypted_data", role)
@@ -79,31 +78,55 @@ def compile_gwas_code() -> None:
     print("\n\n Finished compiling GWAS code \n\n")
 
 
-def connect_to_other_vms(doc_ref_dict: dict, role: str) -> None:
-    print("\n\n Begin connecting to other VMs \n\n")
-    ip_addresses = [
-        doc_ref_dict["personal_parameters"][user]["IP_ADDRESS"]["value"] for user in doc_ref_dict["participants"]
-    ]
-    print("IP addresses:", ip_addresses)
+def update_parameters(doc_ref_dict: dict, role: str) -> None:
+    print(f"\n\n Updating parameters in 'secure-gwas/par/test.par.{role}.txt'\n\n")
+
+    # shared parameters and advanced parameters
+    pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
+
+    # individual parameters
+    pars["NUM_INDS_SP_1"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][1]]["NUM_INDS"]
+    pars["NUM_INDS_SP_2"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][2]]["NUM_INDS"]
+    pars["NUM_INDS"] = {"value": ""}
+    pars["NUM_INDS"]["value"] = str(int(pars["NUM_INDS_SP_1"]["value"]) + int(pars["NUM_INDS_SP_2"]["value"]))
+
+    # num threads = num_cpus = $(nproc)
+    num_cpus = str(multiprocessing.cpu_count())
+    pars["NUM_THREADS"] = {"value": num_cpus}
+    update_firestore(f"update_firestore::NUM_THREADS={num_cpus}")
+    update_firestore(f"update_firestore::NUM_CPUS={num_cpus}")
+
+    # update pars with ipaddresses and ports
+    for i in range(3):
+        ip = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["IP_ADDRESS"]["value"]
+        pars[f"IP_ADDR_P{i}"] = {"value": ip}
+
+        ports = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["PORTS"]["value"]
+        for j in range(i + 1, 3):
+            pars[f"PORT_P{i}_P{j}"] = {"value": ports.split(",")[j]}
 
     for line in fileinput.input(f"secure-gwas/par/test.par.{role}.txt", inplace=True):
-        if "IP_ADDR_P0" in line:
-            print(f"IP_ADDR_P0 {ip_addresses[0]}")
-        elif "IP_ADDR_P1" in line:
-            print(f"IP_ADDR_P1 {ip_addresses[1]}")
-        elif "IP_ADDR_P2" in line:
-            print(f"IP_ADDR_P2 {ip_addresses[2]}")
-        else:
-            print(line, end="")
-    print("\n\n Finished updating parameter files \n\n")
+        key = str(line).split(" ")[0]
+        if key in pars:
+            line = f"{key} " + str(pars[key]["value"]) + "\n"
+        print(line, end="")
 
-    print("Using port 8055 to test connections")
-    command = "nc -k -l -p 8055 &"
+
+def connect_to_other_vms(doc_ref_dict: dict, role: str) -> None:
+    print("\n\n Begin connecting to other VMs \n\n")
+
+    ip_addresses = [
+        doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["IP_ADDRESS"]["value"] for i in range(3)
+    ]
+    port = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][0]]["PORTS"]["value"].split(",")[1]
+
+    print(f"Using port {port} to test connections")
+    command = f"nc -k -l -p {port} &"
     if subprocess.run(command, shell=True).returncode != 0:
         print(f"Failed to perform command {command}")
         exit(1)
     for i in range(int(role)):
-        command = f"nc -w 5 -v -z {ip_addresses[i]} 8055 &>/dev/null"
+        command = f"nc -w 5 -v -z {ip_addresses[i]} {port} &>/dev/null"
         while subprocess.run(command, shell=True).returncode != 0:
             print(f"Failed to perform command {command}. Trying again...")
             time.sleep(5)
@@ -171,40 +194,3 @@ def start_gwas(role: str) -> None:
     update_firestore(
         "update_firestore::status=Finished protocol!  You can view the results on your machine in the /secure-gwas/out directory"
     )
-
-    # TODO: update both firestore and param file with number of cpus for num_threads (n_cpus=$(nproc))
-    # for reference when doing the TODO to update the parameter files...
-    # def update_parameters(self, file: str, study_title: str) -> None:
-    #     print(f"Updating parameters in {file}")
-
-    #     doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
-    #     doc_ref_dict: dict = doc_ref.get().to_dict()
-
-    #     pars = doc_ref_dict["parameters"]
-
-    #     file_number = file.split(".")[-2]
-    #     pars = pars | doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][int(file_number)]]
-
-    #     pars["NUM_INDS_SP_1"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][1]]["NUM_INDS"]
-    #     pars["NUM_INDS_SP_2"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][2]]["NUM_INDS"]
-    #     pars["NUM_INDS"] = {"value": ""}
-    #     pars["NUM_INDS"]["value"] = str(int(pars["NUM_INDS_SP_1"]["value"]) + int(pars["NUM_INDS_SP_2"]["value"]))
-
-    #     # update pars with ipaddresses
-    #     for i in range(3):
-    #         pars[f"IP_ADDR_P{str(i)}"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]][
-    #             "IP_ADDRESS"
-    #         ]
-    #     # update pars with ports
-    #     # pars["PORT_P0_P1"] and PORT_P0_P2 do not need to be updated as they are controlled by us (the Broad)
-    #     pars["PORT_P1_P2"] = {
-    #         "value": doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][1]]["PORTS"]["value"].split(",")[
-    #             2
-    #         ]
-    #     }
-
-    #     for line in fileinput.input(file, inplace=True):
-    #         key = str(line).split(" ")[0]
-    #         if key in pars:
-    #             line = f"{key} " + str(pars[key]["value"]) + "\n"
-    #         print(line, end="")

@@ -6,29 +6,29 @@ Introduction
 
 sfkit is a command line tool made to facilitate secure collaboration for certain types of genomic analysis that utilize potentially sensitive data.  This tutorial will walk you through the steps of using sfkit to perform a secure-federated genome-wide association study (SF-GWAS) using the sfkit workflow.
 
-There are two main components to the sfkit workflow: the website and the sfkit client. The website is a web application that serves to provide a convenient UI for the study participants to create a joint study and set up the study parameters. The sfkit client is a command line tool that is used to perform the actual analysis.  The sfkit CLI is run on a machine controlled by the study participant.  The sfkit website is run by the Broad Institute.
+There are two main components to the sfkit workflow: the website and the sfkit command line interface (CLI). The website is a web application that serves to provide a convenient UI for the study participants to create a joint study and set up the study parameters. The sfkit CLI is a command line tool that is used to perform the actual analysis.  The sfkit CLI is run on a machine controlled by the study participant.  The sfkit website is run by the Broad Institute.
 
 Prerequisites
 -------------
 
-Before you begin, you will need access to a machine where you can run the protocol.  One option is to use GCP: if you are unfamiliar with Google Cloud Compute, you may find the documentation `here <https://cloud.google.com/compute>`_.
+Before you begin, you will need access to a machine where you can run the protocol.  If you do not already have a machine set up, the recommended option is to use GCP: if you are unfamiliar with Google Cloud Compute, you may find the documentation `here <https://cloud.google.com/compute>`_.
 
 .. note::
 
-    If you are deciding what VM size you want/need, we generally recommend using the *e2-highmem-16* (16 vCPUs, 128 GB memory) as a reasonable default.  This size has worked well for us on datasets with <30,000 samples and <700,000 SNPs for SFGWAS.  If you are running a larger dataset, you may need to increase the size of the VM.  On a dataset with ~10 million SNPs, we have used the larger *n2-highmem-64* or *n2-highmem-128*. If you are running a smaller dataset, you may be able to get away with a smaller VM.  Feel free to reach out if you have further questions or concerns.  
+    If you are deciding what Virtual Machine (VM) size you want/need, we generally recommend using the *e2-highmem-16* (16 vCPUs, 128 GB memory) as a reasonable default for this kind of analysis.  This size has worked well for us on datasets with <30,000 samples and <700,000 SNPs for SFGWAS.  If you are running a larger dataset, you may need to increase the size of the VM.  On a dataset with ~10 million SNPs, we have used the larger *n2-highmem-64* or *n2-highmem-128*. If you are running a smaller dataset, you may be able to use a smaller machine.  Feel free to reach out if you have questions or concerns.  
 
 Networking
 ----------
 
 .. note:: 
     
-    When running a real study, you will need to coordinate with the other study participants to set up your networking/firewall such that your machines can communicate with one another.  This may include whitelisting each other's IP address on specific ports that you will specify for TCP connections during the course of the protocol.  For the purposes of this tutorial, we will be running the protocol on a single machine, so we will not need to worry about this.
+    When running a real study, you will need to coordinate with the other study participants to set up your networking/firewall such that your machines can communicate with one another.  This may include whitelisting one another's IP addresses on specific ports that you will specify for TCP connections during the course of the protocol.  For the purposes of this tutorial, we will be running the protocol on a single machine, so we will not need to worry about this.
 
 Website
 -------
 
 1. Go to the companion `website <https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/>`_ and register or login.  
-2. Go to the `studies <https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/index>`_ page to create a study on the website.  For this tutorial, you should choose the "Secure Federated GWAS Study" workflow with the "User" configuration option.  You can choose to enter any title, description and study information and then click "Submit".  You can leave the parameters as they are, for now (when you run a real study, you'll want to set the parameters accordingly). After you submit, you should see a page that looks something like this:
+2. Go to the `studies <https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/index>`_ page to create a study on the website.  For this tutorial, you should choose the "Secure Federated GWAS Study" workflow with the "Self-configured" configuration option.  You can choose to enter any title, description and study information and then click "Submit".  You can leave the parameters as they are, for now (when you run a real study, you'll want to set the parameters accordingly). After you submit, you should see a page that looks something like this:
 
 .. image:: images/study.png
 
@@ -41,7 +41,7 @@ An auth_key.txt should automatically download to your machine.  Once this happen
 CLI 
 ---
 
-1. SSH into your VM where you will be running the workflow and follow the instructions to install sfkit if you haven't already (see :doc:`installation`).
+1. SSH into your VM where you will be running the workflow and follow the instructions to install sfkit if you haven't already (see :doc:`installation`).  Also download the auth_key.txt to your machine if you have not done so already.
 
 2. Run 
 
@@ -49,7 +49,7 @@ CLI
      
     $ sfkit auth
 
-This will authenticate your VM with the website.  It does this by making a get request to the website, which can authenticate you based on the Service Account Email that you provided. If you get an error message, make sure that you have entered the correct Service Account Email in the website.  If you get a message saying "Successfully authenticated!", then you are good to go.
+This will authenticate your VM with the website.  It does this by making a get request to the website, which can authenticate you based on the auth_key that you downloaded.  If you get a message saying "Successfully authenticated!", then you are good to go.
 
 3. Run 
 
@@ -57,7 +57,11 @@ This will authenticate your VM with the website.  It does this by making a get r
 
     $ sfkit networking
 
-This will communicate your IP address to the website so that all study participants will be able to communicate with your VM.  It may also ask your for a preferred port number to use when direct socket connections are made between participants.  If you are doing the demo by yourself, you can choose any port number (e.g. 8060).  If you get a message saying "Successfully communicated networking information!", then you are good to go.
+This will share your IP address to the website so that all study participants will be able to communicate with your VM.  If you get a message saying "Successfully communicated networking information!", then you are good to go.
+
+.. note:: 
+    
+    When running a real study (where there are other participants on other machines), it will also ask you for preferred port numbers to use when direct socket connections are made during the protocol.
 
 4. Run 
 
@@ -120,7 +124,7 @@ The output should end something like this:
     1!: gwas.go:393 (gwas.(*ProtocolInfo).Phase3) - 2022-10-04T15:06:32Z Output collectively decrypted and saved to: out/party1/assoc.txt
     Finished SFGWAS protocol
 
-And if you look in sfgwas/out/party1, you should see a file called assoc.txt that looks something like this:
+And if you look in the sfgwas/out/party1 directory, you should see a file called assoc.txt that looks something like this:
 
 .. code-block:: console
 

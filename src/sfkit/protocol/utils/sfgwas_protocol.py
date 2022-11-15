@@ -29,7 +29,7 @@ def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
     if not demo:
         generate_shared_keys(int(role))
         print("Begin updating config files")
-        update_config_party(role)
+        update_config_local(role)
         update_config_global()
     update_config_global_phase(phase, demo)
     update_sfgwas_go("gwas")
@@ -116,20 +116,7 @@ def generate_shared_keys(role: int) -> None:
     print(f"Shared keys generated and saved to {constants.SFKIT_DIR}.")
 
 
-# def update_data_path_in_config_file_lungGCPFinal(role: str, data_path: str) -> None:
-#     if role != "0":
-#         config_file_path = f"sfgwas/config/configLocal.Party{role}.toml"
-#         data = toml.load(config_file_path)
-#         data["geno_binary_file_prefix"] = f"{data_path}/lung_split/geno_party{role}"
-#         data["geno_block_size_file"] = f"{data_path}/lung_split/geno_party{role}.blockSizes.txt"
-#         data["pheno_file"] = f"{data_path}/lung_split/pheno_party{role}.txt"
-#         data["covar_file"] = f"{data_path}/lung_split/cov_party{role}.txt"
-#         data["snp_position_file"] = f"{data_path}/lung/pos.txt"
-#         with open(config_file_path, "w") as f:
-#             toml.dump(data, f)
-
-
-def update_config_party(role: str, protocol: str = "gwas") -> None:
+def update_config_local(role: str, protocol: str = "gwas") -> None:
     """
     Update configLocal.Party{role}.toml
     :param role: 0, 1, 2, ...
@@ -170,21 +157,27 @@ def update_config_global(protocol: str = "gwas") -> None:
     """
     Update configGlobal.toml
     """
+    print("Updating configGlobal.toml")
     doc_ref_dict: dict = get_doc_ref_dict()
     config_file_path = f"sfgwas/config/{protocol}/configGlobal.toml"
     data = toml.load(config_file_path)
 
     data["num_main_parties"] = len(doc_ref_dict["participants"]) - 1
 
-    print("Updating NUM_INDS and NUM_SNPS")
-    data["num_inds"] = []
+    row_name = "num_rows" if protocol == "pca" else "num_inds"
+    col_name = "num_columns" if protocol == "pca" else "num_snps"
+    data[row_name] = []
     for i, participant in enumerate(doc_ref_dict["participants"]):
-        data["num_inds"].append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
-        print("NUM_INDS for", participant, "is", data["num_inds"][i])
-        assert i == 0 or data["num_inds"][i] > 0, "NUM_INDS must be greater than 0"
-    data["num_snps"] = int(doc_ref_dict["parameters"]["NUM_SNPS"]["value"])
-    print("NUM_SNPS is", data["num_snps"])
-    assert data["num_snps"] > 0, "NUM_SNPS must be greater than 0"
+        data[row_name].append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
+        print(f"{row_name} for {participant} is {data[row_name][i]}")
+        assert i == 0 or data[row_name][i] > 0, f"{row_name} must be greater than 0"
+    data[col_name] = (
+        int(doc_ref_dict["parameters"]["NUM_SNPS"]["value"])
+        if protocol == "gwas"
+        else int(doc_ref_dict["parameters"]["num_columns"]["value"])
+    )
+    print(f"{col_name} is {data[col_name]}")
+    assert data[col_name] > 0, f"{col_name} must be greater than 0"
 
     # Update the ip addresses and ports
     for i, participant in enumerate(doc_ref_dict["participants"]):
@@ -197,6 +190,12 @@ def update_config_global(protocol: str = "gwas") -> None:
         ports: list = doc_ref_dict["personal_parameters"][participant]["PORTS"]["value"].split(",")
         for j, port in enumerate(ports):
             data["servers"][f"party{i}"]["ports"][f"party{j}"] = port
+
+    # shared and advanced parameters
+    pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
+    for key, value in pars.items():
+        if key in data:
+            data[key] = value["value"]
 
     with open(config_file_path, "w") as f:
         toml.dump(data, f)
