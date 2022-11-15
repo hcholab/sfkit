@@ -2,6 +2,7 @@
 Run the sfgwas protocol
 """
 
+import copy
 import shutil
 import fileinput
 import os
@@ -173,9 +174,12 @@ def update_config_global(protocol: str = "gwas") -> None:
     config_file_path = f"sfgwas/config/{protocol}/configGlobal.toml"
     data = toml.load(config_file_path)
 
+    data["num_main_parties"] = len(doc_ref_dict["participants"]) - 1
+
     print("Updating NUM_INDS and NUM_SNPS")
+    data["num_inds"] = []
     for i, participant in enumerate(doc_ref_dict["participants"]):
-        data["num_inds"][i] = int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"])
+        data["num_inds"].append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
         print("NUM_INDS for", participant, "is", data["num_inds"][i])
         assert i == 0 or data["num_inds"][i] > 0, "NUM_INDS must be greater than 0"
     data["num_snps"] = int(doc_ref_dict["parameters"]["NUM_SNPS"]["value"])
@@ -184,6 +188,9 @@ def update_config_global(protocol: str = "gwas") -> None:
 
     # Update the ip addresses and ports
     for i, participant in enumerate(doc_ref_dict["participants"]):
+        if f"party{i}" not in data["servers"]:
+            data["servers"][f"party{i}"] = copy.deepcopy(data["servers"][f"party{i-1}"])
+
         ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
         data["servers"][f"party{i}"]["ipaddr"] = ip_addr
 

@@ -1,6 +1,7 @@
 """
 Run the PCA protocol
 """
+import copy
 import os
 import shutil
 
@@ -46,7 +47,7 @@ def update_config_party(role: str) -> None:
         with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
             data_path = f.readline().rstrip()
 
-        data["geno_file"] = f"{data_path}/geno.txt"
+        data["input_file"] = f"{data_path}/data.txt"
 
     data["shared_keys_path"] = constants.SFKIT_DIR
     data["output_dir"] = f"out/party{role}"
@@ -64,9 +65,12 @@ def update_config_global() -> None:
     config_file_path = "sfgwas/config/pca/configGlobal.toml"
     data = toml.load(config_file_path)
 
+    data["num_main_parties"] = len(doc_ref_dict["participants"]) - 1
+
     print("Updating NUM_INDS/num_rows and NUM_SNPS/num_columns")
+    data["num_rows"] = []
     for i, participant in enumerate(doc_ref_dict["participants"]):
-        data["num_rows"][i] = int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"])
+        data["num_rows"].append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
         print("num_rows for", participant, "is", data["num_rows"][i])
         assert i == 0 or data["num_rows"][i] > 0, "num_rows must be greater than 0"
     data["num_columns"] = int(doc_ref_dict["parameters"]["num_columns"]["value"])
@@ -75,6 +79,9 @@ def update_config_global() -> None:
 
     # Update the ip addresses and ports
     for i, participant in enumerate(doc_ref_dict["participants"]):
+        if f"party{i}" not in data["servers"]:
+            data["servers"][f"party{i}"] = copy.deepcopy(data["servers"][f"party{i-1}"])
+
         ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
         data["servers"][f"party{i}"]["ipaddr"] = ip_addr
 

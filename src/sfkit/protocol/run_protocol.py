@@ -48,5 +48,5 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
         else:
             raise ValueError(f"Unknown study type: {study_type}")
     else:
-        print("You status is not ready.  Exiting now.")
+        print("Your status is not ready.  Exiting now.")
         return
