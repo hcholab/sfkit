@@ -3,8 +3,8 @@ import os
 import checksumdir
 
 from sfkit.api import get_doc_ref_dict, update_firestore
-from sfkit.protocol.utils import constants
-from sfkit.protocol.utils.helper_functions import authenticate_user
+from sfkit.utils import constants
+from sfkit.utils.helper_functions import authenticate_user, assert_with_message
 from sfkit.api import get_user_email
 
 
@@ -28,9 +28,15 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
             return using_demo()
 
         num_inds: int = validate_sfgwas_data(geno_binary_file_prefix, data_path)
-        assert num_inds == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"])
+        assert_with_message(
+            num_inds == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]),
+            "FAILED - NUM_INDS does not match the number of individuals in the data.",
+        )
         num_snps: int = num_rows(os.path.join(data_path, "snp_ids.txt"))
-        assert num_snps == int(doc_ref_dict["personal_parameters"][email]["NUM_SNPS"]["value"])
+        assert_with_message(
+            num_snps == int(doc_ref_dict["personal_parameters"][email]["NUM_SNPS"]["value"]),
+            "FAILED - NUM_SNPS does not match the number of SNPs in the data.",
+        )
         print(f"Your data has {num_inds} individuals and {num_snps} SNPs.")
     elif study_type == "MPCGWAS":
         data_path = validate_data_path(data_path)
@@ -39,7 +45,10 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
             return using_demo()
 
         num_inds: int = validate_mpcgwas_data(data_path)
-        assert num_inds == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"])
+        assert_with_message(
+            num_inds == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]),
+            "FAILED - NUM_INDS does not match the number of individuals in the data.",
+        )
         print(f"Your data has {num_inds} individuals.")
     elif study_type == "PCA":
         data_path = validate_data_path(data_path)
@@ -48,9 +57,15 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
             return using_demo()
 
         number_of_rows: int = num_rows(os.path.join(data_path, "data.txt"))
-        assert number_of_rows == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"])
+        assert_with_message(
+            number_of_rows == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]),
+            "FAILED - NUM_INDS does not match the number of rows in the data.",
+        )
         number_of_cols: int = num_cols(os.path.join(data_path, "data.txt"))
-        assert number_of_cols == int(doc_ref_dict["parameters"]["num_columns"]["value"])
+        assert_with_message(
+            number_of_cols == int(doc_ref_dict["parameters"]["num_columns"]["value"]),
+            "FAILED - num_columns does not match the number of columns in the data.",
+        )
         print(f"Your data has {number_of_rows} rows and {number_of_cols} columns.")
     else:
         raise ValueError(f"Unknown study type: {study_type}")
@@ -90,18 +105,22 @@ def validate_data_path(data_path: str) -> str:
 
 def validate_sfgwas_data(geno_binary_file_prefix: str, data_path: str) -> int:
     for suffix in ["pgen", "pvar", "psam"]:
-        assert os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix)
+        assert_with_message(os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix))
 
     rows = num_rows(os.path.join(data_path, "pheno.txt"))
-    assert rows == num_rows(os.path.join(data_path, "cov.txt")), "pheno and cov have different number of rows"
-    assert rows == num_rows(os.path.join(data_path, "sample_keep.txt")), "pheno and sample_keep differ in num-rows"
+    assert_with_message(
+        rows == num_rows(os.path.join(data_path, "cov.txt")), "pheno and cov have different number of rows"
+    )
+    assert_with_message(
+        rows == num_rows(os.path.join(data_path, "sample_keep.txt")), "pheno and sample_keep differ in num-rows"
+    )
     return rows
 
 
 def validate_mpcgwas_data(data_path: str) -> int:
     rows = num_rows(os.path.join(data_path, "cov.txt"))
-    assert rows == num_rows(os.path.join(data_path, "geno.txt"))
-    assert rows == num_rows(os.path.join(data_path, "pheno.txt"))
+    assert_with_message(rows == num_rows(os.path.join(data_path, "geno.txt")))
+    assert_with_message(rows == num_rows(os.path.join(data_path, "pheno.txt")))
     return rows
 
 

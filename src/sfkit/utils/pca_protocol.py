@@ -6,8 +6,8 @@ import shutil
 
 import toml
 
-from sfkit.protocol.utils import constants
-from sfkit.protocol.utils.sfgwas_protocol import (
+from sfkit.utils import constants
+from sfkit.utils.sfgwas_protocol import (
     build_sfgwas,
     generate_shared_keys,
     install_sfgwas,

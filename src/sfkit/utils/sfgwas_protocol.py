@@ -13,9 +13,10 @@ import toml
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
 from sfkit.api import get_doc_ref_dict
-from sfkit.protocol.utils import constants
-from sfkit.protocol.utils.helper_functions import run_command
+from sfkit.utils import constants
+from sfkit.utils.helper_functions import run_command
 from sfkit.api import update_firestore
+from sfkit.utils.helper_functions import assert_with_message
 
 
 def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
@@ -102,7 +103,7 @@ def generate_shared_keys(role: int) -> None:
             doc_ref_dict: dict = get_doc_ref_dict()
             other_public_key_str: str = doc_ref_dict["personal_parameters"][other_email]["PUBLIC_KEY"]["value"]
         other_public_key = PublicKey(other_public_key_str.encode(), encoder=HexEncoder)
-        assert my_private_key != other_public_key, "Private and public keys must be different"
+        assert_with_message(my_private_key != other_public_key, "FAILED - Private and public keys must be different")
         shared_key = Box(my_private_key, other_public_key).shared_key()
         shared_key_path = os.path.join(constants.SFKIT_DIR, f"shared_key_{min(role, i)}_{max(role, i)}.bin")
         with open(shared_key_path, "wb") as f:
@@ -124,7 +125,7 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
     config_file_path = f"sfgwas/config/{protocol}/configLocal.Party{role}.toml"
 
     try:
-        data = toml.load(config_file_path)
+        data: dict = toml.load(config_file_path)
     except FileNotFoundError:
         print(f"File {config_file_path} not found.")
         print("Creating it...")
@@ -132,25 +133,28 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
         data = toml.load(config_file_path)
 
     if role != "0":
-        with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
-            geno_file_prefix = f.readline().rstrip()
-            data_path = f.readline().rstrip()
-
-        data["geno_binary_file_prefix"] = f"{geno_file_prefix}"
-        data["geno_block_size_file"] = f"{data_path}/chrom_sizes.txt"
-        data["pheno_file"] = f"{data_path}/pheno.txt"
-        data["covar_file"] = f"{data_path}/cov.txt"
-        data["snp_position_file"] = f"{data_path}/snp_pos.txt"
-        data["sample_keep_file"] = f"{data_path}/sample_keep.txt"
-        data["snp_ids_file"] = f"{data_path}/snp_ids.txt"
-        data["geno_count_file"] = f"{data_path}/all.gcount.transpose.bin"
-
+        update_data_file_paths(data)
     data["shared_keys_path"] = constants.SFKIT_DIR
     data["output_dir"] = f"out/party{role}"
     data["cache_dir"] = f"cache/party{role}"
 
     with open(config_file_path, "w") as f:
         toml.dump(data, f)
+
+
+def update_data_file_paths(data: dict) -> None:
+    with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
+        geno_file_prefix = f.readline().rstrip()
+        data_path = f.readline().rstrip()
+
+    data["geno_binary_file_prefix"] = f"{geno_file_prefix}"
+    data["geno_block_size_file"] = f"{data_path}/chrom_sizes.txt"
+    data["pheno_file"] = f"{data_path}/pheno.txt"
+    data["covar_file"] = f"{data_path}/cov.txt"
+    data["snp_position_file"] = f"{data_path}/snp_pos.txt"
+    data["sample_keep_file"] = f"{data_path}/sample_keep.txt"
+    data["snp_ids_file"] = f"{data_path}/snp_ids.txt"
+    data["geno_count_file"] = f"{data_path}/all.gcount.transpose.bin"
 
 
 def update_config_global(protocol: str = "gwas") -> None:
@@ -170,14 +174,14 @@ def update_config_global(protocol: str = "gwas") -> None:
     for i, participant in enumerate(doc_ref_dict["participants"]):
         data[row_name].append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
         print(f"{row_name} for {participant} is {data[row_name][i]}")
-        assert i == 0 or data[row_name][i] > 0, f"{row_name} must be greater than 0"
+        assert_with_message(i == 0 or data[row_name][i] > 0, f"FAILED - {row_name} must be greater than 0")
     data[col_name] = (
         int(doc_ref_dict["parameters"]["NUM_SNPS"]["value"])
         if protocol == "gwas"
         else int(doc_ref_dict["parameters"]["num_columns"]["value"])
     )
     print(f"{col_name} is {data[col_name]}")
-    assert data[col_name] > 0, f"{col_name} must be greater than 0"
+    assert_with_message(data[col_name] > 0, f"FAILED - {col_name} must be greater than 0")
 
     # Update the ip addresses and ports
     for i, participant in enumerate(doc_ref_dict["participants"]):

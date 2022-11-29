@@ -1,6 +1,6 @@
 import requests
 
-from sfkit.protocol.utils import constants
+from sfkit.utils import constants
 
 
 def website_get(request_type: str, params: dict = dict()) -> requests.Response:

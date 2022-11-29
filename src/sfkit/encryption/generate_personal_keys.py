@@ -4,8 +4,8 @@ from nacl.encoding import HexEncoder
 from nacl.public import PrivateKey
 
 from sfkit.api import update_firestore
-from sfkit.protocol.utils import constants
-from sfkit.protocol.utils.helper_functions import authenticate_user
+from sfkit.utils import constants
+from sfkit.utils.helper_functions import authenticate_user
 
 
 def generate_personal_keys() -> None:

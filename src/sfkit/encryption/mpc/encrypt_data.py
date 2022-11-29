@@ -12,11 +12,12 @@ import nacl.utils
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
 from sfkit.encryption.mpc.random_number_generator import PseudoRandomNumberGenerator
-from sfkit.protocol.utils import constants
+from sfkit.utils import constants
 from sfkit.api import get_doc_ref_dict
 from tqdm import tqdm
 
 from sfkit.api import get_user_email
+from sfkit.utils.helper_functions import assert_with_message
 
 BASE_P = 1461501637330902918203684832716283019655932542929
 
@@ -121,7 +122,7 @@ def encrypt_data() -> None:
     private_key_path = os.path.join(constants.SFKIT_DIR, "my_private_key.txt")
     with open(private_key_path, "r") as f:
         my_private_key = PrivateKey(f.readline().rstrip(), encoder=HexEncoder)  # type: ignore
-    assert my_private_key != other_public_key, "Private and public keys must be different"
+    assert_with_message(my_private_key != other_public_key, "FAILED - Private and public keys must be different")
 
     shared_keys = get_shared_mpcgwas_keys(my_private_key, other_public_key)
 
@@ -130,7 +131,9 @@ def encrypt_data() -> None:
         input_dir = f.readline().rstrip()
 
     data_hash = checksumdir.dirhash(input_dir, "md5")
-    assert data_hash == doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"], "Data hash mismatch"
+    assert_with_message(
+        data_hash == doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"], "FAILED - Data hash mismatch"
+    )
 
     print("Encrypting data...")
     encrypt_GMP(PseudoRandomNumberGenerator(shared_keys[role]), input_dir)

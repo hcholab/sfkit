@@ -1,7 +1,8 @@
 import os
 import subprocess
 
-from sfkit.protocol.utils import constants
+from sfkit.api import update_firestore
+from sfkit.utils import constants
 
 
 def authenticate_user() -> None:
@@ -13,4 +14,11 @@ def authenticate_user() -> None:
 def run_command(command: str) -> None:
     if subprocess.run(command, shell=True, executable="/bin/bash").returncode != 0:
         print(f"Failed to perform command {command}")
+        exit(1)
+
+
+def assert_with_message(condition: bool, message: str = "FAILED - The sfkit process has failed.") -> None:
+    if not condition:
+        print(message)
+        update_firestore(f"update_firestore::status={message}")
         exit(1)
