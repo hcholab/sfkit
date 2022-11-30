@@ -2,5 +2,5 @@ Commands
 ========
 
 .. argparse::
-   :ref: src.sfkit.parser.get_parser
+   :ref: sfkit.parser.get_parser
    :prog: sfkit
