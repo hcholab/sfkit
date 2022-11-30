@@ -4,7 +4,7 @@ import checksumdir
 
 from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.utils import constants
-from sfkit.utils.helper_functions import authenticate_user, assert_with_message
+from sfkit.utils.helper_functions import authenticate_user, condition_or_fail
 from sfkit.api import get_user_email
 
 
@@ -28,14 +28,14 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
             return using_demo()
 
         num_inds: int = validate_sfgwas_data(geno_binary_file_prefix, data_path)
-        assert_with_message(
+        condition_or_fail(
             num_inds == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]),
-            "FAILED - NUM_INDS does not match the number of individuals in the data.",
+            "NUM_INDS does not match the number of individuals in the data.",
         )
         num_snps: int = num_rows(os.path.join(data_path, "snp_ids.txt"))
-        assert_with_message(
-            num_snps == int(doc_ref_dict["personal_parameters"][email]["NUM_SNPS"]["value"]),
-            "FAILED - NUM_SNPS does not match the number of SNPs in the data.",
+        condition_or_fail(
+            num_snps == int(doc_ref_dict["parameters"]["num_snps"]["value"]),
+            "num_snps does not match the number of SNPs in the data.",
         )
         print(f"Your data has {num_inds} individuals and {num_snps} SNPs.")
     elif study_type == "MPCGWAS":
@@ -45,9 +45,9 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
             return using_demo()
 
         num_inds: int = validate_mpcgwas_data(data_path)
-        assert_with_message(
+        condition_or_fail(
             num_inds == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]),
-            "FAILED - NUM_INDS does not match the number of individuals in the data.",
+            "NUM_INDS does not match the number of individuals in the data.",
         )
         print(f"Your data has {num_inds} individuals.")
     elif study_type == "PCA":
@@ -57,20 +57,20 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
             return using_demo()
 
         number_of_rows: int = num_rows(os.path.join(data_path, "data.txt"))
-        assert_with_message(
+        condition_or_fail(
             number_of_rows == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]),
-            "FAILED - NUM_INDS does not match the number of rows in the data.",
+            "NUM_INDS does not match the number of rows in the data.",
         )
         number_of_cols: int = num_cols(os.path.join(data_path, "data.txt"))
-        assert_with_message(
+        condition_or_fail(
             number_of_cols == int(doc_ref_dict["parameters"]["num_columns"]["value"]),
-            "FAILED - num_columns does not match the number of columns in the data.",
+            "num_columns does not match the number of columns in the data.",
         )
         print(f"Your data has {number_of_rows} rows and {number_of_cols} columns.")
     else:
         raise ValueError(f"Unknown study type: {study_type}")
 
-    update_firestore("update_firestore::status=not ready")
+    update_firestore("update_firestore::status=validated data")
     data_hash = checksumdir.dirhash(data_path, "md5")
     update_firestore(f"update_firestore::DATA_HASH={data_hash}")
 
@@ -105,13 +105,13 @@ def validate_data_path(data_path: str) -> str:
 
 def validate_sfgwas_data(geno_binary_file_prefix: str, data_path: str) -> int:
     for suffix in ["pgen", "pvar", "psam"]:
-        assert_with_message(os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix))
+        condition_or_fail(os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix))
 
-    rows = num_rows(os.path.join(data_path, "pheno.txt"))
-    assert_with_message(
+    rows: int = num_rows(os.path.join(data_path, "pheno.txt"))
+    condition_or_fail(
         rows == num_rows(os.path.join(data_path, "cov.txt")), "pheno and cov have different number of rows"
     )
-    assert_with_message(
+    condition_or_fail(
         rows == num_rows(os.path.join(data_path, "sample_keep.txt")), "pheno and sample_keep differ in num-rows"
     )
     return rows
@@ -119,8 +119,8 @@ def validate_sfgwas_data(geno_binary_file_prefix: str, data_path: str) -> int:
 
 def validate_mpcgwas_data(data_path: str) -> int:
     rows = num_rows(os.path.join(data_path, "cov.txt"))
-    assert_with_message(rows == num_rows(os.path.join(data_path, "geno.txt")))
-    assert_with_message(rows == num_rows(os.path.join(data_path, "pheno.txt")))
+    condition_or_fail(rows == num_rows(os.path.join(data_path, "geno.txt")))
+    condition_or_fail(rows == num_rows(os.path.join(data_path, "pheno.txt")))
     return rows
 
 
@@ -133,7 +133,7 @@ def num_cols(file_path: str) -> int:
 
 
 def using_demo() -> bool:
-    update_firestore("update_firestore::status=not ready")
+    update_firestore("update_firestore::status=validated data")
     print("Using demo data!")
     print("Successfully registered and validated data!")
     return True

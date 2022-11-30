@@ -27,7 +27,3 @@ def main() -> None:
         run_protocol(phase, demo)
     else:
         parser.print_help()
-
-
-if __name__ == "__main__":
-    main()

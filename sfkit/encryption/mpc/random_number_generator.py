@@ -1,3 +1,4 @@
+# sourcery skip: avoid-single-character-names-variables, require-parameter-annotation
 # for MPC GWAS
 
 import math
@@ -17,7 +18,7 @@ class PseudoRandomNumberGenerator:
     numbers in the range of some prime in a cryptographically secure fashion.
     """
 
-    def __init__(self, key, base_p=BASE_P):
+    def __init__(self, key: bytes, base_p: int = BASE_P):
         self.base_p = base_p
         self.box = nacl.secret.SecretBox(key)
         self.nonce = 0
@@ -50,7 +51,7 @@ class PseudoRandomNumberGenerator:
             cur = list(byte_string[:n])
             byte_string = byte_string[n:]
 
-            # if there are extra bits, we mask the first ones with 0
+            # if there are extra bits, we mask the first ones with 0; this is currently not necessary, but it is good to have it in case we change the base_p
             if (n * 8) > l:
                 diff = n * 8 - l
                 # mask first diff bits as 0
@@ -64,17 +65,3 @@ class PseudoRandomNumberGenerator:
                 res.append(cur)
 
         return res
-
-
-def main() -> None:  # for testing
-    key = bytes.fromhex("3a57393f2a2ef038d43b432c34339e0cd021a15ce25b17c8bf07a5d9eae05d13")
-    prng = PseudoRandomNumberGenerator(key)
-    for _ in range(2000):
-        print(prng.next(), end=" ")
-
-
-if __name__ == "__main__":
-    # global debug
-    # debug = len(sys.argv) > 1 and sys.argv[1] == "debug"
-
-    main()

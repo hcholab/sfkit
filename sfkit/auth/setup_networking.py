@@ -29,11 +29,14 @@ def setup_networking(ports_str: str) -> None:
     email: str = get_user_email()
     role: str = str(doc_ref_dict["participants"].index(email))
 
-    if not ports_str:
+    if ports_str:
+        [validate_port(port) for port in ports_str.split(",")]
+    else:
         ports = ["null" for _ in range(len(doc_ref_dict["participants"]))]
         for r in range(int(role) + 1, len(doc_ref_dict["participants"])):  # for each other participant
             ports[r] = validate_port(input(f"Enter port you would like to use to conenct with participant #{r}: "))
         ports_str = ",".join(ports)
+
     update_firestore(f"update_firestore::PORTS={ports_str}")
 
     print("Successfully communicated networking information!")

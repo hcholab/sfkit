@@ -1,8 +1,11 @@
 black
 checksumdir
+coverage
 google-auth
 ipaddr
 PyNaCl
+pytest
+pytest-mock
 requests
 sphinx
 sphinx-rtd-theme

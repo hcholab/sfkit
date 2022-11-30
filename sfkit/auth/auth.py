@@ -1,8 +1,8 @@
 import os
 
-from sfkit.utils import constants
 from sfkit.api import get_doc_ref_dict
-from sfkit.utils.helper_functions import assert_with_message
+from sfkit.utils import constants
+from sfkit.utils.helper_functions import condition_or_fail
 
 
 def auth() -> None:
@@ -33,7 +33,7 @@ def auth() -> None:
         os.remove(constants.AUTH_KEY)
         print("Invalid auth_key.txt file.")
         print(e)
-        assert_with_message(False)
+        condition_or_fail(False)
         exit(1)
 
     print("Successfully authenticated!")

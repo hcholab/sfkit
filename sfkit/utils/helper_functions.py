@@ -17,8 +17,9 @@ def run_command(command: str) -> None:
         exit(1)
 
 
-def assert_with_message(condition: bool, message: str = "FAILED - The sfkit process has failed.") -> None:
+def condition_or_fail(condition: bool, message: str = "The sfkit process has failed.") -> None:
     if not condition:
+        message = f"FAILED - {message}"
         print(message)
         update_firestore(f"update_firestore::status={message}")
         exit(1)

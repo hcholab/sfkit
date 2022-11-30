@@ -17,14 +17,13 @@ from sfkit.api import get_doc_ref_dict
 from tqdm import tqdm
 
 from sfkit.api import get_user_email
-from sfkit.utils.helper_functions import assert_with_message
+from sfkit.utils.helper_functions import condition_or_fail
 
 BASE_P = 1461501637330902918203684832716283019655932542929
 
 
-def encrypt_GMP(
-    prng: PseudoRandomNumberGenerator, input_dir: str, output_dir: str = "./encrypted_data"
-) -> None:  # sourcery skip: avoid-global-variables, avoid-single-character-names-variables, ensure-file-closed, snake-case-functions, switch
+def encrypt_GMP(prng, input_dir: str, output_dir: str = "./encrypted_data") -> None:
+    # sourcery skip: avoid-global-variables, avoid-single-character-names-variables, ensure-file-closed, require-parameter-annotation, snake-case-functions, switch
     """
     Converts the data to GMP vectors (genotype, missing data, phenotype), encrypts
     them, and writes them to files.
@@ -122,7 +121,7 @@ def encrypt_data() -> None:
     private_key_path = os.path.join(constants.SFKIT_DIR, "my_private_key.txt")
     with open(private_key_path, "r") as f:
         my_private_key = PrivateKey(f.readline().rstrip(), encoder=HexEncoder)  # type: ignore
-    assert_with_message(my_private_key != other_public_key, "FAILED - Private and public keys must be different")
+    condition_or_fail(my_private_key != other_public_key, "Private and public keys must be different")
 
     shared_keys = get_shared_mpcgwas_keys(my_private_key, other_public_key)
 
@@ -131,8 +130,8 @@ def encrypt_data() -> None:
         input_dir = f.readline().rstrip()
 
     data_hash = checksumdir.dirhash(input_dir, "md5")
-    assert_with_message(
-        data_hash == doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"], "FAILED - Data hash mismatch"
+    condition_or_fail(
+        data_hash == doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"], "Data hash mismatch"
     )
 
     print("Encrypting data...")
@@ -145,13 +144,3 @@ def encrypt_data() -> None:
     # update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
 
     print("\n\nThe encryption is complete.")
-
-
-def main() -> None:
-    encrypt_data()
-
-
-if __name__ == "__main__":
-    global debug
-    debug = len(sys.argv) > 1 and sys.argv[1] == "debug"
-    main()

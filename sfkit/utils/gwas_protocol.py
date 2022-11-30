@@ -76,6 +76,7 @@ def compile_gwas_code() -> None:
         print(f"Failed to perform command {command}")
         exit(1)
     print("\n\n Finished compiling GWAS code \n\n")
+    update_firestore("update_firestore::status=finished compiling GWAS code")
 
 
 def update_parameters(doc_ref_dict: dict, role: str) -> None:
@@ -166,6 +167,7 @@ def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
             print(f"Failed to perform command {command}")
             exit(1)
     print("\n\n Finished copying data to GWAS repo \n\n")
+    update_firestore("update_firestore::status=finished copying data to GWAS repo")
 
 
 def start_datasharing(role: str) -> None:

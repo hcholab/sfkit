@@ -16,7 +16,7 @@ from sfkit.api import get_doc_ref_dict
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import run_command
 from sfkit.api import update_firestore
-from sfkit.utils.helper_functions import assert_with_message
+from sfkit.utils.helper_functions import condition_or_fail
 
 
 def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
@@ -95,7 +95,7 @@ def generate_shared_keys(role: int) -> None:
             continue
         other_public_key_str: str = doc_ref_dict["personal_parameters"][other_email]["PUBLIC_KEY"]["value"]
         while not other_public_key_str:
-            if other_email == "broad":
+            if other_email == "Broad":
                 print("Waiting for the Broad (CP0) to set up...")
             else:
                 print(f"No public key found for {other_email}.  Waiting...")
@@ -103,7 +103,7 @@ def generate_shared_keys(role: int) -> None:
             doc_ref_dict: dict = get_doc_ref_dict()
             other_public_key_str: str = doc_ref_dict["personal_parameters"][other_email]["PUBLIC_KEY"]["value"]
         other_public_key = PublicKey(other_public_key_str.encode(), encoder=HexEncoder)
-        assert_with_message(my_private_key != other_public_key, "FAILED - Private and public keys must be different")
+        condition_or_fail(my_private_key != other_public_key, "Private and public keys must be different")
         shared_key = Box(my_private_key, other_public_key).shared_key()
         shared_key_path = os.path.join(constants.SFKIT_DIR, f"shared_key_{min(role, i)}_{max(role, i)}.bin")
         with open(shared_key_path, "wb") as f:
@@ -174,14 +174,14 @@ def update_config_global(protocol: str = "gwas") -> None:
     for i, participant in enumerate(doc_ref_dict["participants"]):
         data[row_name].append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
         print(f"{row_name} for {participant} is {data[row_name][i]}")
-        assert_with_message(i == 0 or data[row_name][i] > 0, f"FAILED - {row_name} must be greater than 0")
+        condition_or_fail(i == 0 or data[row_name][i] > 0, f"{row_name} must be greater than 0")
     data[col_name] = (
         int(doc_ref_dict["parameters"]["NUM_SNPS"]["value"])
         if protocol == "gwas"
         else int(doc_ref_dict["parameters"]["num_columns"]["value"])
     )
     print(f"{col_name} is {data[col_name]}")
-    assert_with_message(data[col_name] > 0, f"FAILED - {col_name} must be greater than 0")
+    condition_or_fail(data[col_name] > 0, f"{col_name} must be greater than 0")
 
     # Update the ip addresses and ports
     for i, participant in enumerate(doc_ref_dict["participants"]):

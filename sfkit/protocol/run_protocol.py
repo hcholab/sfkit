@@ -20,22 +20,25 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
     role: str = str(doc_ref_dict["participants"].index(email))
     study_type: str = doc_ref_dict["study_type"]
     statuses: dict = doc_ref_dict["status"]
-    if statuses[email] in ["", "validating", "invalid data"]:
-        print("You have not successfully validated your data.  Please do so before proceeding.")
-        return
 
-    if statuses[email] in ["not ready", "running1", "running2"]:
-        statuses[email] = "ready"
-        update_firestore("update_firestore::status=ready")
-    while any(s in str(statuses.values()) for s in ["", "validating", "invalid data", "not ready"]) and not demo:
-        print("Other participant(s) not yet ready.  Waiting... (press CTRL-C to cancel)")
-        time.sleep(5)
-        doc_ref_dict: dict = get_doc_ref_dict()
-        statuses: dict = doc_ref_dict["status"]
-    if statuses[email] == "ready":
+    if statuses[email] in ["validated data", "running1", "running2"]:
+        statuses[email] = "ready to begin protocol"
+        update_firestore("update_firestore::status=ready to begin protocol")
+    if statuses[email] == "ready to begin protocol":
+        while not demo and other_participant_not_ready(list(statuses.values())):
+            print("Other participant(s) not yet ready.  Waiting... (press CTRL-C to cancel)")
+            time.sleep(5)
+            doc_ref_dict: dict = get_doc_ref_dict()
+            statuses: dict = doc_ref_dict["status"]
+
         if role == "1":
             create_cp0()
-        update_firestore(f"update_firestore::status=running{phase}")
+
+        if phase:
+            update_firestore(f"update_firestore::status=running phsae {phase} of {study_type} protocol")
+        else:
+            update_firestore(f"update_firestore::status=running {study_type} protocol")
+
         if study_type == "MPCGWAS":
             run_gwas_protocol(doc_ref_dict, role)
         elif study_type == "SFGWAS":
@@ -47,3 +50,12 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
     else:
         print("Your status is not ready.  Exiting now.")
         return
+
+
+def other_participant_not_ready(status_list: list) -> bool:
+    return (
+        "" in status_list
+        or "FAILED" in str(status_list)
+        or "ready to begin sfkit" in str(status_list)
+        or "setting up your vm instance" in str(status_list)
+    )
