@@ -20,22 +20,19 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
     role: str = str(doc_ref_dict["participants"].index(email))
     study_type: str = doc_ref_dict["study_type"]
     statuses: dict = doc_ref_dict["status"]
-    if statuses[email] in ["['']", "['validating']", "['invalid data']"]:
+    if statuses[email] in ["", "validating", "invalid data"]:
         print("You have not successfully validated your data.  Please do so before proceeding.")
         return
 
-    if statuses[email] in [["not ready"], ["running1"], ["running2"]]:
-        statuses[email] = ["ready"]
+    if statuses[email] in ["not ready", "running1", "running2"]:
+        statuses[email] = "ready"
         update_firestore("update_firestore::status=ready")
-    while (
-        any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"])
-        and not demo
-    ):
+    while any(s in str(statuses.values()) for s in ["", "validating", "invalid data", "not ready"]) and not demo:
         print("Other participant(s) not yet ready.  Waiting... (press CTRL-C to cancel)")
         time.sleep(5)
         doc_ref_dict: dict = get_doc_ref_dict()
         statuses: dict = doc_ref_dict["status"]
-    if statuses[email] == ["ready"]:
+    if statuses[email] == "ready":
         if role == "1":
             create_cp0()
         update_firestore(f"update_firestore::status=running{phase}")
