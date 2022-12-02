@@ -199,7 +199,10 @@ def update_config_global(protocol: str = "gwas") -> None:
     pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
     for key, value in pars.items():
         if key in data:
-            data[key] = value["value"]
+            try:
+                data[key] = int(value["value"])
+            except ValueError:
+                data[key] = value["value"]
 
     with open(config_file_path, "w") as f:
         toml.dump(data, f)

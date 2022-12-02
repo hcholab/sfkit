@@ -56,9 +56,14 @@ mock_doc_ref_dict = {
             "DATA_HASH": {"value": "data_hash"},
         },
     },
-    "parameters": {"num_columns": {"value": 1}, "NUM_SNPS": {"value": 1}, "num_snps": {"value": 1}},
+    "parameters": {
+        "num_columns": {"value": 1},
+        "NUM_SNPS": {"value": 1},
+        "num_snps": {"value": 1},
+        "color": {"value": "red"},
+    },
     "participants": ["Broad", "a@a.com", "b@b.com"],
-    "advanced_parameters": {},
+    "advanced_parameters": {"name": {"value": "value"}},
     "study_type": "SFGWAS",
     "status": {"Broad": "", "a@a.com": "", "b@b.com": ""},
 }
@@ -91,6 +96,7 @@ mock_toml_data = {
     "servers": {
         "party0": {"ipaddr": "127.0.0.1", "ports": {"party0": 5000}},
     },
+    "name": "",
 }
 
 

@@ -21,7 +21,9 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
     study_type: str = doc_ref_dict["study_type"]
     statuses: dict = doc_ref_dict["status"]
 
-    if statuses[email] in ["validated data", "running1", "running2"]:
+    if (statuses[email] in ["validated data", "running1", "running2"]) or (
+        role == "0" and statuses[email] == "ready to begin sfkit"
+    ):
         statuses[email] = "ready to begin protocol"
         update_firestore("update_firestore::status=ready to begin protocol")
     if statuses[email] == "ready to begin protocol":
