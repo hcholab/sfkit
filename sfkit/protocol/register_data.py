@@ -5,7 +5,7 @@ import checksumdir
 from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import authenticate_user, condition_or_fail
-from sfkit.api import get_user_email
+from sfkit.api import get_username
 
 
 def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
@@ -16,7 +16,7 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     authenticate_user()
 
     doc_ref_dict: dict = get_doc_ref_dict()
-    email: str = get_user_email()
+    username: str = get_username()
     study_type: str = doc_ref_dict["study_type"]
     num_inds: int
 
@@ -29,7 +29,7 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
 
         num_inds: int = validate_sfgwas_data(geno_binary_file_prefix, data_path)
         condition_or_fail(
-            num_inds == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]),
+            num_inds == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
             "NUM_INDS does not match the number of individuals in the data.",
         )
         num_snps: int = num_rows(os.path.join(data_path, "snp_ids.txt"))
@@ -46,7 +46,7 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
 
         num_inds: int = validate_mpcgwas_data(data_path)
         condition_or_fail(
-            num_inds == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]),
+            num_inds == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
             "NUM_INDS does not match the number of individuals in the data.",
         )
         print(f"Your data has {num_inds} individuals.")
@@ -58,7 +58,7 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
 
         number_of_rows: int = num_rows(os.path.join(data_path, "data.txt"))
         condition_or_fail(
-            number_of_rows == int(doc_ref_dict["personal_parameters"][email]["NUM_INDS"]["value"]),
+            number_of_rows == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
             "NUM_INDS does not match the number of rows in the data.",
         )
         number_of_cols: int = num_cols(os.path.join(data_path, "data.txt"))

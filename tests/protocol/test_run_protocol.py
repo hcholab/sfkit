@@ -10,8 +10,7 @@ def test_run_protocol(mocker):
     mocker.patch("sfkit.protocol.run_protocol.authenticate_user")
     # mock get_doc_ref_dict
     mocker.patch("sfkit.protocol.run_protocol.get_doc_ref_dict", return_value=mock_doc_ref_dict)
-    # mock get_user_email
-    mocker.patch("sfkit.protocol.run_protocol.get_user_email", return_value="a@a.com")
+    mocker.patch("sfkit.protocol.run_protocol.get_username", return_value="a@a.com")
     # mock update_firestore
     mocker.patch("sfkit.protocol.run_protocol.update_firestore")
     # mock time.sleep
@@ -40,7 +39,7 @@ def test_run_protocol(mocker):
 
     mock_doc_ref_dict_copy["status"]["b@b.com"] = "validated data"
     mock_doc_ref_dict_copy["study_type"] = "MPCGWAS"
-    mocker.patch("sfkit.protocol.run_protocol.get_user_email", return_value="b@b.com")
+    mocker.patch("sfkit.protocol.run_protocol.get_username", return_value="b@b.com")
     run_protocol.run_protocol(phase="1")
 
     mock_doc_ref_dict_copy["study_type"] = "PCA"

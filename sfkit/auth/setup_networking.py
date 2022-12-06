@@ -3,7 +3,7 @@ import socket
 from requests import get
 
 from sfkit.api import get_doc_ref_dict, update_firestore
-from sfkit.api import get_user_email
+from sfkit.api import get_username
 from sfkit.utils.helper_functions import authenticate_user
 
 
@@ -26,8 +26,8 @@ def setup_networking(ports_str: str) -> None:
     update_firestore(f"update_firestore::IP_ADDRESS={ip_address}")
 
     doc_ref_dict: dict = get_doc_ref_dict()
-    email: str = get_user_email()
-    role: str = str(doc_ref_dict["participants"].index(email))
+    username: str = get_username()
+    role: str = str(doc_ref_dict["participants"].index(username))
 
     if ports_str:
         [validate_port(port) for port in ports_str.split(",")]

@@ -4,7 +4,7 @@ from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.utils.gwas_protocol import run_gwas_protocol
 from sfkit.utils.pca_protocol import run_pca_protocol
 from sfkit.utils.sfgwas_protocol import run_sfgwas_protocol
-from sfkit.api import create_cp0, get_user_email
+from sfkit.api import create_cp0, get_username
 from sfkit.utils.helper_functions import authenticate_user
 
 
@@ -15,18 +15,18 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
         raise ValueError("phase must be 1, 2, or 3")
 
     doc_ref_dict: dict = get_doc_ref_dict()
-    email = get_user_email()
+    username = get_username()
 
-    role: str = str(doc_ref_dict["participants"].index(email))
+    role: str = str(doc_ref_dict["participants"].index(username))
     study_type: str = doc_ref_dict["study_type"]
     statuses: dict = doc_ref_dict["status"]
 
-    if (statuses[email] in ["validated data", "running1", "running2"]) or (
-        role == "0" and statuses[email] == "ready to begin sfkit"
+    if (statuses[username] in ["validated data", "running1", "running2"]) or (
+        role == "0" and statuses[username] == "ready to begin sfkit"
     ):
-        statuses[email] = "ready to begin protocol"
+        statuses[username] = "ready to begin protocol"
         update_firestore("update_firestore::status=ready to begin protocol")
-    if statuses[email] == "ready to begin protocol":
+    if statuses[username] == "ready to begin protocol":
         while not demo and other_participant_not_ready(list(statuses.values())):
             print("Other participant(s) not yet ready.  Waiting... (press CTRL-C to cancel)")
             time.sleep(5)

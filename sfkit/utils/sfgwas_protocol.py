@@ -90,18 +90,18 @@ def generate_shared_keys(role: int) -> None:
     with open(private_key_path, "r") as f:
         my_private_key = PrivateKey(f.readline().rstrip().encode(), encoder=HexEncoder)
 
-    for i, other_email in enumerate(doc_ref_dict["participants"]):
+    for i, other_username in enumerate(doc_ref_dict["participants"]):
         if i == role:
             continue
-        other_public_key_str: str = doc_ref_dict["personal_parameters"][other_email]["PUBLIC_KEY"]["value"]
+        other_public_key_str: str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
         while not other_public_key_str:
-            if other_email == "Broad":
+            if other_username == "Broad":
                 print("Waiting for the Broad (CP0) to set up...")
             else:
-                print(f"No public key found for {other_email}.  Waiting...")
+                print(f"No public key found for {other_username}.  Waiting...")
             time.sleep(5)
             doc_ref_dict: dict = get_doc_ref_dict()
-            other_public_key_str: str = doc_ref_dict["personal_parameters"][other_email]["PUBLIC_KEY"]["value"]
+            other_public_key_str: str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
         other_public_key = PublicKey(other_public_key_str.encode(), encoder=HexEncoder)
         condition_or_fail(my_private_key != other_public_key, "Private and public keys must be different")
         shared_key = Box(my_private_key, other_public_key).shared_key()
@@ -261,7 +261,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     :param demo: True if running demo
     """
     print("Begin SFGWAS protocol")
-    update_firestore("update_firestore::status=beginning sfgwas protocol")
+    update_firestore(f"update_firestore::status=beginning {protocol} protocol")
     protocol_command = f"export PID={role} && go run sfgwas.go | tee /dev/console > stdout_party{role}.txt"
     if demo:
         protocol_command = "bash run_example.sh"

@@ -38,8 +38,7 @@ def test_get_shared_mpcgwas_keys(mocker):
 
 
 def test_encrypt_data(mocker):
-    # mock get_user_email
-    mocker.patch("sfkit.encryption.mpc.encrypt_data.get_user_email", return_value="a@a.com")
+    mocker.patch("sfkit.encryption.mpc.encrypt_data.get_username", return_value="a@a.com")
     # mock get_doc_ref_dict
     mocker.patch("sfkit.encryption.mpc.encrypt_data.get_doc_ref_dict", return_value=mock_doc_ref_dict)
     # mock PublicKey

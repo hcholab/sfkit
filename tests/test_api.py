@@ -11,7 +11,7 @@ def test_website_get(mocker):
     res = api.website_get("web")
 
     assert res.status_code == 200
-    assert res.url == "https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/web"
+    assert res.url == "https://sfkit.org/web"
 
 
 def test_get_doc_ref_dict(mocker):
@@ -20,9 +20,9 @@ def test_get_doc_ref_dict(mocker):
     assert res == {"get_doc_ref_dict": "get_doc_ref_dict"}
 
 
-def test_get_user_email(mocker):
+def test_get_username(mocker):
     mocker.patch("sfkit.api.website_get", mock_website_get)
-    res = api.get_user_email()
+    res = api.get_username()
     assert res == ""
 
 

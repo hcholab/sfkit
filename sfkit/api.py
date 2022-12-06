@@ -21,9 +21,9 @@ def get_doc_ref_dict() -> dict:
     return response.json()
 
 
-def get_user_email() -> str:
-    response = website_get("get_user_email")
-    return response.json().get("user_email", "")
+def get_username() -> str:
+    response = website_get("get_username")
+    return response.json().get("username", "")
 
 
 def update_firestore(msg: str) -> bool:

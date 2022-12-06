@@ -1,6 +1,6 @@
 import os
 
-WEBSITE_URL = "https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app"
+WEBSITE_URL = "https://sfkit.org/"
 METADATA_VM_IDENTITY_URL = (
     "http://metadata.google.internal/computeMetadata/v1/"
     "instance/service-accounts/default/identity?"

@@ -16,7 +16,7 @@ from sfkit.utils import constants
 from sfkit.api import get_doc_ref_dict
 from tqdm import tqdm
 
-from sfkit.api import get_user_email
+from sfkit.api import get_username
 from sfkit.utils.helper_functions import condition_or_fail
 
 BASE_P = 1461501637330902918203684832716283019655932542929
@@ -104,11 +104,11 @@ def get_shared_mpcgwas_keys(my_private_key: PrivateKey, other_public_key: Public
 
 
 def encrypt_data() -> None:
-    email: str = get_user_email()
+    username: str = get_username()
 
     print("Downloading other party's public key...")
     doc_ref_dict: dict = get_doc_ref_dict()
-    role = doc_ref_dict["participants"].index(email)
+    role = doc_ref_dict["participants"].index(username)
     other_public_key = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][3 - role]]["PUBLIC_KEY"][
         "value"
     ]
@@ -131,7 +131,7 @@ def encrypt_data() -> None:
 
     data_hash = checksumdir.dirhash(input_dir, "md5")
     condition_or_fail(
-        data_hash == doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"], "Data hash mismatch"
+        data_hash == doc_ref_dict["personal_parameters"][username]["DATA_HASH"]["value"], "Data hash mismatch"
     )
 
     print("Encrypting data...")
@@ -140,7 +140,5 @@ def encrypt_data() -> None:
     with open("./encrypted_data/other_shared_key.bin", "wb") as f:
         f.write(shared_keys[3 - role])
     shutil.copyfile(f"{input_dir}/pos.txt", "./encrypted_data/pos.txt")
-
-    # update_firestore(f"update_firestore::status=not ready::{study_title}::{email}")
 
     print("\n\nThe encryption is complete.")

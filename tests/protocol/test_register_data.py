@@ -8,8 +8,7 @@ from tests.helper_functions_and_constants import *
 def test_register_data(mocker):
     # mock authenticate_user
     mocker.patch("sfkit.protocol.register_data.authenticate_user")
-    # mock get_user_email
-    mocker.patch("sfkit.protocol.register_data.get_user_email", return_value="a@a.com")
+    mocker.patch("sfkit.protocol.register_data.get_username", return_value="a@a.com")
     # mock get_doc_ref_dict
     mocker.patch("sfkit.protocol.register_data.get_doc_ref_dict", return_value=mock_doc_ref_dict)
     # mock validate_geno_binary_file_prefix

@@ -2,7 +2,7 @@ Welcome to sfkit's documentation!
 =================================
 
 **sfkit** is a collection of CLI tools to help run privacy-preserving distributed computation on genomic data.  
-It is a companion to the website `here <https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/>`_.
+It is a companion to the website `here <https://sfkit.org/>`_.
 
 Check out the :doc:`tutorial` to get started. 
 
