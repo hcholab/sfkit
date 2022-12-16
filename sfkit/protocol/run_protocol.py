@@ -42,7 +42,7 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
             update_firestore(f"update_firestore::status=running {study_type} protocol")
 
         if study_type == "MPCGWAS":
-            run_gwas_protocol(doc_ref_dict, role)
+            run_gwas_protocol(doc_ref_dict, role, demo)
         elif study_type == "SFGWAS":
             run_sfgwas_protocol(role, phase, demo)
         elif study_type == "PCA":

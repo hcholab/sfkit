@@ -109,13 +109,16 @@ def encrypt_data() -> None:
     print("Downloading other party's public key...")
     doc_ref_dict: dict = get_doc_ref_dict()
     role = doc_ref_dict["participants"].index(username)
-    other_public_key = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][3 - role]]["PUBLIC_KEY"][
-        "value"
-    ]
+    if len(doc_ref_dict["participants"]) == 3:
+        other_public_key = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][3 - role]]["PUBLIC_KEY"][
+            "value"
+        ]
+    else:
+        other_public_key = "ccc9b947a2faf59a0b78ac55ad1a84848333d8e757b2242d7e1499ab55147d2e"  # dummy key for demo
     if other_public_key == "":
         print("No public key found for other user. Exiting.")
         sys.exit(1)
-    other_public_key = PublicKey(other_public_key, encoder=HexEncoder)
+    other_public_key = PublicKey(other_public_key, encoder=HexEncoder)  # type: ignore
 
     print("Generating shared keys...")
     private_key_path = os.path.join(constants.SFKIT_DIR, "my_private_key.txt")

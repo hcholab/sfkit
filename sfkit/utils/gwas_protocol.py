@@ -7,18 +7,19 @@ from sfkit.api import update_firestore
 from sfkit.encryption.mpc.encrypt_data import encrypt_data
 
 
-def run_gwas_protocol(doc_ref_dict: dict, role: str) -> None:
+def run_gwas_protocol(doc_ref_dict: dict, role: str, demo: bool = False) -> None:
     print("\n\n Begin running GWAS protocol \n\n")
     install_gwas_dependencies()
     install_gwas_repo()
     install_ntl_library()
     compile_gwas_code()
-    update_parameters(doc_ref_dict, role)
-    connect_to_other_vms(doc_ref_dict, role)
-    encrypt_or_prepare_data("./encrypted_data", role)
-    copy_data_to_gwas_repo("./encrypted_data", role)
-    start_datasharing(role)
-    start_gwas(role)
+    if not demo:
+        update_parameters(doc_ref_dict, role)
+        connect_to_other_vms(doc_ref_dict, role)
+        encrypt_or_prepare_data("./encrypted_data", role)
+        copy_data_to_gwas_repo("./encrypted_data", role)
+    start_datasharing(role, demo)
+    start_gwas(role, demo)
 
 
 def install_gwas_dependencies() -> None:
@@ -86,8 +87,11 @@ def update_parameters(doc_ref_dict: dict, role: str) -> None:
     pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
 
     # individual parameters
-    pars["NUM_INDS_SP_1"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][1]]["NUM_INDS"]
-    pars["NUM_INDS_SP_2"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][2]]["NUM_INDS"]
+    for i in range(1, len(doc_ref_dict["participants"])):
+        pars[f"NUM_INDS_SP_{i}"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["NUM_INDS"][
+            "value"
+        ]
+
     pars["NUM_INDS"] = {"value": ""}
     pars["NUM_INDS"]["value"] = str(int(pars["NUM_INDS_SP_1"]["value"]) + int(pars["NUM_INDS_SP_2"]["value"]))
 
@@ -98,7 +102,7 @@ def update_parameters(doc_ref_dict: dict, role: str) -> None:
     update_firestore(f"update_firestore::NUM_CPUS={num_cpus}")
 
     # update pars with ipaddresses and ports
-    for i in range(3):
+    for i in range(len(doc_ref_dict["participants"])):
         ip = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["IP_ADDRESS"]["value"]
         pars[f"IP_ADDR_P{i}"] = {"value": ip}
 
@@ -170,13 +174,16 @@ def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
     update_firestore("update_firestore::status=finished copying data to GWAS repo")
 
 
-def start_datasharing(role: str) -> None:
+def start_datasharing(role: str, demo: bool) -> None:
     print("Sleeping before starting datasharing")
     time.sleep(30 * int(role))
     print("\n\n Begin starting data sharing \n\n")
-    command = f"cd secure-gwas/code && bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
-    if role != "0":
-        command += " ../test_data/"
+    if demo:
+        command = "cd secure-gwas/code && bash run_example_datasharing.sh"
+    else:
+        command = f"cd secure-gwas/code && bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
+        if role != "0":
+            command += " ../test_data/"
     if subprocess.run(command, shell=True).returncode != 0:
         print(f"Failed to perform command {command}")
         exit(1)
@@ -184,11 +191,14 @@ def start_datasharing(role: str) -> None:
     update_firestore("update_firestore::status=started data sharing protocol")
 
 
-def start_gwas(role: str) -> None:
+def start_gwas(role: str, demo: bool) -> None:
     print("Sleeping before starting GWAS")
     time.sleep(100 + 30 * int(role))
     print("\n\n Begin starting GWAS \n\n")
-    command = f"cd secure-gwas/code && bin/GwasClient '{role}' ../par/test.par.'{role}'.txt"
+    if demo:
+        command = "cd secure-gwas/code && bash run_example_gwas.sh"
+    else:
+        command = f"cd secure-gwas/code && bin/GwasClient '{role}' ../par/test.par.'{role}'.txt"
     if subprocess.run(command, shell=True).returncode != 0:
         print(f"Failed to perform command {command}")
         exit(1)
