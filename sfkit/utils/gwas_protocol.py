@@ -3,7 +3,7 @@ import multiprocessing
 import subprocess
 import time
 
-from sfkit.api import update_firestore
+from sfkit.api import update_firestore, website_send_file
 from sfkit.encryption.mpc.encrypt_data import encrypt_data
 
 
@@ -203,6 +203,13 @@ def start_gwas(role: str, demo: bool) -> None:
         print(f"Failed to perform command {command}")
         exit(1)
     print("\n\n Finished GWAS \n\n")
-    update_firestore(
-        "update_firestore::status=Finished protocol!  You can view the results on your machine in the /secure-gwas/out directory"
-    )
+
+    if demo:
+        update_firestore("update_firestore::status=Finished protocol!")
+        with open("/secure-gwas/out/assoc.txt", "r") as file:
+            website_send_file(file, "assoc.txt")
+
+    else:
+        update_firestore(
+            "update_firestore::status=Finished protocol!  You can view the results on your machine in the /secure-gwas/out directory"
+        )

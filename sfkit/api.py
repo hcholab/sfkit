@@ -1,6 +1,23 @@
+from io import TextIOWrapper
+
 import requests
 
 from sfkit.utils import constants
+
+
+def website_send_file(file: TextIOWrapper, filename: str) -> bool:
+    files = {"file": (filename, file)}
+    url = f"{constants.WEBSITE_URL}/upload_file"
+    with open(constants.AUTH_KEY, "r") as f:
+        auth_key = f.readline().rstrip()
+
+    headers = {
+        "Authorization": f"{auth_key}",
+        # "content-type": "application/json",
+    }
+    response = requests.post(url, files=files, headers=headers)
+
+    return response.status_code == 200
 
 
 def website_get(request_type: str, params: dict = dict()) -> requests.Response:
