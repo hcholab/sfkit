@@ -1,11 +1,11 @@
-from io import TextIOWrapper
+from io import IOBase
 
 import requests
 
 from sfkit.utils import constants
 
 
-def website_send_file(file: TextIOWrapper, filename: str) -> bool:
+def website_send_file(file: IOBase, filename: str) -> bool:
     files = {"file": (filename, file)}
     url = f"{constants.WEBSITE_URL}/upload_file"
     with open(constants.AUTH_KEY, "r") as f:

@@ -8,6 +8,10 @@ sfkit is a command line tool made to facilitate secure collaboration for certain
 
 There are two main components to the sfkit workflow: the website and the sfkit command line interface (CLI). The website is a web application that serves to provide a convenient UI for the study participants to create a joint study and set up the study parameters. The sfkit CLI is a command line tool that is used to perform the actual analysis.  The sfkit CLI is run on a machine controlled by the study participant.  The sfkit website is run by the Broad Institute.
 
+.. note::
+
+    If you would like to run this workflow, but are not very comfortable with the command line, there is also a `website-exclusive tutorial <https://sfkit.org/tutorial>`_ that you can follow.
+
 Prerequisites
 -------------
 
@@ -28,11 +32,11 @@ Website
 -------
 
 1. Go to the companion `website <https://sfkit.org/>`_ and register or login.  
-2. Go to the `studies <https://sfkit.org/index>`_ page to create a study on the website.  For this tutorial, you should choose the "Secure Federated GWAS Study" workflow with the "Self-configured" configuration option.  You can choose to enter any title, description and study information and then click "Submit".  You can leave the parameters as they are, for now (when you run a real study, you'll want to set the parameters accordingly). After you submit, you should see a page that looks something like this:
+2. Go to the `studies <https://sfkit.org/index>`_ page to create a study on the website.  For this tutorial, you should choose the "SF-GWAS" workflow with the "user-configured" option.  You can choose to enter any title, description and study information and then click "Submit".  You can leave the parameters as they are, for now (when you run a real study, you'll want to set the parameters accordingly). After you submit, you should see a page that looks something like this:
 
 .. image:: images/study.png
 
-An auth_key.txt should automatically download to your machine.  Once this happens, you can proceed to the CLI. 
+You should click the button to download the the Auth key, and then you should upload it to the machine where you will be running the protocol.
 
 .. note::
 
@@ -41,7 +45,7 @@ An auth_key.txt should automatically download to your machine.  Once this happen
 CLI 
 ---
 
-1. SSH into your VM where you will be running the workflow and follow the instructions to install sfkit if you haven't already (see :doc:`installation`).  Also download the auth_key.txt to your machine if you have not done so already.
+1. SSH into your VM where you will be running the workflow and follow the instructions to install sfkit if you haven't already (see :doc:`installation`).  Also upload the auth_key.txt to your machine if you have not done so already.
 
 2. Run 
 

@@ -70,7 +70,8 @@ mock_doc_ref_dict = {
 
 mock_doc_ref_dict_keys = copy.deepcopy(mock_doc_ref_dict)
 mock_doc_ref_dict_keys["personal_parameters"]["a@a.com"]["PUBLIC_KEY"]["value"] = "public_key"
-mock_doc_ref_dict_keys["personal_parameters"]["b@b.com"]["PUBLIC_KEY"]["value"] = "public_key"
+mock_doc_ref_dict_keys["participants"].remove("b@b.com")
+# mock_doc_ref_dict_keys["personal_parameters"]["b@b.com"]["PUBLIC_KEY"]["value"] = "public_key"
 mock_doc_ref_dict_keys["personal_parameters"]["Broad"]["PUBLIC_KEY"]["value"] = "public_key"
 
 mock_doc_ref_dict_mpcgwas = copy.deepcopy(mock_doc_ref_dict)

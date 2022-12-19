@@ -12,7 +12,7 @@ import time
 import toml
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
-from sfkit.api import get_doc_ref_dict
+from sfkit.api import get_doc_ref_dict, website_send_file
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import run_command
 from sfkit.api import update_firestore
@@ -270,10 +270,20 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     print(f"Finished {protocol} protocol")
 
     if protocol == "SFGWAS":
-        update_firestore(
-            f"update_firestore::status=Finished protocol!  You can view the results on your machine in the /sfgwas/out/party{role} directory"
-        )
+        if demo:
+            update_firestore("update_firestore::status=Finished protocol!")
+            with open(f"sfgwas/out/party{role}/assoc.txt", "r") as f:
+                website_send_file(f, "assoc.txt")
+        else:
+            update_firestore(
+                f"update_firestore::status=Finished protocol!  You can view the results on your machine in the /sfgwas/out/party{role} directory"
+            )
     elif protocol == "PCA":
-        update_firestore(
-            f"update_firestore::status=Finished protocol!  You can view the results on your machine in /sfgwas/cache/party{role}/Qpc.txt"
-        )
+        if demo:
+            update_firestore("update_firestore::status=Finished protocol!")
+            with open(f"sfgwas/cache/party{role}/Qpc.txt", "r") as f:
+                website_send_file(f, "Qpc.txt")
+        else:
+            update_firestore(
+                f"update_firestore::status=Finished protocol!  You can view the results on your machine in /sfgwas/cache/party{role}/Qpc.txt"
+            )

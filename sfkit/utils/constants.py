@@ -1,6 +1,6 @@
 import os
 
-WEBSITE_URL = "https://sfkit.org/"
+WEBSITE_URL = "https://sfkit.org"
 METADATA_VM_IDENTITY_URL = (
     "http://metadata.google.internal/computeMetadata/v1/"
     "instance/service-accounts/default/identity?"

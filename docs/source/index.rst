@@ -1,8 +1,8 @@
-Welcome to sfkit's documentation!
-=================================
+Welcome to the sfkit CLI documentation!
+=======================================
 
-**sfkit** is a collection of CLI tools to help run privacy-preserving distributed computation on genomic data.  
-It is a companion to the website `here <https://sfkit.org/>`_.
+**sfkit CLI** is a collection of command line interface (CLI) tools to help run privacy-preserving distributed computation on genomic data.  
+It is a companion to the `sfkit website <https://sfkit.org/>`_.
 
 Check out the :doc:`tutorial` to get started. 
 

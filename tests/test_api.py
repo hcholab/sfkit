@@ -1,11 +1,20 @@
 # sourcery skip: require-parameter-annotation, require-return-annotation
+from io import StringIO
 import requests
 
 from sfkit import api
 
 
+def test_website_send_file(mocker):
+    mocker.patch("sfkit.api.requests.post", mock_get_post)
+    mocker.patch("sfkit.api.open")
+
+    res = api.website_send_file(StringIO("web"), "msg")
+    assert res == True
+
+
 def test_website_get(mocker):
-    mocker.patch("sfkit.api.requests.get", mock_get)
+    mocker.patch("sfkit.api.requests.get", mock_get_post)
     mocker.patch("sfkit.api.open")
 
     res = api.website_get("web")
@@ -38,7 +47,7 @@ def test_create_cp0(mocker):
     assert res == True
 
 
-def mock_get(url, headers, params):
+def mock_get_post(url, headers, params=None, files=None):
     res = requests.Response()
     res.status_code = 200
     res.url = url
@@ -48,4 +57,4 @@ def mock_get(url, headers, params):
 
 
 def mock_website_get(request_type: str, params: dict = dict()) -> requests.Response:
-    return mock_get(request_type, {}, params)
+    return mock_get_post(request_type, {}, params)

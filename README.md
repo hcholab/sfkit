@@ -1,6 +1,6 @@
 ## sfkit
 
-`sfkit` is a collection of CLI tools to help run certain types of secure multi-party computation on genomic data. It is a companion to the website [here](https://sfkit.org/).
+`sfkit` is a collection of CLI tools to help run certain types of federated and/or secure multi-party computation especially on genomic data. It is a companion to the website [here](https://sfkit.org/).
 
 ## Documentation
 
@@ -16,14 +16,13 @@ You can read the full documentation [here](https://sfkit.readthedocs.io/en/lates
 
 ## Usage
 
-Usage: sfkit <auth | setup_networking | generate_personal_keys | register_data | run_protocol>
+Usage: sfkit <auth | networking | generate_keys | register_data | run_protocol>
 
 - auth: Authenticate with the CLI.
-- set_study (deprecated): Set the study you are using.
-- setup_networking: Setup the networking, including your IP address and any relevant ports.
-- generate_personal_keys: Generate your public and private cryptographic keys for use in encrypting the data.
+- networking: Setup the networking, including your IP address and any relevant ports.
+- generate_keys: Generate your public and private cryptographic keys for use in encrypting the data.
 - register_data: Register and validate your data.
-- run_protocol: Run the protocol. As this command may be long-running, it is recommended that you run it using nohup. This will prevent it from terminating if you close this window/terminal. For example, `nohup sfkit run_protocol & tail -f nohup.out`. You can also use a tool like screen or tmux.
+- run_protocol: Run the protocol. As this command may be long-running, you may want to run it with a tool like nohup, screen or tmux to prevent it from terminating if you close this window/terminal. For example, `nohup sfkit run_protocol & tail -f nohup.out`.
 
 ### Questions
 

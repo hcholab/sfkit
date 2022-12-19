@@ -93,7 +93,7 @@ def update_parameters(doc_ref_dict: dict, role: str) -> None:
         ]
 
     pars["NUM_INDS"] = {"value": ""}
-    pars["NUM_INDS"]["value"] = str(int(pars["NUM_INDS_SP_1"]["value"]) + int(pars["NUM_INDS_SP_2"]["value"]))
+    pars["NUM_INDS"]["value"] = str(int(pars["NUM_INDS_SP_1"]) + int(pars["NUM_INDS_SP_2"]))
 
     # num threads = num_cpus = $(nproc)
     num_cpus = str(multiprocessing.cpu_count())
@@ -206,7 +206,7 @@ def start_gwas(role: str, demo: bool) -> None:
 
     if demo:
         update_firestore("update_firestore::status=Finished protocol!")
-        with open("/secure-gwas/out/assoc.txt", "r") as file:
+        with open("secure-gwas/out/test_assoc.txt", "r") as file:
             website_send_file(file, "assoc.txt")
 
     else:
