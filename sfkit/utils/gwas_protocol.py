@@ -205,9 +205,9 @@ def start_gwas(role: str, demo: bool) -> None:
     print("\n\n Finished GWAS \n\n")
 
     if demo:
-        update_firestore("update_firestore::status=Finished protocol!")
         with open("secure-gwas/out/test_assoc.txt", "r") as file:
             website_send_file(file, "assoc.txt")
+        update_firestore("update_firestore::status=Finished protocol!")
 
     else:
         update_firestore(
