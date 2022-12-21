@@ -12,14 +12,15 @@ def test_run_gwas_protocol(mocker):
     mocker.patch("sfkit.utils.gwas_protocol.install_ntl_library")
     mocker.patch("sfkit.utils.gwas_protocol.compile_gwas_code")
     mocker.patch("sfkit.utils.gwas_protocol.update_parameters")
-    mocker.patch("sfkit.utils.gwas_protocol.connect_to_other_vms")
+    # mocker.patch("sfkit.utils.gwas_protocol.connect_to_other_vms")
     mocker.patch("sfkit.utils.gwas_protocol.encrypt_or_prepare_data")
     mocker.patch("sfkit.utils.gwas_protocol.copy_data_to_gwas_repo")
+    mocker.patch("sfkit.utils.gwas_protocol.sync_with_other_vms")
     mocker.patch("sfkit.utils.gwas_protocol.start_datasharing")
     mocker.patch("sfkit.utils.gwas_protocol.start_gwas")
 
-    gwas_protocol.run_gwas_protocol({}, "1")
-    gwas_protocol.run_gwas_protocol({}, "1", demo=True)
+    gwas_protocol.run_gwas_protocol("1")
+    gwas_protocol.run_gwas_protocol("1", demo=True)
 
 
 def test_install_gwas_dependencies(mocker):
@@ -66,27 +67,29 @@ def test_update_parameters(mocker):
     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
     # mock fileinput.input
     mocker.patch("sfkit.utils.gwas_protocol.fileinput.input", mock_fileinput_input)
+    # mock get_doc_ref_dict
+    mocker.patch("sfkit.utils.gwas_protocol.get_doc_ref_dict", return_value=mock_doc_ref_dict)
 
-    gwas_protocol.update_parameters(mock_doc_ref_dict, "1")
+    gwas_protocol.update_parameters("1")
 
 
-def test_connect_to_other_vms(mocker):
-    # mock subprocess.run
-    mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(0))
-    # mock update_firestore
-    mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
-    # mock time.sleep
-    mocker.patch("sfkit.utils.gwas_protocol.time.sleep", mock_sleep)
+# def test_connect_to_other_vms(mocker):
+#     # mock subprocess.run
+#     mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(0))
+#     # mock update_firestore
+#     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
+#     # mock time.sleep
+#     mocker.patch("sfkit.utils.gwas_protocol.time.sleep", mock_sleep)
 
-    gwas_protocol.connect_to_other_vms(mock_doc_ref_dict, "1")
+#     gwas_protocol.connect_to_other_vms(mock_doc_ref_dict, "1")
 
-    mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(1))
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        gwas_protocol.connect_to_other_vms(mock_doc_ref_dict, "1")
+#     mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(1))
+#     with pytest.raises(SystemExit) as pytest_wrapped_e:
+#         gwas_protocol.connect_to_other_vms(mock_doc_ref_dict, "1")
 
-    mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", mock_subprocess_run)
-    mock_doc_ref_dict["personal_parameters"]["a@a.com"]["IP_ADDRESS"]["value"] = "bad"
-    gwas_protocol.connect_to_other_vms(mock_doc_ref_dict, "2")
+#     mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", mock_subprocess_run)
+#     mock_doc_ref_dict["personal_parameters"]["a@a.com"]["IP_ADDRESS"]["value"] = "bad"
+#     gwas_protocol.connect_to_other_vms(mock_doc_ref_dict, "2")
 
 
 def test_encrypt_or_prepare_data(mocker):

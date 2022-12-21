@@ -1,23 +1,26 @@
 import fileinput
 import multiprocessing
+
+# import socket
 import subprocess
 import time
 
-from sfkit.api import update_firestore, website_send_file
+from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.encryption.mpc.encrypt_data import encrypt_data
 
 
-def run_gwas_protocol(doc_ref_dict: dict, role: str, demo: bool = False) -> None:
+def run_gwas_protocol(role: str, demo: bool = False) -> None:
     print("\n\n Begin running GWAS protocol \n\n")
     install_gwas_dependencies()
     install_gwas_repo()
     install_ntl_library()
     compile_gwas_code()
     if not demo:
-        update_parameters(doc_ref_dict, role)
-        connect_to_other_vms(doc_ref_dict, role)
+        update_parameters(role)
+        # connect_to_other_vms(role)
         encrypt_or_prepare_data("./encrypted_data", role)
         copy_data_to_gwas_repo("./encrypted_data", role)
+        sync_with_other_vms(role)
     start_datasharing(role, demo)
     start_gwas(role, demo)
 
@@ -80,8 +83,10 @@ def compile_gwas_code() -> None:
     update_firestore("update_firestore::status=finished compiling GWAS code")
 
 
-def update_parameters(doc_ref_dict: dict, role: str) -> None:
+def update_parameters(role: str) -> None:
     print(f"\n\n Updating parameters in 'secure-gwas/par/test.par.{role}.txt'\n\n")
+
+    doc_ref_dict = get_doc_ref_dict()
 
     # shared parameters and advanced parameters
     pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
@@ -115,26 +120,37 @@ def update_parameters(doc_ref_dict: dict, role: str) -> None:
         print(line, end="")
 
 
-def connect_to_other_vms(doc_ref_dict: dict, role: str) -> None:
-    print("\n\n Begin connecting to other VMs \n\n")
+# this function currently has 2 main problems: 1. the other machine doesn't receive the connection 2. it uses the same ports as the main protocol, causing a conflict
+# def connect_to_other_vms(role: str) -> None:
+#     print("\n\n Begin connecting to other VMs \n\n")
 
-    ip_addresses = [
-        doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["IP_ADDRESS"]["value"] for i in range(3)
-    ]
-    port = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][0]]["PORTS"]["value"].split(",")[1]
+#     doc_ref_dict: dict = get_doc_ref_dict()
 
-    print(f"Using port {port} to test connections")
-    command = f"nc -k -l -p {port} &"
-    if subprocess.run(command, shell=True).returncode != 0:
-        print(f"Failed to perform command {command}")
-        exit(1)
-    for i in range(int(role)):
-        command = f"nc -w 5 -v -z {ip_addresses[i]} {port} &>/dev/null"
-        while subprocess.run(command, shell=True).returncode != 0:
-            print(f"Failed to perform command {command}. Trying again...")
-            time.sleep(5)
-    print("\n\n Finished connecting to other VMs \n\n")
-    update_firestore("update_firestore::status=finished connecting to other VMs")
+#     for i in range(int(role)):
+#         other_user = doc_ref_dict["participants"][i]
+#         ip_address = doc_ref_dict["personal_parameters"][other_user]["IP_ADDRESS"]["value"]
+#         port = int(doc_ref_dict["personal_parameters"][other_user]["PORTS"]["value"].split(",")[int(role)])
+
+#         while ip_address == "" or port == "":
+#             print(f"Waiting for {other_user} to finish setting up...")
+#             time.sleep(5)
+#             doc_ref_dict = get_doc_ref_dict()
+#             ip_address = doc_ref_dict["personal_parameters"][other_user]["IP_ADDRESS"]["value"]
+#             port = int(doc_ref_dict["personal_parameters"][other_user]["PORTS"]["value"].split(",")[int(role)])
+
+#         print(f"Connecting to {other_user} at {ip_address}:{port}...")
+
+#         while True:
+#             try:
+#                 sock = socket.create_connection((ip_address, port), timeout=5)
+#                 sock.close()
+#                 break
+#             except socket.timeout:
+#                 print(f"Timed out while connecting to {other_user} at {ip_address}:{port}. Trying again...")
+#             except socket.error:
+#                 print(f"Error while connecting to {other_user} at {ip_address}:{port}. Trying again...")
+#                 time.sleep(5)
+#     print("\n\n Finished connecting to other VMs \n\n")
 
 
 def encrypt_or_prepare_data(data_path: str, role: str) -> None:
@@ -172,10 +188,24 @@ def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
     update_firestore("update_firestore::status=finished copying data to GWAS repo")
 
 
+def sync_with_other_vms(role: str) -> None:
+    update_firestore("update_firestore::status=syncing up")
+    # wait until all participants have the status of starting data sharing protocol
+    while True:
+        doc_ref_dict: dict = get_doc_ref_dict()
+        statuses = doc_ref_dict["status"].values()
+        if all(status == "syncing up" for status in statuses):
+            break
+        print("Waiting for all participants to sync up...")
+        time.sleep(5)
+    time.sleep(15 + 15 * int(role))
+    print("Finished syncing up")
+    update_firestore("update_firestore::status=finished syncing up")
+
+
 def start_datasharing(role: str, demo: bool) -> None:
-    print("Sleeping before starting datasharing")
-    time.sleep(30 * int(role))
     print("\n\n Begin starting data sharing \n\n")
+    update_firestore("update_firestore::status=starting data sharing protocol")
     if demo:
         command = "cd secure-gwas/code && bash run_example_datasharing.sh"
     else:
