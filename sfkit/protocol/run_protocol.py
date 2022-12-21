@@ -33,11 +33,11 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
             doc_ref_dict: dict = get_doc_ref_dict()
             statuses: dict = doc_ref_dict["status"]
 
-        if role == "1":
+        if not demo and role == "1":
             create_cp0()
 
         if phase:
-            update_firestore(f"update_firestore::status=running phsae {phase} of {study_type} protocol")
+            update_firestore(f"update_firestore::status=running phase {phase} of {study_type} protocol")
         else:
             update_firestore(f"update_firestore::status=running {study_type} protocol")
 

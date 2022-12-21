@@ -14,8 +14,11 @@ def setup_networking(ports_str: str) -> None:
     )
 
     authenticate_user()
+    doc_ref_dict: dict = get_doc_ref_dict()
 
-    if ports_str:  # if ports are specified we're using auto-configuration and internal ip_addresses
+    if (
+        doc_ref_dict["setup_configuration"] == "website"
+    ):  # if ports are specified we're using auto-configuration and internal ip_addresses
         ip_address: str = socket.gethostbyname(socket.gethostname())
         print("Using internal ip address:", ip_address)
     else:
@@ -25,7 +28,6 @@ def setup_networking(ports_str: str) -> None:
     print("Processing...")
     update_firestore(f"update_firestore::IP_ADDRESS={ip_address}")
 
-    doc_ref_dict: dict = get_doc_ref_dict()
     username: str = get_username()
     role: str = str(doc_ref_dict["participants"].index(username))
 

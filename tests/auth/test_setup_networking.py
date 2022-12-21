@@ -4,7 +4,10 @@ from sfkit.auth import setup_networking
 
 
 def test_setup_networking(mocker):
-    mocker.patch("sfkit.auth.setup_networking.get_doc_ref_dict", return_value={"participants": ["a@a.com", "b@b.com"]})
+    mocker.patch(
+        "sfkit.auth.setup_networking.get_doc_ref_dict",
+        return_value={"participants": ["a@a.com", "b@b.com"], "setup_configuration": "website"},
+    )
     mocker.patch("sfkit.auth.setup_networking.update_firestore")
     mocker.patch("sfkit.auth.setup_networking.get_username", return_value="a@a.com")
     mocker.patch("sfkit.auth.setup_networking.authenticate_user")

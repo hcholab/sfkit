@@ -88,12 +88,10 @@ def update_parameters(doc_ref_dict: dict, role: str) -> None:
 
     # individual parameters
     for i in range(1, len(doc_ref_dict["participants"])):
-        pars[f"NUM_INDS_SP_{i}"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["NUM_INDS"][
-            "value"
-        ]
+        pars[f"NUM_INDS_SP_{i}"] = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["NUM_INDS"]
 
     pars["NUM_INDS"] = {"value": ""}
-    pars["NUM_INDS"]["value"] = str(int(pars["NUM_INDS_SP_1"]) + int(pars["NUM_INDS_SP_2"]))
+    pars["NUM_INDS"]["value"] = str(int(pars["NUM_INDS_SP_1"]["value"]) + int(pars["NUM_INDS_SP_2"]["value"]))
 
     # num threads = num_cpus = $(nproc)
     num_cpus = str(multiprocessing.cpu_count())
