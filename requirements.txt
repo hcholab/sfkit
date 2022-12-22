@@ -12,3 +12,8 @@ sphinx-rtd-theme
 sphinx-argparse
 toml
 tqdm
+numpy
+pandas
+scipy
+matplotlib
+qmplot

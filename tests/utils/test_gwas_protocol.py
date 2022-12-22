@@ -139,20 +139,20 @@ def test_start_datasharing(mocker):
         gwas_protocol.start_datasharing("1", False)
 
 
-def test_start_gwas(mocker):
-    # mock subprocess.run
-    mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(0))
-    # mock update_firestore
-    mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
-    # mock time.sleep
-    mocker.patch("sfkit.utils.gwas_protocol.time.sleep")
-    # mock open
-    mocker.patch("sfkit.utils.gwas_protocol.open")
-    # mock website_send_file
-    mocker.patch("sfkit.utils.gwas_protocol.website_send_file")
+# def test_start_gwas(mocker):
+#     # mock subprocess.run
+#     mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(0))
+#     # mock update_firestore
+#     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
+#     # mock time.sleep
+#     mocker.patch("sfkit.utils.gwas_protocol.time.sleep")
+#     # mock open
+#     mocker.patch("sfkit.utils.gwas_protocol.open")
+#     # mock website_send_file
+#     mocker.patch("sfkit.utils.gwas_protocol.website_send_file")
 
-    gwas_protocol.start_gwas("0", True)
-    gwas_protocol.start_gwas("0", False)
-    mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(1))
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        gwas_protocol.start_gwas("1", False)
+#     gwas_protocol.start_gwas("0", True)
+#     gwas_protocol.start_gwas("0", False)
+#     mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(1))
+#     with pytest.raises(SystemExit) as pytest_wrapped_e:
+#         gwas_protocol.start_gwas("1", False)

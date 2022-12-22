@@ -43,7 +43,7 @@ def encrypt_GMP(prng, input_dir: str, output_dir: str = "./encrypted_data") -> N
     num_lines = sum(1 for _ in open(f"{input_dir}/pheno.txt", "r"))
     for _ in tqdm(range(num_lines)):
         p = pheno_file.readline().rstrip().split() + cov_file.readline().rstrip().split()
-        p = [str((float(x) - prng.next()) % BASE_P) for x in p]
+        p = [str((int(x) - prng.next()) % BASE_P) for x in p]
 
         geno_line = geno_file.readline().rstrip().split()
         g = [[-prng.next() % BASE_P for _ in range(len(geno_line))] for _ in range(3)]

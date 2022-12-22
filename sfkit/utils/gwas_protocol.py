@@ -7,6 +7,7 @@ import time
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.encryption.mpc.encrypt_data import encrypt_data
+from sfkit.utils.helper_functions import plot_assoc, postprocess_assoc
 
 
 def run_gwas_protocol(role: str, demo: bool = False) -> None:
@@ -189,6 +190,7 @@ def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
 
 
 def sync_with_other_vms(role: str) -> None:
+    print("Begin syncing up")
     update_firestore("update_firestore::status=syncing up")
     # wait until all participants have the status of starting data sharing protocol
     while True:
@@ -233,8 +235,23 @@ def start_gwas(role: str, demo: bool) -> None:
     print("\n\n Finished GWAS \n\n")
 
     if demo:
-        with open("secure-gwas/out/test_assoc.txt", "r") as file:
-            website_send_file(file, "assoc.txt")
+        postprocess_assoc(
+            "secure-gwas/out/new_assoc.txt",
+            "secure-gwas/out/test_assoc.txt",
+            "secure-gwas/test_data/pos.txt",
+            "secure-gwas/out/test_gkeep1.txt",
+            "secure-gwas/out/test_gkeep2.txt",
+            1000,
+            2,
+        )
+        plot_assoc("secure-gwas/out/manhattan.png", "secure-gwas/out/new_assoc.txt")
+
+        with open("secure-gwas/out/new_assoc.txt", "r") as file:
+            website_send_file(file, "new_assoc.txt")
+
+        with open("secure-gwas/out/manhattan.png", "rb") as file:
+            website_send_file(file, "manhattan.png")
+
         update_firestore("update_firestore::status=Finished protocol!")
 
     else:
