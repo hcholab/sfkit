@@ -113,6 +113,8 @@ def undo_mock_changes():
 class Mock_Subprocess:
     def __init__(self, returncode):
         self.returncode = returncode
+        self.stdout = "stdout"
+        self.stderr = "stderr"
 
 
 def mock_subprocess_run(command, shell=True):

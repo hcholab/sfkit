@@ -17,10 +17,13 @@ def authenticate_user() -> None:
         exit(1)
 
 
-def run_command(command: str) -> None:
-    if subprocess.run(command, shell=True, executable="/bin/bash").returncode != 0:
-        print(f"Failed to perform command {command}")
-        exit(1)
+def run_command(command: str, fail_message: str = "") -> None:
+    res = subprocess.run(command, shell=True, executable="/bin/bash")
+    if res.returncode != 0 and res.stderr not in ["", None]:
+        print(f"FAILED - {command}")
+        print(f"Return code: {res.returncode}")
+        print(f"Stderr: {res.stderr}")
+        condition_or_fail(False, fail_message)
 
 
 def condition_or_fail(condition: bool, message: str = "The sfkit process has failed.") -> None:

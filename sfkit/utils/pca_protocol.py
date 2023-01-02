@@ -17,15 +17,16 @@ from sfkit.utils.sfgwas_protocol import (
 )
 
 
-def run_pca_protocol(role: str) -> None:
+def run_pca_protocol(role: str, demo: bool = False) -> None:
     install_sfgwas()
-    generate_shared_keys(int(role))
-    print("Begin updating config files")
-    update_config_local(role)
-    update_config_global(protocol="pca")
+    if not demo:
+        generate_shared_keys(int(role))
+        print("Begin updating config files")
+        update_config_local(role)
+        update_config_global(protocol="pca")
     update_sfgwas_go("pca")
     build_sfgwas()
-    start_sfgwas(role, protocol="PCA")
+    start_sfgwas(role, demo, protocol="PCA")
 
 
 def update_config_local(role: str) -> None:

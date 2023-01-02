@@ -1,6 +1,6 @@
 [project]
 name = "sfkit"
-version = "0.0.126"
+version = "0.0.129"
 authors = [{ name = "Simon Mendelsohn", email = "smendels@broadinstitute.org" }]
 description = "Some CLI Tools For The Secure Multi-party Genomic Analysis Website"
 readme = "README.md"

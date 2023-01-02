@@ -266,7 +266,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     if demo:
         protocol_command = "bash run_example.sh"
     command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && {protocol_command}"
-    run_command(command)
+    run_command(command, fail_message=f"Failed {protocol} protocol")
     print(f"Finished {protocol} protocol")
 
     if protocol == "SFGWAS":

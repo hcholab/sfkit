@@ -46,7 +46,7 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
         elif study_type == "SFGWAS":
             run_sfgwas_protocol(role, phase, demo)
         elif study_type == "PCA":
-            run_pca_protocol(role)
+            run_pca_protocol(role, demo)
         else:
             raise ValueError(f"Unknown study type: {study_type}")
     else:
