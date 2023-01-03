@@ -8,6 +8,7 @@ import fileinput
 import os
 import random
 import time
+from typing import Union
 
 import toml
 from nacl.encoding import HexEncoder
@@ -176,7 +177,7 @@ def update_config_global(protocol: str = "gwas") -> None:
         print(f"{row_name} for {participant} is {data[row_name][i]}")
         condition_or_fail(i == 0 or data[row_name][i] > 0, f"{row_name} must be greater than 0")
     data[col_name] = (
-        int(doc_ref_dict["parameters"]["NUM_SNPS"]["value"])
+        int(doc_ref_dict["parameters"]["num_snps"]["value"])
         if protocol == "gwas"
         else int(doc_ref_dict["parameters"]["num_columns"]["value"])
     )
@@ -199,10 +200,7 @@ def update_config_global(protocol: str = "gwas") -> None:
     pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
     for key, value in pars.items():
         if key in data:
-            try:
-                data[key] = int(value["value"])
-            except ValueError:
-                data[key] = value["value"]
+            data[key] = to_float_int_or_bool(value["value"])
 
     with open(config_file_path, "w") as f:
         toml.dump(data, f)
@@ -287,3 +285,15 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
             update_firestore(
                 f"update_firestore::status=Finished protocol!  You can view the results on your machine in /sfgwas/cache/party{role}/Qpc.txt"
             )
+
+
+def to_float_int_or_bool(string: str) -> Union[float, int, bool, str]:
+    if string.lower() in {"true", "false"}:
+        return string.lower() == "true"
+    try:
+        return int(string)
+    except ValueError:
+        try:
+            return float(string)
+        except ValueError:
+            return string

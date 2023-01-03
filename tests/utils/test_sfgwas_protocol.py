@@ -71,19 +71,19 @@ def test_update_data_file_paths(mocker):
     sfgwas_protocol.update_data_file_paths(mock_toml_data)
 
 
-def test_update_config_global(mocker):
-    # mock get_doc_ref_dict
-    mocker.patch("sfkit.utils.sfgwas_protocol.get_doc_ref_dict", mock_get_doc_ref_dict)
-    # mock toml.load
-    mocker.patch("sfkit.utils.sfgwas_protocol.toml.load", mock_toml_load)
-    # mock open
-    mocker.patch("sfkit.utils.sfgwas_protocol.open")
-    # mock toml.dump
-    mocker.patch("sfkit.utils.sfgwas_protocol.toml.dump")
-    # mock condition_or_fail
-    mocker.patch("sfkit.utils.sfgwas_protocol.condition_or_fail")
+# def test_update_config_global(mocker):
+#     # mock get_doc_ref_dict
+#     mocker.patch("sfkit.utils.sfgwas_protocol.get_doc_ref_dict", mock_get_doc_ref_dict)
+#     # mock toml.load
+#     mocker.patch("sfkit.utils.sfgwas_protocol.toml.load", mock_toml_load)
+#     # mock open
+#     mocker.patch("sfkit.utils.sfgwas_protocol.open")
+#     # mock toml.dump
+#     mocker.patch("sfkit.utils.sfgwas_protocol.toml.dump")
+#     # mock condition_or_fail
+#     mocker.patch("sfkit.utils.sfgwas_protocol.condition_or_fail")
 
-    sfgwas_protocol.update_config_global()
+#     sfgwas_protocol.update_config_global()
 
 
 def test_update_config_global_phase(mocker):

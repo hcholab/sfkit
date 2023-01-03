@@ -206,7 +206,7 @@ def sync_with_other_vms(role: str) -> None:
 
 
 def start_datasharing(role: str, demo: bool) -> None:
-    print("\n\n Begin starting data sharing \n\n")
+    print("\n\n starting data sharing protocol \n\n")
     update_firestore("update_firestore::status=starting data sharing protocol")
     if demo:
         command = "cd secure-gwas/code && bash run_example_datasharing.sh"
@@ -217,14 +217,15 @@ def start_datasharing(role: str, demo: bool) -> None:
     if subprocess.run(command, shell=True).returncode != 0:
         print(f"Failed to perform command {command}")
         exit(1)
-    print("\n\n Finished starting data sharing \n\n")
-    update_firestore("update_firestore::status=started data sharing protocol")
+    print("\n\n Finished data sharing protocol\n\n")
+    update_firestore("update_firestore::status=finished data sharing protocol")
 
 
 def start_gwas(role: str, demo: bool) -> None:
     print("Sleeping before starting GWAS")
     time.sleep(100 + 30 * int(role))
-    print("\n\n Begin starting GWAS \n\n")
+    print("\n\n starting GWAS \n\n")
+    update_firestore("update_firestore::status=starting GWAS")
     if demo:
         command = "cd secure-gwas/code && bash run_example_gwas.sh"
     else:
@@ -255,6 +256,9 @@ def start_gwas(role: str, demo: bool) -> None:
         update_firestore("update_firestore::status=Finished protocol!")
 
     else:
+        update_firestore(
+            "update_firestore::status=Finished protocol!  You can view the results on your machine in the /secure-gwas/out directory"
+        )
         update_firestore(
             "update_firestore::status=Finished protocol!  You can view the results on your machine in the /secure-gwas/out directory"
         )
