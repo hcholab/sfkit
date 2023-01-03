@@ -160,7 +160,7 @@ def encrypt_or_prepare_data(data_path: str, role: str) -> None:
         if subprocess.run(command, shell=True).returncode != 0:
             print(f"Failed to perform command {command}")
             exit(1)
-        command = f"gsutil cp gs://secure-gwas-data0/pos.txt {data_path}/pos.txt"
+        command = f"gsutil cp gs://sfkit_example_data/mpcgwas/party0/pos.txt {data_path}/pos.txt"
         if subprocess.run(command, shell=True).returncode != 0:
             print(f"Failed to perform command {command}")
             exit(1)

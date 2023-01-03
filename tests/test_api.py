@@ -1,6 +1,6 @@
 # sourcery skip: require-parameter-annotation, require-return-annotation
 from io import StringIO
-import requests
+from requests import Response
 
 from sfkit import api
 
@@ -48,7 +48,7 @@ def test_create_cp0(mocker):
 
 
 def mock_get_post(url, headers, params=None, files=None):
-    res = requests.Response()
+    res = Response()
     res.status_code = 200
     res.url = url
     res.headers = headers
@@ -56,5 +56,5 @@ def mock_get_post(url, headers, params=None, files=None):
     return res
 
 
-def mock_website_get(request_type: str, params: dict = dict()) -> requests.Response:
+def mock_website_get(request_type: str, params: dict = dict()) -> Response:
     return mock_get_post(request_type, {}, params)

@@ -4,7 +4,7 @@ Tutorial
 Introduction
 ------------
 
-sfkit is a command line tool made to facilitate secure collaboration for certain types of genomic analysis that utilize potentially sensitive data.  This tutorial will walk you through the steps of using sfkit to perform a secure-federated genome-wide association study (SF-GWAS) using the sfkit workflow.
+sfkit is a command line tool made to facilitate secure collaboration for certain types of genomic analysis that utilize potentially sensitive data.  This tutorial will walk you through the steps of using sfkit to perform a secure-federated genome-wide association study (SF-GWAS) using the sfkit workflow.  That said, this same tutorial can be run with any of the workflows.  
 
 There are two main components to the sfkit workflow: the website and the sfkit command line interface (CLI). The website is a web application that serves to provide a convenient UI for the study participants to create a joint study and set up the study parameters. The sfkit CLI is a command line tool that is used to perform the actual analysis.  The sfkit CLI is run on a machine controlled by the study participant.  The sfkit website is run by the Broad Institute.
 
@@ -19,7 +19,7 @@ Before you begin, you will need access to a machine where you can run the protoc
 
 .. note::
 
-    If you are deciding what Virtual Machine (VM) size you want/need, we generally recommend using the *e2-highmem-16* (16 vCPUs, 128 GB memory) as a reasonable default for this kind of analysis.  This size has worked well for us on datasets with <30,000 samples and <700,000 SNPs for SFGWAS.  If you are running a larger dataset, you may need to increase the size of the VM.  On a dataset with ~10 million SNPs, we have used the larger *n2-highmem-64* or *n2-highmem-128*. If you are running a smaller dataset, you may be able to use a smaller machine.  Feel free to reach out if you have questions or concerns.  
+    If you are deciding what Virtual Machine (VM) size you want/need, we generally recommend using the *e2-highmem-16* (16 vCPUs, 128 GB memory) with at least a *100GB boot disk* as a reasonable default for this kind of analysis.  This size has worked well for us on datasets with <30,000 samples and <700,000 SNPs for SFGWAS.  If you are running a larger dataset, you may need to increase the size of the VM.  On a dataset with ~10 million SNPs, we have used the larger *n2-highmem-64* or *n2-highmem-128*. If you are running a smaller dataset, you may be able to use a smaller machine.  Feel free to reach out if you have questions or concerns.  
 
 Networking
 ----------
