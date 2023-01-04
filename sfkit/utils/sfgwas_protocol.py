@@ -260,7 +260,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     """
     print("Begin SFGWAS protocol")
     update_firestore(f"update_firestore::status=beginning {protocol} protocol")
-    protocol_command = f"export PID={role} && go run sfgwas.go | tee /dev/console > stdout_party{role}.txt"
+    protocol_command = f"export PID={role} && go run sfgwas.go | tee stdout_party{role}.txt"
     if demo:
         protocol_command = "bash run_example.sh"
     command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && {protocol_command}"
