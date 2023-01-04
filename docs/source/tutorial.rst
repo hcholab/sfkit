@@ -54,15 +54,15 @@ Website
 -------
 
 1. Go to the companion `website <https://sfkit.org/>`_ and register or login.  
-2. Go to the `studies <https://sfkit.org/index>`_ page to create a study on the website.  For this tutorial, you should choose the "SF-GWAS" workflow with the "user-configured" option.  You can choose to enter any title, description and study information and then click "Submit".  You can leave the parameters as they are, for now (when you run a real study, you'll want to set the parameters accordingly). After you submit, you should see a page that looks something like this:
+2. Go to the `studies <https://sfkit.org/index>`_ page to create a study on the website.  For this tutorial, you should choose the "SF-GWAS" workflow with the "user-configured" option.  You can choose to enter any title, description and study information and then check "Demo Study" and Confirm.  You can leave the parameters as they are, for now (when you run a real study, you'll want to set the parameters accordingly). After you submit, you should see a page that looks something like this:
 
 .. image:: images/study.png
 
-You should click the button to download the the Auth key, and then you should upload it to the machine where you will be running the protocol.
+You should click the button to download the the Auth key, and then you should upload it to the machine where you will be running the protocol. (You can put this key anywhere you want; you will be asked for the path when you authenticate with `sfkit auth`.)
 
 .. note::
 
-   When running a real study, you will want to allow multiple participants for a study.  A new participant can request to join a study by clicking "Request to Join Study" under a study on the Studies page.  Alternatively, you can invite a new study participant with the button on your study page.  For this tutorial, we will only be using one participant. 
+   When running a real study, you will want to allow multiple participants for a study.  A new participant can request to join a study by clicking "Request to Join Study" under a study on the Studies page.  Alternatively, you can invite a new study participant with the button on your study page.  For this tutorial, we have automaticaly added an "Example Collaborator" to imitate another study participant.
 
 CLI 
 ---
@@ -155,16 +155,15 @@ And if you look in the sfgwas/out/party1 directory, you should see a file called
 .. code-block:: console
 
     smendels@simon-0:~$ head sfgwas/out/party1/assoc.txt
-    2.214016e-02
-    4.138482e-03
-    -3.585493e-02
-    -6.841428e-03
-    2.023826e-02
-    1.094795e-03
-    4.876583e-02
-    1.222332e-02
-    -7.845751e-03
-    8.301471e-04
+    #CHROM	POS	R	LOG10P
+    1	10000	0.02240129	-0.49905497629788775
+    1	20000	0.003412083	-0.05607581566922004
+    1	30000	-0.03598186	-0.9674039445847216
+    1	40000	-0.006283264	-0.10847440540850205
+    1	50000	0.02135239	-0.4683696638454863
+    1	60000	0.0002090347	-0.0032473610465469987
+    1	70000	0.04874529	-1.5335656035638792
+    1	80000	0.01069461	-0.19869300651888114
 
 .. note::
 

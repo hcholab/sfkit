@@ -53,8 +53,9 @@ def postprocess_assoc(
 
     # Combine filters
     gkeep1 = np.loadtxt(gkeep1_file, dtype=bool)
-    gkeep2 = np.loadtxt(gkeep2_file, dtype=bool)
-    gkeep1[gkeep1] = gkeep2
+    if gkeep2_file != "":
+        gkeep2 = np.loadtxt(gkeep2_file, dtype=bool)
+        gkeep1[gkeep1] = gkeep2
 
     # Load and check dimension of output association stats
     assoc = np.loadtxt(assoc_file)

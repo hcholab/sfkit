@@ -15,7 +15,7 @@ from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
 from sfkit.api import get_doc_ref_dict, website_send_file
 from sfkit.utils import constants
-from sfkit.utils.helper_functions import run_command
+from sfkit.utils.helper_functions import plot_assoc, postprocess_assoc, run_command
 from sfkit.api import update_firestore
 from sfkit.utils.helper_functions import condition_or_fail
 
@@ -269,8 +269,23 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
 
     if protocol == "SFGWAS":
         if demo:
-            with open(f"sfgwas/out/party{role}/assoc.txt", "r") as f:
-                website_send_file(f, "assoc.txt")
+            postprocess_assoc(
+                f"sfgwas/out/party{role}/new_assoc.txt",
+                f"sfgwas/out/party{role}/assoc.txt",
+                f"sfgwas/example_data/party{role}/snp_pos.txt",
+                f"sfgwas/cache/party{role}/gkeep.txt",
+                "",
+                2000,
+                5,
+            )
+            plot_assoc(f"sfgwas/out/party{role}/manhattan.png", f"sfgwas/out/party{role}/new_assoc.txt")
+
+            with open(f"sfgwas/out/party{role}/new_assoc.txt", "r") as f:
+                website_send_file(f, "new_assoc.txt")
+
+            with open(f"sfgwas/out/party{role}/manhattan.png", "rb") as f:
+                website_send_file(f, "manhattan.png")
+
             update_firestore("update_firestore::status=Finished protocol!")
         else:
             update_firestore(

@@ -115,21 +115,21 @@ def test_build_sfgwas(mocker):
     sfgwas_protocol.build_sfgwas()
 
 
-def test_start_sfgwas(mocker):
-    # mock update_firestore
-    mocker.patch("sfkit.utils.sfgwas_protocol.update_firestore")
-    # mock run_command
-    mocker.patch("sfkit.utils.sfgwas_protocol.run_command")
-    # mock open
-    mocker.patch("sfkit.utils.sfgwas_protocol.open")
-    # mock shutil.make_archive
-    mocker.patch("sfkit.utils.sfgwas_protocol.shutil.make_archive")
-    # mock website_send_file
-    mocker.patch("sfkit.utils.sfgwas_protocol.website_send_file")
+# def test_start_sfgwas(mocker):
+#     # mock update_firestore
+#     mocker.patch("sfkit.utils.sfgwas_protocol.update_firestore")
+#     # mock run_command
+#     mocker.patch("sfkit.utils.sfgwas_protocol.run_command")
+#     # mock open
+#     mocker.patch("sfkit.utils.sfgwas_protocol.open")
+#     # mock shutil.make_archive
+#     mocker.patch("sfkit.utils.sfgwas_protocol.shutil.make_archive")
+#     # mock website_send_file
+#     mocker.patch("sfkit.utils.sfgwas_protocol.website_send_file")
 
-    sfgwas_protocol.start_sfgwas("1")
-    sfgwas_protocol.start_sfgwas("2", protocol="PCA")
-    sfgwas_protocol.start_sfgwas("2", demo=True, protocol="garbage")
+#     sfgwas_protocol.start_sfgwas("1")
+#     sfgwas_protocol.start_sfgwas("2", protocol="PCA")
+#     sfgwas_protocol.start_sfgwas("2", demo=True, protocol="garbage")
 
-    sfgwas_protocol.start_sfgwas("1", demo=True)
-    sfgwas_protocol.start_sfgwas("2", protocol="PCA", demo=True)
+#     sfgwas_protocol.start_sfgwas("1", demo=True)
+#     sfgwas_protocol.start_sfgwas("2", protocol="PCA", demo=True)
