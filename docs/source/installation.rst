@@ -4,10 +4,10 @@ Installation
 Prerequisites
 -------------
 
-* a Debian or Ubuntu-based system
+* A Debian or Ubuntu-based system
 * Python 3.9 or later
 
-You can install python with the following command:
+You can install Python with the following command:
 
 .. code-block:: console 
 
