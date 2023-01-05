@@ -1,12 +1,11 @@
 Welcome to the sfkit CLI documentation!
 =======================================
 
-.. image:: images/sfkit-logo.png
+.. figure:: images/sfkit-logo.png
    :width: 200
    :alt: sfkit logo
    :align: center
-
-|
+   :class: my-class
 
 **sfkit CLI** is a collection of command line interface (CLI) tools to help run 
 privacy-preserving collaborative analyses on genomic data.  
