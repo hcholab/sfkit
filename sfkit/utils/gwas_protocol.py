@@ -7,7 +7,7 @@ import time
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.encryption.mpc.encrypt_data import encrypt_data
-from sfkit.utils.helper_functions import plot_assoc, postprocess_assoc
+from sfkit.utils.helper_functions import copy_results_to_cloud_storage, plot_assoc, postprocess_assoc
 
 
 def run_gwas_protocol(role: str, demo: bool = False) -> None:
@@ -235,18 +235,30 @@ def start_gwas(role: str, demo: bool) -> None:
         exit(1)
     print("\n\n Finished GWAS \n\n")
 
-    if demo:
-        postprocess_assoc(
-            "secure-gwas/out/new_assoc.txt",
-            "secure-gwas/out/test_assoc.txt",
-            "secure-gwas/test_data/pos.txt",
-            "secure-gwas/out/test_gkeep1.txt",
-            "secure-gwas/out/test_gkeep2.txt",
-            1000,
-            2,
-        )
-        plot_assoc("secure-gwas/out/manhattan.png", "secure-gwas/out/new_assoc.txt")
+    postprocess_assoc(
+        "secure-gwas/out/new_assoc.txt",
+        "secure-gwas/out/test_assoc.txt",
+        "secure-gwas/test_data/pos.txt",
+        "secure-gwas/out/test_gkeep1.txt",
+        "secure-gwas/out/test_gkeep2.txt",
+        1000,
+        2,
+    )
+    plot_assoc("secure-gwas/out/manhattan.png", "secure-gwas/out/new_assoc.txt")
 
+    doc_ref_dict: dict = get_doc_ref_dict()
+    user_id: str = doc_ref_dict["participants"][int(role)]
+    send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
+
+    # copy results to cloud storage
+    if doc_ref_dict["setup_configuration"] == "website":
+        data_path = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
+        if demo and not data_path:
+            study_title: str = doc_ref_dict["title"].replace(" ", "").lower()
+            data_path = f"sfkit_example_data/demo/{study_title}"
+        copy_results_to_cloud_storage(role, data_path, "secure-gwas/out")
+
+    if send_results == "Yes" and doc_ref_dict["setup_configuration"] == "website":
         with open("secure-gwas/out/new_assoc.txt", "r") as file:
             website_send_file(file, "new_assoc.txt")
 
@@ -254,7 +266,6 @@ def start_gwas(role: str, demo: bool) -> None:
             website_send_file(file, "manhattan.png")
 
         update_firestore("update_firestore::status=Finished protocol!")
-
     else:
         update_firestore(
             "update_firestore::status=Finished protocol!  You can view the results on your machine in the /secure-gwas/out directory"

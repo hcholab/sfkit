@@ -1,9 +1,11 @@
 import os
+import shutil
 import subprocess
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from google.cloud import storage
 from qmplot import manhattanplot
 from scipy.stats import chi2
 
@@ -97,3 +99,23 @@ def plot_assoc(plot_file: str, new_assoc_file: str) -> None:
         xticklabel_kws={"rotation": "vertical"},  # set vertical or any other degrees as you like.
     )
     plt.savefig(plot_file)
+
+
+def copy_results_to_cloud_storage(role: str, data_path: str, output_directory: str) -> None:
+    # sourcery skip: extract-method
+
+    os.makedirs(output_directory, exist_ok=True)
+    if "sfgwas" in output_directory:
+        shutil.copyfile(f"sfgwas/cache/party{role}/Qpc.txt", f"{output_directory}/Qpc.txt")
+
+    try:
+        storage_client = storage.Client()
+        bucket_name, prefix = data_path.split("/", 1)
+        bucket = storage_client.bucket(bucket_name)
+        for file in os.listdir(output_directory):
+            blob = bucket.blob(f"{prefix}/out/party{role}/{file}")
+            blob.upload_from_filename(f"{output_directory}/{file}")
+        print(f"Successfully uploaded results from {output_directory} to gs://{data_path}/out/party{role}")
+    except Exception as e:
+        print("Failed to upload results to cloud storage")
+        print(e)

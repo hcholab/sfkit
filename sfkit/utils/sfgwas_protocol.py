@@ -3,21 +3,26 @@ Run the sfgwas protocol
 """
 
 import copy
-import shutil
 import fileinput
 import os
 import random
+import shutil
 import time
 from typing import Union
 
 import toml
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
-from sfkit.api import get_doc_ref_dict, website_send_file
+
+from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.utils import constants
-from sfkit.utils.helper_functions import plot_assoc, postprocess_assoc, run_command
-from sfkit.api import update_firestore
-from sfkit.utils.helper_functions import condition_or_fail
+from sfkit.utils.helper_functions import (
+    condition_or_fail,
+    copy_results_to_cloud_storage,
+    plot_assoc,
+    postprocess_assoc,
+    run_command,
+)
 
 
 def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
@@ -267,19 +272,32 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     run_command(command, fail_message=f"Failed {protocol} protocol")
     print(f"Finished {protocol} protocol")
 
-    if protocol == "SFGWAS":
-        if demo:
-            postprocess_assoc(
-                f"sfgwas/out/party{role}/new_assoc.txt",
-                f"sfgwas/out/party{role}/assoc.txt",
-                f"sfgwas/example_data/party{role}/snp_pos.txt",
-                f"sfgwas/cache/party{role}/gkeep.txt",
-                "",
-                2000,
-                5,
-            )
-            plot_assoc(f"sfgwas/out/party{role}/manhattan.png", f"sfgwas/out/party{role}/new_assoc.txt")
+    doc_ref_dict: dict = get_doc_ref_dict()
+    user_id: str = doc_ref_dict["participants"][int(role)]
+    send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
 
+    if protocol == "SFGWAS":
+        postprocess_assoc(
+            f"sfgwas/out/party{role}/new_assoc.txt",
+            f"sfgwas/out/party{role}/assoc.txt",
+            f"sfgwas/example_data/party{role}/snp_pos.txt",
+            f"sfgwas/cache/party{role}/gkeep.txt",
+            "",
+            2000,
+            5,
+        )
+        plot_assoc(f"sfgwas/out/party{role}/manhattan.png", f"sfgwas/out/party{role}/new_assoc.txt")
+
+    # copy results to cloud storage
+    if doc_ref_dict["setup_configuration"] == "website":
+        data_path = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
+        if demo and not data_path:
+            study_title: str = doc_ref_dict["title"].replace(" ", "").lower()
+            data_path = f"sfkit_example_data/demo/{study_title}"
+        copy_results_to_cloud_storage(role, data_path, f"sfgwas/out/party{role}")
+
+    if protocol == "SFGWAS":
+        if send_results == "Yes" and doc_ref_dict["setup_configuration"] == "website":
             with open(f"sfgwas/out/party{role}/new_assoc.txt", "r") as f:
                 website_send_file(f, "new_assoc.txt")
 
@@ -292,7 +310,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
                 f"update_firestore::status=Finished protocol!  You can view the results on your machine in the /sfgwas/out/party{role} directory"
             )
     elif protocol == "PCA":
-        if demo:
+        if send_results == "Yes" and doc_ref_dict["setup_configuration"] == "website":
             with open(f"sfgwas/cache/party{role}/Qpc.txt", "r") as f:
                 website_send_file(f, "Qpc.txt")
             update_firestore("update_firestore::status=Finished protocol!")
