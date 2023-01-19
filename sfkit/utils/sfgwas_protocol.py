@@ -307,7 +307,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
             update_firestore("update_firestore::status=Finished protocol!")
         else:
             update_firestore(
-                f"update_firestore::status=Finished protocol!  You can view the results on your machine in the /sfgwas/out/party{role} directory"
+                "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
             )
     elif protocol == "PCA":
         if send_results == "Yes" and doc_ref_dict["setup_configuration"] == "website":
@@ -316,7 +316,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
             update_firestore("update_firestore::status=Finished protocol!")
         else:
             update_firestore(
-                f"update_firestore::status=Finished protocol!  You can view the results on your machine in /sfgwas/cache/party{role}/Qpc.txt"
+                "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
             )
 
 

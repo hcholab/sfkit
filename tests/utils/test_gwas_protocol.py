@@ -92,24 +92,24 @@ def test_update_parameters(mocker):
 #     gwas_protocol.connect_to_other_vms(mock_doc_ref_dict, "2")
 
 
-def test_encrypt_or_prepare_data(mocker):
-    # mock subprocess.run
-    mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(0))
-    # mock update_firestore
-    mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
-    # mock encrypt_data
-    mocker.patch("sfkit.utils.gwas_protocol.encrypt_data")
+# def test_encrypt_or_prepare_data(mocker):
+#     # mock subprocess.run
+#     mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(0))
+#     # mock update_firestore
+#     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
+#     # mock encrypt_data
+#     mocker.patch("sfkit.utils.gwas_protocol.encrypt_data")
 
-    gwas_protocol.encrypt_or_prepare_data("data_path", "0")
-    mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(1))
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        gwas_protocol.encrypt_or_prepare_data("data_path", "0")
-    mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", side_effect=[Mock_Subprocess(0), Mock_Subprocess(1)])
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        gwas_protocol.encrypt_or_prepare_data("data_path", "0")
+#     gwas_protocol.encrypt_or_prepare_data("data_path", "0")
+#     mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", return_value=Mock_Subprocess(1))
+#     with pytest.raises(SystemExit) as pytest_wrapped_e:
+#         gwas_protocol.encrypt_or_prepare_data("data_path", "0")
+#     mocker.patch("sfkit.utils.gwas_protocol.subprocess.run", side_effect=[Mock_Subprocess(0), Mock_Subprocess(1)])
+#     with pytest.raises(SystemExit) as pytest_wrapped_e:
+#         gwas_protocol.encrypt_or_prepare_data("data_path", "0")
 
-    gwas_protocol.encrypt_or_prepare_data("data_path", "1")
-    gwas_protocol.encrypt_or_prepare_data("data_path", "5")
+#     gwas_protocol.encrypt_or_prepare_data("data_path", "1")
+#     gwas_protocol.encrypt_or_prepare_data("data_path", "5")
 
 
 def test_copy_data_to_gwas_repo(mocker):

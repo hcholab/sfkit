@@ -155,12 +155,15 @@ def update_parameters(role: str) -> None:
 
 
 def encrypt_or_prepare_data(data_path: str, role: str) -> None:
+    doc_ref_dict: dict = get_doc_ref_dict()
+    study_title: str = doc_ref_dict["title"].replace(" ", "").lower()
+
     if role == "0":
         command = f"mkdir -p {data_path}"
         if subprocess.run(command, shell=True).returncode != 0:
             print(f"Failed to perform command {command}")
             exit(1)
-        command = f"gsutil cp gs://sfkit_example_data/mpcgwas/party0/pos.txt {data_path}/pos.txt"
+        command = f"gsutil cp gs://sfkit/{study_title}/pos.txt {data_path}/pos.txt"
         if subprocess.run(command, shell=True).returncode != 0:
             print(f"Failed to perform command {command}")
             exit(1)
@@ -268,8 +271,8 @@ def start_gwas(role: str, demo: bool) -> None:
         update_firestore("update_firestore::status=Finished protocol!")
     else:
         update_firestore(
-            "update_firestore::status=Finished protocol!  You can view the results on your machine in the /secure-gwas/out directory"
+            "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
         )
         update_firestore(
-            "update_firestore::status=Finished protocol!  You can view the results on your machine in the /secure-gwas/out directory"
+            "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
         )

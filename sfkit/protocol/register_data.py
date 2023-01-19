@@ -5,7 +5,7 @@ import checksumdir
 from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import authenticate_user, condition_or_fail
-from sfkit.api import get_username
+from sfkit.api import get_username, website_send_file
 
 
 def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
@@ -17,6 +17,7 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
 
     doc_ref_dict: dict = get_doc_ref_dict()
     username: str = get_username()
+    role: str = str(doc_ref_dict["participants"].index(username))
     study_type: str = doc_ref_dict["study_type"]
     num_inds: int
 
@@ -50,6 +51,9 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
             "NUM_INDS does not match the number of individuals in the data.",
         )
         print(f"Your data has {num_inds} individuals.")
+
+        if role == "1":
+            website_send_file(open(os.path.join(data_path, "pos.txt"), "r"), "pos.txt")
     elif study_type == "PCA":
         data_path = validate_data_path(data_path)
 

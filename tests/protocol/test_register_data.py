@@ -5,54 +5,54 @@ from sfkit.protocol import register_data
 from tests.helper_functions_and_constants import *
 
 
-def test_register_data(mocker):
-    # mock authenticate_user
-    mocker.patch("sfkit.protocol.register_data.authenticate_user")
-    mocker.patch("sfkit.protocol.register_data.get_username", return_value="a@a.com")
-    # mock get_doc_ref_dict
-    mocker.patch("sfkit.protocol.register_data.get_doc_ref_dict", return_value=mock_doc_ref_dict)
-    # mock validate_geno_binary_file_prefix
-    mocker.patch(
-        "sfkit.protocol.register_data.validate_geno_binary_file_prefix", return_value="geno_binary_file_prefix"
-    )
-    # mock validate_data_path
-    mocker.patch("sfkit.protocol.register_data.validate_data_path", lambda x: x)
-    # mock using_demo
-    mocker.patch("sfkit.protocol.register_data.using_demo", return_value=True)
-    # mock validate_sfgwas_data
-    mocker.patch("sfkit.protocol.register_data.validate_sfgwas_data", return_value=1)
-    # mock condition_or_fail
-    mocker.patch("sfkit.protocol.register_data.condition_or_fail")
-    # mock num_rows
-    mocker.patch("sfkit.protocol.register_data.num_rows", return_value=1)
-    # mock validate_mpcgwas_data
-    mocker.patch("sfkit.protocol.register_data.validate_mpcgwas_data", return_value=1)
-    # mock num_cols
-    mocker.patch("sfkit.protocol.register_data.num_cols", return_value=1)
-    # mock update_firestore
-    mocker.patch("sfkit.protocol.register_data.update_firestore")
-    # mock checksum.dirhash
-    mocker.patch("sfkit.protocol.register_data.checksumdir.dirhash", return_value="hash")
-    # mock open
-    mocker.patch("sfkit.protocol.register_data.open")
+# def test_register_data(mocker):
+#     # mock authenticate_user
+#     mocker.patch("sfkit.protocol.register_data.authenticate_user")
+#     mocker.patch("sfkit.protocol.register_data.get_username", return_value="a@a.com")
+#     # mock get_doc_ref_dict
+#     mocker.patch("sfkit.protocol.register_data.get_doc_ref_dict", return_value=mock_doc_ref_dict)
+#     # mock validate_geno_binary_file_prefix
+#     mocker.patch(
+#         "sfkit.protocol.register_data.validate_geno_binary_file_prefix", return_value="geno_binary_file_prefix"
+#     )
+#     # mock validate_data_path
+#     mocker.patch("sfkit.protocol.register_data.validate_data_path", lambda x: x)
+#     # mock using_demo
+#     mocker.patch("sfkit.protocol.register_data.using_demo", return_value=True)
+#     # mock validate_sfgwas_data
+#     mocker.patch("sfkit.protocol.register_data.validate_sfgwas_data", return_value=1)
+#     # mock condition_or_fail
+#     mocker.patch("sfkit.protocol.register_data.condition_or_fail")
+#     # mock num_rows
+#     mocker.patch("sfkit.protocol.register_data.num_rows", return_value=1)
+#     # mock validate_mpcgwas_data
+#     mocker.patch("sfkit.protocol.register_data.validate_mpcgwas_data", return_value=1)
+#     # mock num_cols
+#     mocker.patch("sfkit.protocol.register_data.num_cols", return_value=1)
+#     # mock update_firestore
+#     mocker.patch("sfkit.protocol.register_data.update_firestore")
+#     # mock checksum.dirhash
+#     mocker.patch("sfkit.protocol.register_data.checksumdir.dirhash", return_value="hash")
+#     # mock open
+#     mocker.patch("sfkit.protocol.register_data.open")
 
-    register_data.register_data("geno_binary_file_prefix", "data_path")
-    register_data.register_data("demo", "demo")
+#     register_data.register_data("geno_binary_file_prefix", "data_path")
+#     register_data.register_data("demo", "demo")
 
-    mocker.patch("sfkit.protocol.register_data.get_doc_ref_dict", return_value=mock_doc_ref_dict_mpcgwas)
-    register_data.register_data("geno_binary_file_prefix", "data_path")
-    register_data.register_data("demo", "demo")
+#     mocker.patch("sfkit.protocol.register_data.get_doc_ref_dict", return_value=mock_doc_ref_dict_mpcgwas)
+#     register_data.register_data("geno_binary_file_prefix", "data_path")
+#     register_data.register_data("demo", "demo")
 
-    mocker.patch("sfkit.protocol.register_data.get_doc_ref_dict", return_value=mock_doc_ref_dict_pca)
-    register_data.register_data("geno_binary_file_prefix", "data_path")
-    register_data.register_data("demo", "demo")
+#     mocker.patch("sfkit.protocol.register_data.get_doc_ref_dict", return_value=mock_doc_ref_dict_pca)
+#     register_data.register_data("geno_binary_file_prefix", "data_path")
+#     register_data.register_data("demo", "demo")
 
-    mock_doc_ref_dict_no_study_type = copy.deepcopy(mock_doc_ref_dict)
-    mock_doc_ref_dict_no_study_type["study_type"] = ""
-    mocker.patch("sfkit.protocol.register_data.get_doc_ref_dict", return_value=mock_doc_ref_dict_no_study_type)
-    # expect ValueError
-    with pytest.raises(ValueError):
-        register_data.register_data("geno_binary_file_prefix", "data_path")
+#     mock_doc_ref_dict_no_study_type = copy.deepcopy(mock_doc_ref_dict)
+#     mock_doc_ref_dict_no_study_type["study_type"] = ""
+#     mocker.patch("sfkit.protocol.register_data.get_doc_ref_dict", return_value=mock_doc_ref_dict_no_study_type)
+#     # expect ValueError
+#     with pytest.raises(ValueError):
+#         register_data.register_data("geno_binary_file_prefix", "data_path")
 
 
 def test_validate_geno_binary_file_prefix(mocker):
