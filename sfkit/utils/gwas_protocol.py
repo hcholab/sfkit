@@ -1,13 +1,10 @@
 import fileinput
 import multiprocessing
-
-# import socket
-import subprocess
 import time
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.encryption.mpc.encrypt_data import encrypt_data
-from sfkit.utils.helper_functions import copy_results_to_cloud_storage, plot_assoc, postprocess_assoc
+from sfkit.utils.helper_functions import copy_results_to_cloud_storage, plot_assoc, postprocess_assoc, run_command
 
 
 def run_gwas_protocol(role: str, demo: bool = False) -> None:
@@ -40,16 +37,15 @@ def install_gwas_dependencies() -> None:
                     sudo apt-get --assume-yes install python3-pip 
                     sudo pip3 install numpy"""
     for command in commands.split("\n"):
-        if subprocess.run(command, shell=True).returncode != 0:
-            print(f"Failed to perform command {command}")
-            exit(1)
+        run_command(command)
     print("\n\n Finished installing dependencies \n\n")
     update_firestore("update_firestore::status=finished installing dependencies")
 
 
 def install_gwas_repo() -> None:
     print("\n\n Begin installing GWAS repo \n\n")
-    subprocess.run("git clone https://github.com/simonjmendelsohn/secure-gwas secure-gwas", shell=True)
+    command = "git clone https://github.com/simonjmendelsohn/secure-gwas secure-gwas"
+    run_command(command)
     print("\n\n Finished installing GWAS repo \n\n")
 
 
@@ -63,9 +59,7 @@ def install_ntl_library() -> None:
                 cd ntl-10.3.0/src && make all
                 cd ntl-10.3.0/src && sudo make install"""
     for command in commands.split("\n"):
-        if subprocess.run(command, shell=True).returncode != 0:
-            print(f"Failed to perform command {command}")
-            exit(1)
+        run_command(command)
     print("\n\n Finished installing NTL library \n\n")
     update_firestore("update_firestore::status=finished installing NTL library")
 
@@ -77,9 +71,7 @@ def compile_gwas_code() -> None:
                 sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile &&\
                 sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile &&\
                 sudo make"""
-    if subprocess.run(command, shell=True).returncode != 0:
-        print(f"Failed to perform command {command}")
-        exit(1)
+    run_command(command)
     print("\n\n Finished compiling GWAS code \n\n")
     update_firestore("update_firestore::status=finished compiling GWAS code")
 
@@ -160,13 +152,9 @@ def encrypt_or_prepare_data(data_path: str, role: str) -> None:
 
     if role == "0":
         command = f"mkdir -p {data_path}"
-        if subprocess.run(command, shell=True).returncode != 0:
-            print(f"Failed to perform command {command}")
-            exit(1)
+        run_command(command)
         command = f"gsutil cp gs://sfkit/{study_title}/pos.txt {data_path}/pos.txt"
-        if subprocess.run(command, shell=True).returncode != 0:
-            print(f"Failed to perform command {command}")
-            exit(1)
+        run_command(command)
     elif role in {"1", "2"}:
         encrypt_data()
     update_firestore("update_firestore::status=finished encrypting data")
@@ -185,9 +173,7 @@ def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
         commands = f"cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"
 
     for command in commands.split("\n"):
-        if subprocess.run(command, shell=True).returncode != 0:
-            print(f"Failed to perform command {command}")
-            exit(1)
+        run_command(command)
     print("\n\n Finished copying data to GWAS repo \n\n")
     update_firestore("update_firestore::status=finished copying data to GWAS repo")
 
@@ -217,9 +203,7 @@ def start_datasharing(role: str, demo: bool) -> None:
         command = f"cd secure-gwas/code && bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
         if role != "0":
             command += " ../test_data/"
-    if subprocess.run(command, shell=True).returncode != 0:
-        print(f"Failed to perform command {command}")
-        exit(1)
+    run_command(command, fail_message="Failed MPC-GWAS data sharing protocol")
     print("\n\n Finished data sharing protocol\n\n")
     update_firestore("update_firestore::status=finished data sharing protocol")
 
@@ -233,11 +217,16 @@ def start_gwas(role: str, demo: bool) -> None:
         command = "cd secure-gwas/code && bash run_example_gwas.sh"
     else:
         command = f"cd secure-gwas/code && bin/GwasClient '{role}' ../par/test.par.'{role}'.txt"
-    if subprocess.run(command, shell=True).returncode != 0:
-        print(f"Failed to perform command {command}")
-        exit(1)
+    run_command(command, fail_message="Failed MPC-GWAS protocol")
     print("\n\n Finished GWAS \n\n")
 
+    if role != "0":
+        process_output_files(role, demo)
+    else:
+        update_firestore("update_firestore::status=Finished protocol!")
+
+
+def process_output_files(role: str, demo: bool) -> None:
     postprocess_assoc(
         "secure-gwas/out/new_assoc.txt",
         "secure-gwas/out/test_assoc.txt",

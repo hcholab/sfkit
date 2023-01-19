@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 
 import checksumdir
 
@@ -45,12 +46,17 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
         if data_path == "demo":
             return using_demo()
 
-        num_inds: int = validate_mpcgwas_data(data_path)
+        num_inds, num_covs = validate_mpcgwas_data(data_path)
         condition_or_fail(
             num_inds == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
             "NUM_INDS does not match the number of individuals in the data.",
         )
-        print(f"Your data has {num_inds} individuals.")
+        condition_or_fail(
+            num_covs == int(doc_ref_dict["parameters"]["NUM_COVS"]["value"]),
+            "NUM_COVS does not match the number of covariates in the data.",
+        )
+
+        print(f"Your data has {num_inds} individuals and {num_covs} covariates.")
 
         if role == "1":
             website_send_file(open(os.path.join(data_path, "pos.txt"), "r"), "pos.txt")
@@ -121,11 +127,14 @@ def validate_sfgwas_data(geno_binary_file_prefix: str, data_path: str) -> int:
     return rows
 
 
-def validate_mpcgwas_data(data_path: str) -> int:
+def validate_mpcgwas_data(data_path: str) -> Tuple[int, int]:
     rows = num_rows(os.path.join(data_path, "cov.txt"))
     condition_or_fail(rows == num_rows(os.path.join(data_path, "geno.txt")))
     condition_or_fail(rows == num_rows(os.path.join(data_path, "pheno.txt")))
-    return rows
+
+    num_covs = num_cols(os.path.join(data_path, "cov.txt"))
+
+    return rows, num_covs
 
 
 def num_rows(file_path: str) -> int:
