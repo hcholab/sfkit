@@ -13,70 +13,19 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     """
     Register data with the server and validate that the data formatting looks correct.
     """
-
     authenticate_user()
 
     doc_ref_dict: dict = get_doc_ref_dict()
     username: str = get_username()
     role: str = str(doc_ref_dict["participants"].index(username))
     study_type: str = doc_ref_dict["study_type"]
-    num_inds: int
 
     if study_type == "SFGWAS":
-        geno_binary_file_prefix = validate_geno_binary_file_prefix(geno_binary_file_prefix)
-        data_path = validate_data_path(data_path)
-
-        if data_path == "demo":
-            return using_demo()
-
-        num_inds: int = validate_sfgwas_data(geno_binary_file_prefix, data_path)
-        condition_or_fail(
-            num_inds == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
-            "NUM_INDS does not match the number of individuals in the data.",
-        )
-        num_snps: int = num_rows(os.path.join(data_path, "snp_ids.txt"))
-        condition_or_fail(
-            num_snps == int(doc_ref_dict["parameters"]["num_snps"]["value"]),
-            "num_snps does not match the number of SNPs in the data.",
-        )
-        print(f"Your data has {num_inds} individuals and {num_snps} SNPs.")
+        validate_sfgwas(doc_ref_dict, username, data_path, geno_binary_file_prefix)
     elif study_type == "MPCGWAS":
-        data_path = validate_data_path(data_path)
-
-        if data_path == "demo":
-            return using_demo()
-
-        num_inds, num_covs = validate_mpcgwas_data(data_path)
-        condition_or_fail(
-            num_inds == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
-            "NUM_INDS does not match the number of individuals in the data.",
-        )
-        condition_or_fail(
-            num_covs == int(doc_ref_dict["parameters"]["NUM_COVS"]["value"]),
-            "NUM_COVS does not match the number of covariates in the data.",
-        )
-
-        print(f"Your data has {num_inds} individuals and {num_covs} covariates.")
-
-        if role == "1":
-            website_send_file(open(os.path.join(data_path, "pos.txt"), "r"), "pos.txt")
+        validate_mpcgwas(doc_ref_dict, username, data_path, role)
     elif study_type == "PCA":
-        data_path = validate_data_path(data_path)
-
-        if data_path == "demo":
-            return using_demo()
-
-        number_of_rows: int = num_rows(os.path.join(data_path, "data.txt"))
-        condition_or_fail(
-            number_of_rows == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
-            "NUM_INDS does not match the number of rows in the data.",
-        )
-        number_of_cols: int = num_cols(os.path.join(data_path, "data.txt"))
-        condition_or_fail(
-            number_of_cols == int(doc_ref_dict["parameters"]["num_columns"]["value"]),
-            "num_columns does not match the number of columns in the data.",
-        )
-        print(f"Your data has {number_of_rows} rows and {number_of_cols} columns.")
+        validate_pca(doc_ref_dict, username, data_path)
     else:
         raise ValueError(f"Unknown study type: {study_type}")
 
@@ -91,6 +40,67 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
 
     print("Successfully registered and validated data!")
     return True
+
+
+def validate_sfgwas(doc_ref_dict: dict, username: str, data_path: str, geno_binary_file_prefix: str) -> None:
+    geno_binary_file_prefix = validate_geno_binary_file_prefix(geno_binary_file_prefix)
+    data_path = validate_data_path(data_path)
+
+    if data_path == "demo":
+        using_demo()
+
+    num_inds: int = validate_sfgwas_data(geno_binary_file_prefix, data_path)
+    condition_or_fail(
+        num_inds == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
+        "NUM_INDS does not match the number of individuals in the data.",
+    )
+    num_snps: int = num_rows(os.path.join(data_path, "snp_ids.txt"))
+    condition_or_fail(
+        num_snps == int(doc_ref_dict["parameters"]["num_snps"]["value"]),
+        "num_snps does not match the number of SNPs in the data.",
+    )
+    print(f"Your data has {num_inds} individuals and {num_snps} SNPs.")
+
+
+def validate_mpcgwas(doc_ref_dict: dict, username: str, data_path: str, role: str) -> None:
+    data_path = validate_data_path(data_path)
+
+    if data_path == "demo":
+        using_demo()
+
+    num_inds, num_covs = validate_mpcgwas_data(data_path)
+    condition_or_fail(
+        num_inds == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
+        "NUM_INDS does not match the number of individuals in the data.",
+    )
+    condition_or_fail(
+        num_covs == int(doc_ref_dict["parameters"]["NUM_COVS"]["value"]),
+        "NUM_COVS does not match the number of covariates in the data.",
+    )
+
+    print(f"Your data has {num_inds} individuals and {num_covs} covariates.")
+
+    if role == "1":
+        website_send_file(open(os.path.join(data_path, "pos.txt"), "r"), "pos.txt")
+
+
+def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> None:
+    data_path = validate_data_path(data_path)
+
+    if data_path == "demo":
+        using_demo()
+
+    number_of_rows: int = num_rows(os.path.join(data_path, "data.txt"))
+    condition_or_fail(
+        number_of_rows == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
+        "NUM_INDS does not match the number of rows in the data.",
+    )
+    number_of_cols: int = num_cols(os.path.join(data_path, "data.txt"))
+    condition_or_fail(
+        number_of_cols == int(doc_ref_dict["parameters"]["num_columns"]["value"]),
+        "num_columns does not match the number of columns in the data.",
+    )
+    print(f"Your data has {number_of_rows} rows and {number_of_cols} columns.")
 
 
 def validate_geno_binary_file_prefix(geno_binary_file_prefix: str) -> str:
@@ -145,8 +155,8 @@ def num_cols(file_path: str) -> int:
     return len(open(file_path).readline().split())
 
 
-def using_demo() -> bool:
+def using_demo() -> None:
     update_firestore("update_firestore::status=validated data")
     print("Using demo data!")
     print("Successfully registered and validated data!")
-    return True
+    exit(0)
