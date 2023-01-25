@@ -140,8 +140,10 @@ def encrypt_data() -> None:
     print("Encrypting data...")
     encrypt_GMP(PseudoRandomNumberGenerator(shared_keys[role]), input_dir)
 
+    print("saving shared key")
     with open("./encrypted_data/other_shared_key.bin", "wb") as f:
         f.write(shared_keys[3 - role])
+    print("copying over pos.txt")
     shutil.copyfile(f"{input_dir}/pos.txt", "./encrypted_data/pos.txt")
 
     print("\n\nThe encryption is complete.")

@@ -4,7 +4,13 @@ import time
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.encryption.mpc.encrypt_data import encrypt_data
-from sfkit.utils.helper_functions import copy_results_to_cloud_storage, plot_assoc, postprocess_assoc, run_command
+from sfkit.utils.helper_functions import (
+    condition_or_fail,
+    copy_results_to_cloud_storage,
+    plot_assoc,
+    postprocess_assoc,
+    run_command,
+)
 
 
 def run_gwas_protocol(role: str, demo: bool = False) -> None:
@@ -156,7 +162,10 @@ def encrypt_or_prepare_data(data_path: str, role: str) -> None:
         command = f"gsutil cp gs://sfkit/{study_title}/pos.txt {data_path}/pos.txt"
         run_command(command)
     elif role in {"1", "2"}:
-        encrypt_data()
+        try:
+            encrypt_data()
+        except Exception as e:
+            condition_or_fail(False, f"encrypt_data::error={e}")
     update_firestore("update_firestore::status=finished encrypting data")
 
 
