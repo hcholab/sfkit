@@ -236,14 +236,24 @@ def start_gwas(role: str, demo: bool) -> None:
 
 
 def process_output_files(role: str, demo: bool) -> None:
+    # sourcery skip: assign-if-exp, introduce-default-else, swap-if-expression
+    doc_ref_dict = get_doc_ref_dict()
+    num_inds_total = 1_000
+    if not demo:
+        num_inds_total = sum(
+            int(doc_ref_dict["personal_parameters"][user]["NUM_INDS"]["value"])
+            for user in doc_ref_dict["participants"]
+        )
+    num_covs = int(doc_ref_dict["parameters"]["NUM_COVS"]["value"])
+
     postprocess_assoc(
         "secure-gwas/out/new_assoc.txt",
         "secure-gwas/out/test_assoc.txt",
         "secure-gwas/test_data/pos.txt",
         "secure-gwas/out/test_gkeep1.txt",
         "secure-gwas/out/test_gkeep2.txt",
-        1000,
-        2,
+        num_inds_total,
+        num_covs,
     )
     plot_assoc("secure-gwas/out/manhattan.png", "secure-gwas/out/new_assoc.txt")
 

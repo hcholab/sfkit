@@ -277,17 +277,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
 
     if protocol == "SFGWAS":
-        postprocess_assoc(
-            f"sfgwas/out/party{role}/new_assoc.txt",
-            f"sfgwas/out/party{role}/assoc.txt",
-            f"sfgwas/example_data/party{role}/snp_pos.txt",
-            f"sfgwas/cache/party{role}/gkeep.txt",
-            "",
-            2000,
-            5,
-        )
-        plot_assoc(f"sfgwas/out/party{role}/manhattan.png", f"sfgwas/out/party{role}/new_assoc.txt")
-
+        make_new_assoc_and_manhattan_plot(doc_ref_dict, demo, role)
     # copy results to cloud storage
     if doc_ref_dict["setup_configuration"] == "website":
         data_path = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
@@ -318,6 +308,35 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
             update_firestore(
                 "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
             )
+
+
+def make_new_assoc_and_manhattan_plot(doc_ref_dict: dict, demo: bool, role: str) -> None:
+    # sourcery skip: assign-if-exp, introduce-default-else, swap-if-expression
+    num_inds_total = 2000
+    if not demo:
+        num_inds_total = sum(
+            int(doc_ref_dict["personal_parameters"][user]["NUM_INDS"]["value"])
+            for user in doc_ref_dict["participants"]
+        )
+    num_covs = int(doc_ref_dict["parameters"]["num_covs"]["value"])
+
+    snp_pos_path = f"sfgwas/example_data/party{role}/snp_pos.txt"
+    if not demo:
+        with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
+            f.readline()
+            data_path = f.readline().rstrip()
+            snp_pos_path = f"{data_path}/snp_pos.txt"
+
+    postprocess_assoc(
+        f"sfgwas/out/party{role}/new_assoc.txt",
+        f"sfgwas/out/party{role}/assoc.txt",
+        snp_pos_path,
+        f"sfgwas/cache/party{role}/gkeep.txt",
+        "",
+        num_inds_total,
+        num_covs,
+    )
+    plot_assoc(f"sfgwas/out/party{role}/manhattan.png", f"sfgwas/out/party{role}/new_assoc.txt")
 
 
 def to_float_int_or_bool(string: str) -> Union[float, int, bool, str]:
