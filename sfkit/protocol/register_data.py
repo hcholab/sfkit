@@ -21,11 +21,13 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     study_type: str = doc_ref_dict["study_type"]
 
     if study_type == "SFGWAS":
-        validate_sfgwas(doc_ref_dict, username, data_path, geno_binary_file_prefix)
+        geno_binary_file_prefix, data_path = validate_sfgwas(
+            doc_ref_dict, username, data_path, geno_binary_file_prefix
+        )
     elif study_type == "MPCGWAS":
-        validate_mpcgwas(doc_ref_dict, username, data_path, role)
+        data_path = validate_mpcgwas(doc_ref_dict, username, data_path, role)
     elif study_type == "PCA":
-        validate_pca(doc_ref_dict, username, data_path)
+        data_path = validate_pca(doc_ref_dict, username, data_path)
     else:
         raise ValueError(f"Unknown study type: {study_type}")
 
@@ -42,7 +44,9 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     return True
 
 
-def validate_sfgwas(doc_ref_dict: dict, username: str, data_path: str, geno_binary_file_prefix: str) -> None:
+def validate_sfgwas(
+    doc_ref_dict: dict, username: str, data_path: str, geno_binary_file_prefix: str
+) -> Tuple[str, str]:
     geno_binary_file_prefix = validate_geno_binary_file_prefix(geno_binary_file_prefix)
     data_path = validate_data_path(data_path)
 
@@ -61,8 +65,10 @@ def validate_sfgwas(doc_ref_dict: dict, username: str, data_path: str, geno_bina
     )
     print(f"Your data has {num_inds} individuals and {num_snps} SNPs.")
 
+    return geno_binary_file_prefix, data_path
 
-def validate_mpcgwas(doc_ref_dict: dict, username: str, data_path: str, role: str) -> None:
+
+def validate_mpcgwas(doc_ref_dict: dict, username: str, data_path: str, role: str) -> str:
     data_path = validate_data_path(data_path)
 
     if data_path == "demo":
@@ -83,8 +89,10 @@ def validate_mpcgwas(doc_ref_dict: dict, username: str, data_path: str, role: st
     if role == "1":
         website_send_file(open(os.path.join(data_path, "pos.txt"), "r"), "pos.txt")
 
+    return data_path
 
-def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> None:
+
+def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> str:
     data_path = validate_data_path(data_path)
 
     if data_path == "demo":
@@ -101,6 +109,8 @@ def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> None:
         "num_columns does not match the number of columns in the data.",
     )
     print(f"Your data has {number_of_rows} rows and {number_of_cols} columns.")
+
+    return data_path
 
 
 def validate_geno_binary_file_prefix(geno_binary_file_prefix: str) -> str:

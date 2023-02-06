@@ -281,6 +281,3 @@ def process_output_files(role: str, demo: bool) -> None:
         update_firestore(
             "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
         )
-        update_firestore(
-            "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
-        )
