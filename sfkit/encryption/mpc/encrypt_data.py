@@ -19,10 +19,8 @@ from tqdm import tqdm
 from sfkit.api import get_username
 from sfkit.utils.helper_functions import condition_or_fail
 
-BASE_P = 1461501637330902918203684832716283019655932542929
 
-
-def encrypt_GMP(prng, input_dir: str, output_dir: str = "./encrypted_data") -> None:
+def encrypt_GMP(prng: PseudoRandomNumberGenerator, input_dir: str, output_dir: str = "./encrypted_data") -> None:
     # sourcery skip: avoid-global-variables, avoid-single-character-names-variables, ensure-file-closed, require-parameter-annotation, snake-case-functions, switch
     """
     Converts the data to GMP vectors (genotype, missing data, phenotype), encrypts
@@ -43,20 +41,20 @@ def encrypt_GMP(prng, input_dir: str, output_dir: str = "./encrypted_data") -> N
     num_lines = sum(1 for _ in open(f"{input_dir}/pheno.txt", "r"))
     for _ in range(num_lines):
         p = pheno_file.readline().rstrip().split() + cov_file.readline().rstrip().split()
-        p = [str((int(x) - prng.next()) % BASE_P) for x in p]
+        p = [str((int(x) - prng.next()) % prng.base_p) for x in p]
 
         geno_line = geno_file.readline().rstrip().split()
-        g = [[-prng.next() % BASE_P for _ in range(len(geno_line))] for _ in range(3)]
-        m = [-prng.next() % BASE_P for _ in range(len(geno_line))]
+        g = [[-prng.next() % prng.base_p for _ in range(len(geno_line))] for _ in range(3)]
+        m = [-prng.next() % prng.base_p for _ in range(len(geno_line))]
         for j, val in enumerate(geno_line):
             if val == "0":
-                g[0][j] = (g[0][j] + 1) % BASE_P
+                g[0][j] = (g[0][j] + 1) % prng.base_p
             elif val == "1":
-                g[1][j] = (g[1][j] + 1) % BASE_P
+                g[1][j] = (g[1][j] + 1) % prng.base_p
             elif val == "2":
-                g[2][j] = (g[2][j] + 1) % BASE_P
+                g[2][j] = (g[2][j] + 1) % prng.base_p
             else:
-                m[j] = (m[j] + 1) % BASE_P
+                m[j] = (m[j] + 1) % prng.base_p
 
         g_text = " ".join(map(str, g[0])) + " " + " ".join(map(str, g[1])) + " " + " ".join(map(str, g[2])) + "\n"
         g_file.write(g_text.encode("utf-8"))
@@ -138,7 +136,8 @@ def encrypt_data() -> None:
     )
 
     print("Encrypting data...")
-    encrypt_GMP(PseudoRandomNumberGenerator(shared_keys[role]), input_dir)
+    base_p: int = int(doc_ref_dict["advanced_parameters"]["BASE_P"]["value"])
+    encrypt_GMP(PseudoRandomNumberGenerator(shared_keys[role], base_p), input_dir)
 
     print("saving shared key")
     with open("./encrypted_data/other_shared_key.bin", "wb") as f:
