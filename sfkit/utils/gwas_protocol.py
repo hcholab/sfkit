@@ -30,6 +30,7 @@ def run_gwas_protocol(role: str, demo: bool = False) -> None:
 
 
 def install_gwas_dependencies() -> None:
+    update_firestore("update_firestore::task=Installing dependencies")
     print("\n\n Begin installing dependencies \n\n")
     commands = """sudo apt-get --assume-yes update 
                     sudo apt-get --assume-yes install build-essential 
@@ -46,6 +47,7 @@ def install_gwas_dependencies() -> None:
         run_command(command)
     print("\n\n Finished installing dependencies \n\n")
     update_firestore("update_firestore::status=finished installing dependencies")
+    update_firestore("update_firestore::task=Installing dependencies completed")
 
 
 def install_gwas_repo() -> None:
@@ -56,6 +58,7 @@ def install_gwas_repo() -> None:
 
 
 def install_ntl_library() -> None:
+    update_firestore("update_firestore::task=Installing NTL library")
     print("\n\n Begin installing NTL library \n\n")
     commands = """curl https://libntl.org/ntl-10.3.0.tar.gz --output ntl-10.3.0.tar.gz
                 tar -zxvf ntl-10.3.0.tar.gz
@@ -68,9 +71,11 @@ def install_ntl_library() -> None:
         run_command(command)
     print("\n\n Finished installing NTL library \n\n")
     update_firestore("update_firestore::status=finished installing NTL library")
+    update_firestore("update_firestore::task=Installing NTL library completed")
 
 
 def compile_gwas_code() -> None:
+    update_firestore("update_firestore::task=Compiling GWAS code")
     print("\n\n Begin compiling GWAS code \n\n")
     command = """cd secure-gwas/code && COMP=$(which clang++) &&\
                 sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile &&\
@@ -80,6 +85,7 @@ def compile_gwas_code() -> None:
     run_command(command)
     print("\n\n Finished compiling GWAS code \n\n")
     update_firestore("update_firestore::status=finished compiling GWAS code")
+    update_firestore("update_firestore::task=Compiling GWAS code completed")
 
 
 def update_parameters(role: str) -> None:
@@ -153,6 +159,7 @@ def update_parameters(role: str) -> None:
 
 
 def encrypt_or_prepare_data(data_path: str, role: str) -> None:
+    update_firestore("update_firestore::task=Encrypting data")
     doc_ref_dict: dict = get_doc_ref_dict()
     study_title: str = doc_ref_dict["title"].replace(" ", "").lower()
 
@@ -167,6 +174,7 @@ def encrypt_or_prepare_data(data_path: str, role: str) -> None:
         except Exception as e:
             condition_or_fail(False, f"encrypt_data::error={e}")
     update_firestore("update_firestore::status=finished encrypting data")
+    update_firestore("update_firestore::task=Encrypting data completed")
 
 
 def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
@@ -188,6 +196,7 @@ def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
 
 
 def sync_with_other_vms(role: str) -> None:
+    update_firestore("update_firestore::task=Syncing up machines")
     print("Begin syncing up")
     update_firestore("update_firestore::status=syncing up")
     # wait until all participants have the status of starting data sharing protocol
@@ -201,9 +210,11 @@ def sync_with_other_vms(role: str) -> None:
     time.sleep(15 + 15 * int(role))
     print("Finished syncing up")
     update_firestore("update_firestore::status=finished syncing up")
+    update_firestore("update_firestore::task=Syncing up machines completed")
 
 
 def start_datasharing(role: str, demo: bool) -> None:
+    update_firestore("update_firestore::task=Performing data sharing protocol")
     print("\n\n starting data sharing protocol \n\n")
     update_firestore("update_firestore::status=starting data sharing protocol")
     if demo:
@@ -215,9 +226,11 @@ def start_datasharing(role: str, demo: bool) -> None:
     run_command(command, fail_message="Failed MPC-GWAS data sharing protocol")
     print("\n\n Finished data sharing protocol\n\n")
     update_firestore("update_firestore::status=finished data sharing protocol")
+    update_firestore("update_firestore::task=Performing data sharing protocol completed")
 
 
 def start_gwas(role: str, demo: bool) -> None:
+    update_firestore("update_firestore::task=Performing GWAS protocol")
     print("Sleeping before starting GWAS")
     time.sleep(100 + 30 * int(role))
     print("\n\n starting GWAS \n\n")
@@ -233,6 +246,7 @@ def start_gwas(role: str, demo: bool) -> None:
         process_output_files(role, demo)
     else:
         update_firestore("update_firestore::status=Finished protocol!")
+    update_firestore("update_firestore::task=Performing GWAS protocol completed")
 
 
 def process_output_files(role: str, demo: bool) -> None:
