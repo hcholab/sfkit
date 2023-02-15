@@ -29,6 +29,7 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
     if statuses[username] == "ready to begin protocol":
         while not demo and other_participant_not_ready(list(statuses.values())):
             print("Other participant(s) not yet ready.  Waiting... (press CTRL-C to cancel)")
+            update_firestore("update_firestore::task=Waiting for other participant(s) to be ready")
             time.sleep(5)
             doc_ref_dict: dict = get_doc_ref_dict()
             statuses: dict = doc_ref_dict["status"]
@@ -41,6 +42,7 @@ def run_protocol(phase: str = "", demo: bool = False) -> None:
         else:
             update_firestore(f"update_firestore::status=running {study_type} protocol")
 
+        update_firestore("update_firestore::task=Waiting for other participant(s) to be ready completed")
         if study_type == "MPCGWAS":
             run_gwas_protocol(role, demo)
         elif study_type == "SFGWAS":

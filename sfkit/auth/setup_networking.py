@@ -1,9 +1,9 @@
 import socket
+from time import sleep
 
 from requests import get
 
-from sfkit.api import get_doc_ref_dict, update_firestore
-from sfkit.api import get_username
+from sfkit.api import get_doc_ref_dict, get_username, update_firestore
 from sfkit.utils.helper_functions import authenticate_user
 
 
@@ -40,8 +40,10 @@ def setup_networking(ports_str: str) -> None:
         ports_str = ",".join(ports)
 
     update_firestore(f"update_firestore::PORTS={ports_str}")
-
     print("Successfully communicated networking information!")
+
+    sleep(1)
+    update_firestore("update_firestore::task=Configuring your VM instance completed")
 
 
 def validate_port(port: str) -> str:

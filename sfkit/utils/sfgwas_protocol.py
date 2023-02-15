@@ -48,6 +48,7 @@ def install_sfgwas() -> None:
     """
     Install sfgwas and its dependencies
     """
+    update_firestore("update_firestore::task=Installing dependencies")
     print("Begin installing dependencies")
     commands = [
         "sudo apt-get update -y",
@@ -81,7 +82,7 @@ def install_sfgwas() -> None:
         run_command("git clone https://github.com/simonjmendelsohn/sfgwas && cd sfgwas")
 
     print("Finished installing dependencies")
-    update_firestore("update_firestore::status=finished installing dependencies")
+    update_firestore("update_firestore::task=Installing dependencies completed")
 
 
 def generate_shared_keys(role: int) -> None:
@@ -90,6 +91,7 @@ def generate_shared_keys(role: int) -> None:
     :param role: 0, 1, 2, ...
     """
     doc_ref_dict: dict = get_doc_ref_dict()
+    update_firestore("update_firestore::task=Generating cryptographic keys")
     print("Generating shared keys...")
 
     private_key_path = os.path.join(constants.SFKIT_DIR, "my_private_key.txt")
@@ -121,6 +123,7 @@ def generate_shared_keys(role: int) -> None:
         f.write(global_shared_key)
 
     print(f"Shared keys generated and saved to {constants.SFKIT_DIR}.")
+    update_firestore("update_firestore::task=Generating cryptographic keys completed")
 
 
 def update_config_local(role: str, protocol: str = "gwas") -> None:
@@ -250,11 +253,12 @@ def build_sfgwas() -> None:
     """
     build/compile sfgwas
     """
+    update_firestore("update_firestore::task=Compiling code")
     print("Building sfgwas code")
     command = """export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && go get -t github.com/simonjmendelsohn/sfgwas && go build"""
     run_command(command)
     print("Finished building sfgwas code")
-    update_firestore("update_firestore::status=finished building code")
+    update_firestore("update_firestore::task=Compiling code completed")
 
 
 def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> None:
@@ -263,8 +267,8 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     :param role: 0, 1, 2, ...
     :param demo: True if running demo
     """
+    update_firestore(f"update_firestore::task=Running {protocol} protocol")
     print("Begin SFGWAS protocol")
-    update_firestore(f"update_firestore::status=beginning {protocol} protocol")
     protocol_command = f"export PID={role} && go run sfgwas.go | tee stdout_party{role}.txt"
     if demo:
         protocol_command = "bash run_example.sh"
@@ -308,6 +312,8 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
             update_firestore(
                 "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
             )
+
+    update_firestore(f"update_firestore::task=Running {protocol} protocol completed")
 
 
 def make_new_assoc_and_manhattan_plot(doc_ref_dict: dict, demo: bool, role: str) -> None:

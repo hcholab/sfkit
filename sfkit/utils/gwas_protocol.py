@@ -46,7 +46,6 @@ def install_gwas_dependencies() -> None:
     for command in commands.split("\n"):
         run_command(command)
     print("\n\n Finished installing dependencies \n\n")
-    update_firestore("update_firestore::status=finished installing dependencies")
     update_firestore("update_firestore::task=Installing dependencies completed")
 
 
@@ -70,7 +69,6 @@ def install_ntl_library() -> None:
     for command in commands.split("\n"):
         run_command(command)
     print("\n\n Finished installing NTL library \n\n")
-    update_firestore("update_firestore::status=finished installing NTL library")
     update_firestore("update_firestore::task=Installing NTL library completed")
 
 
@@ -84,7 +82,6 @@ def compile_gwas_code() -> None:
                 sudo make"""
     run_command(command)
     print("\n\n Finished compiling GWAS code \n\n")
-    update_firestore("update_firestore::status=finished compiling GWAS code")
     update_firestore("update_firestore::task=Compiling GWAS code completed")
 
 
@@ -173,7 +170,6 @@ def encrypt_or_prepare_data(data_path: str, role: str) -> None:
             encrypt_data()
         except Exception as e:
             condition_or_fail(False, f"encrypt_data::error={e}")
-    update_firestore("update_firestore::status=finished encrypting data")
     update_firestore("update_firestore::task=Encrypting data completed")
 
 
@@ -192,13 +188,11 @@ def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
     for command in commands.split("\n"):
         run_command(command)
     print("\n\n Finished copying data to GWAS repo \n\n")
-    update_firestore("update_firestore::status=finished copying data to GWAS repo")
 
 
 def sync_with_other_vms(role: str) -> None:
     update_firestore("update_firestore::task=Syncing up machines")
     print("Begin syncing up")
-    update_firestore("update_firestore::status=syncing up")
     # wait until all participants have the status of starting data sharing protocol
     while True:
         doc_ref_dict: dict = get_doc_ref_dict()
@@ -209,14 +203,12 @@ def sync_with_other_vms(role: str) -> None:
         time.sleep(5)
     time.sleep(15 + 15 * int(role))
     print("Finished syncing up")
-    update_firestore("update_firestore::status=finished syncing up")
     update_firestore("update_firestore::task=Syncing up machines completed")
 
 
 def start_datasharing(role: str, demo: bool) -> None:
     update_firestore("update_firestore::task=Performing data sharing protocol")
     print("\n\n starting data sharing protocol \n\n")
-    update_firestore("update_firestore::status=starting data sharing protocol")
     if demo:
         command = "cd secure-gwas/code && bash run_example_datasharing.sh"
     else:
@@ -225,7 +217,6 @@ def start_datasharing(role: str, demo: bool) -> None:
             command += " ../test_data/"
     run_command(command, fail_message="Failed MPC-GWAS data sharing protocol")
     print("\n\n Finished data sharing protocol\n\n")
-    update_firestore("update_firestore::status=finished data sharing protocol")
     update_firestore("update_firestore::task=Performing data sharing protocol completed")
 
 
