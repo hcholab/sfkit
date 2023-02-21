@@ -276,6 +276,10 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     run_command(command, fail_message=f"Failed {protocol} protocol")
     print(f"Finished {protocol} protocol")
 
+    if role == "0":
+        update_firestore("update_firestore::status=Finished protocol!")
+        return
+
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
