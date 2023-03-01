@@ -44,6 +44,7 @@ def get_username() -> str:
 
 
 def update_firestore(msg: str) -> bool:
+    print(f"Updating firestore with msg: {msg}")
     response = website_get("update_firestore", params={"msg": msg})
     return response.status_code == 200
 

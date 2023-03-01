@@ -6,7 +6,9 @@ import copy
 import fileinput
 import os
 import random
+import select
 import shutil
+import subprocess
 import time
 from typing import Union
 
@@ -55,9 +57,9 @@ def install_sfgwas() -> None:
         "sudo apt-get install wget git zip unzip -y",
         "wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
         "sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz",
-        "wget -nc https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20220603.zip",
+        "wget -nc https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_20230109.zip",
         "mkdir -p ~/.local/bin",
-        "unzip -o plink2_linux_avx2_20220603.zip -d ~/.local/bin",
+        "unzip -o plink2_linux_avx2_20230109.zip -d ~/.local/bin",
         "pip3 install numpy",
     ]
     for command in commands:
@@ -273,19 +275,109 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     if demo:
         protocol_command = "bash run_example.sh"
     command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && {protocol_command}"
-    run_command(command, fail_message=f"Failed {protocol} protocol")
+
+    run_sfgwas_with_task_updates(command, protocol, demo)
     print(f"Finished {protocol} protocol")
 
     if role == "0":
         update_firestore("update_firestore::status=Finished protocol!")
         return
 
+    post_process_results(role, demo, protocol)
+
+
+def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool) -> None:
+    doc_ref_dict: dict = get_doc_ref_dict()
+    num_power_iters: int = 2 if demo else int(doc_ref_dict["advanced_parameters"]["num_power_iters"]["value"])
+
+    task_updates = [
+        "Starting QC",
+        "Starting PCA",
+        "Preprocessing X",
+    ]
+    task_updates.extend(f"Power iteration iter  {i} / {num_power_iters}" for i in range(1, num_power_iters + 1))
+    task_updates += [
+        "Computing covariance matrix",
+        "Eigen decomposition",
+        "Extract PC subspace",
+        "Finished PCA",
+        "Starting association tests",
+        "Starting QR",
+        "Multiplication with genotype matrix started",
+    ]
+    task_updates += [f"MatMult: block {i} / 22 starting" for i in range(1, 23)]
+
+    transform = (
+        {
+            "Starting QC": "Quality Control",
+            "Starting PCA": "Principal Component Analysis",
+            "Preprocessing X": "sub-task Preprocessing X",
+        }
+        | {
+            f"Power iteration iter  {i} / {num_power_iters}": f"sub-task Power iteration iter {i} / {num_power_iters}"
+            for i in range(1, num_power_iters + 1)
+        }
+        | {
+            "Computing covariance matrix": "sub-task Computing covariance matrix",
+            "Eigen decomposition": "sub-task Eigen decomposition",
+            "Extract PC subspace": "sub-task Extract PC subspace",
+            "Finished PCA": "sub-task Finished PCA",
+            "Starting association tests": "Association Tests",
+            "Starting QR": "sub-task Starting QR factorization",
+            "Multiplication with genotype matrix started": "sub-task Multiplication with genotype matrix started",
+        }
+        | {f"MatMult: block {i} / 22 starting": f"sub-task MatMult: block {i} / 22 starting" for i in range(1, 23)}
+    )
+
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, executable="/bin/bash"
+    )
+
+    waiting_time = 900
+    prev_task = ""
+    current_task = task_updates.pop(0)
+    while process.poll() is None:
+        rlist, _, _ = select.select([process.stdout], [], [], waiting_time)
+
+        if not rlist:
+            if waiting_time == 900:
+                print("WARNING: sfgwas has been stalling for 15 minutes. Killing process.")
+            process.kill()
+            update_firestore(f"update_firestore::task={transform[current_task]} completed")
+            return
+
+        line = process.stdout.readline().decode("utf-8")  # type: ignore
+        print(line, end="")
+        if current_task in line:
+            if prev_task:
+                update_firestore(f"update_firestore::task={transform[prev_task]} completed")
+            update_firestore(f"update_firestore::task={transform[current_task]}")
+            if task_updates:
+                prev_task = current_task
+                current_task = task_updates.pop(0)
+        elif "Output collectively decrypted and saved to" in line:
+            waiting_time = 30
+
+    process.wait()
+
+    if process.stderr:
+        error_message = process.stderr.readline().decode("utf-8").strip()
+        if error_message and not error_message.startswith("W :"):
+            print(f"FAILED - {command}")
+            print(f"Stderr: {process.stderr.readline().decode('utf-8')}")
+            condition_or_fail(False, f"Failed {protocol} protocol")
+    else:
+        update_firestore(f"update_firestore::task={transform[current_task]} completed")
+
+
+def post_process_results(role: str, demo: bool, protocol: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
 
     if protocol == "SFGWAS":
         make_new_assoc_and_manhattan_plot(doc_ref_dict, demo, role)
+
     # copy results to cloud storage
     if doc_ref_dict["setup_configuration"] == "website":
         data_path = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
