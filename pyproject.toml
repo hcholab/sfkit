@@ -1,6 +1,6 @@
 [project]
 name = "sfkit"
-version = "0.0.173"
+version = "0.0.177"
 authors = [{ name = "Simon Mendelsohn", email = "smendels@broadinstitute.org" }]
 description = "Some CLI Tools For The Secure Multi-party Genomic Analysis Website"
 readme = "README.md"
@@ -12,6 +12,7 @@ classifiers = [
 ]
 dependencies = [
     'black',
+    'bs4',
     'checksumdir',
     'google-auth',
     'google-cloud-storage',

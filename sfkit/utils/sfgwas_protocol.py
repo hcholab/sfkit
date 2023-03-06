@@ -6,13 +6,16 @@ import copy
 import fileinput
 import os
 import random
+import re
 import select
 import shutil
 import subprocess
 import time
 from typing import Union
 
+import requests
 import toml
+from bs4 import BeautifulSoup
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
 
@@ -52,18 +55,28 @@ def install_sfgwas() -> None:
     """
     update_firestore("update_firestore::task=Installing dependencies")
     print("Begin installing dependencies")
+
+    plink2_download_link = get_plink2_download_link()
+    plink2_zip_file = plink2_download_link.split("/")[-1]
+
     commands = [
         "sudo apt-get update -y",
         "sudo apt-get install wget git zip unzip -y",
         "wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
         "sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz",
-        "wget -nc https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_20230109.zip",
+        f"wget -nc {plink2_download_link}",
         "mkdir -p ~/.local/bin",
-        "unzip -o plink2_linux_avx2_20230109.zip -d ~/.local/bin",
+        f"unzip -o {plink2_zip_file} -d ~/.local/bin",
         "pip3 install numpy",
     ]
     for command in commands:
         run_command(command)
+
+    # make sure plink2 successfully installed
+    condition_or_fail(
+        os.path.isfile(os.path.join(os.path.expanduser("~"), ".local/bin/plink2")),
+        "plink2 not installed (probably need to get new version)",
+    )
 
     if os.path.isdir("lattigo"):
         print("lattigo already exists")
@@ -333,15 +346,15 @@ def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool) -> Non
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, executable="/bin/bash"
     )
 
-    waiting_time = 900
+    waiting_time = 86_400
     prev_task = ""
     current_task = task_updates.pop(0)
     while process.poll() is None:
         rlist, _, _ = select.select([process.stdout], [], [], waiting_time)
 
         if not rlist:
-            if waiting_time == 900:
-                print("WARNING: sfgwas has been stalling for 15 minutes. Killing process.")
+            if waiting_time == 86_400:
+                print("WARNING: sfgwas has been stalling for 24 hours. Killing process.")
             process.kill()
             update_firestore(f"update_firestore::task={transform[current_task]} completed")
             return
@@ -451,3 +464,25 @@ def to_float_int_or_bool(string: str) -> Union[float, int, bool, str]:
             return float(string)
         except ValueError:
             return string
+
+
+def get_plink2_download_link() -> str:
+    """
+    Scrapes the PLINK 2.0 website for the current Alpha download link for Plink2 for Linux AVX2 Intel.
+
+    Returns:
+        The download link for the current Alpha version of Plink2 for Linux AVX2 Intel.
+    """
+
+    url = "https://www.cog-genomics.org/plink/2.0/"
+
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    if link := soup.find(
+        "a",
+        href=re.compile(r"^https://s3.amazonaws.com/plink2-assets/.*plink2_linux_avx2_.*\.zip$"),
+    ):
+        return link.get("href")  # type: ignore
+    else:
+        return "https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20221024.zip"
