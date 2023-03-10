@@ -66,7 +66,7 @@ def install_sfgwas() -> None:
         "sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz",
         f"wget -nc {plink2_download_link}",
         "mkdir -p ~/.local/bin",
-        f"unzip -o {plink2_zip_file} -d ~/.local/bin",
+        f"unzip -o {plink2_zip_file} -d ~/.local/bin",  # TODO: try out f"sudo unzip -o {plink2_zip_file} -d /usr/local/bin"
         "pip3 install numpy",
     ]
     for command in commands:
@@ -303,44 +303,8 @@ def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool) -> Non
     doc_ref_dict: dict = get_doc_ref_dict()
     num_power_iters: int = 2 if demo else int(doc_ref_dict["advanced_parameters"]["num_power_iters"]["value"])
 
-    task_updates = [
-        "Starting QC",
-        "Starting PCA",
-        "Preprocessing X",
-    ]
-    task_updates.extend(f"Power iteration iter  {i} / {num_power_iters}" for i in range(1, num_power_iters + 1))
-    task_updates += [
-        "Computing covariance matrix",
-        "Eigen decomposition",
-        "Extract PC subspace",
-        "Finished PCA",
-        "Starting association tests",
-        "Starting QR",
-        "Multiplication with genotype matrix started",
-    ]
-    task_updates += [f"MatMult: block {i} / 22 starting" for i in range(1, 23)]
-
-    transform = (
-        {
-            "Starting QC": "Quality Control",
-            "Starting PCA": "Principal Component Analysis",
-            "Preprocessing X": "sub-task Preprocessing X",
-        }
-        | {
-            f"Power iteration iter  {i} / {num_power_iters}": f"sub-task Power iteration iter {i} / {num_power_iters}"
-            for i in range(1, num_power_iters + 1)
-        }
-        | {
-            "Computing covariance matrix": "sub-task Computing covariance matrix",
-            "Eigen decomposition": "sub-task Eigen decomposition",
-            "Extract PC subspace": "sub-task Extract PC subspace",
-            "Finished PCA": "sub-task Finished PCA",
-            "Starting association tests": "Association Tests",
-            "Starting QR": "sub-task Starting QR factorization",
-            "Multiplication with genotype matrix started": "sub-task Multiplication with genotype matrix started",
-        }
-        | {f"MatMult: block {i} / 22 starting": f"sub-task MatMult: block {i} / 22 starting" for i in range(1, 23)}
-    )
+    task_updates = constants.task_updates(num_power_iters)
+    transform = constants.transform(num_power_iters)
 
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, executable="/bin/bash"
