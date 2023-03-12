@@ -65,8 +65,7 @@ def install_sfgwas() -> None:
         "wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
         "sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz",
         f"wget -nc {plink2_download_link}",
-        "mkdir -p ~/.local/bin",
-        f"unzip -o {plink2_zip_file} -d ~/.local/bin",  # TODO: try out f"sudo unzip -o {plink2_zip_file} -d /usr/local/bin"
+        f"sudo unzip -o {plink2_zip_file} -d /usr/local/bin",
         "pip3 install numpy",
     ]
     for command in commands:
@@ -74,7 +73,7 @@ def install_sfgwas() -> None:
 
     # make sure plink2 successfully installed
     condition_or_fail(
-        os.path.isfile(os.path.join(os.path.expanduser("~"), ".local/bin/plink2")),
+        os.path.isfile("/usr/local/bin/plink2"),
         "plink2 not installed (probably need to get new version)",
     )
 
