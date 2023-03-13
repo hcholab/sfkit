@@ -161,6 +161,12 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
     data["output_dir"] = f"out/party{role}"
     data["cache_dir"] = f"cache/party{role}"
 
+    doc_ref_dict: dict = get_doc_ref_dict()
+    user_id: str = doc_ref_dict["participants"][int(role)]
+    data["local_num_threads"] = int(doc_ref_dict["personal_parameters"][user_id]["NUM_CPUS"]["value"])
+    data["assoc_num_blocks_parallel"] = int(data["local_num_threads"] / 8)
+    data["memory_limit"] = int(data["local_num_threads"]) * 8 * 1_000_000_000
+
     with open(config_file_path, "w") as f:
         toml.dump(data, f)
 
