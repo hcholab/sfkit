@@ -191,6 +191,7 @@ def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
 
 
 def sync_with_other_vms(role: str) -> None:
+    update_firestore("update_firestore::status=syncing up")
     update_firestore("update_firestore::task=Syncing up machines")
     print("Begin syncing up")
     # wait until all participants have the status of starting data sharing protocol
