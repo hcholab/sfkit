@@ -1,6 +1,6 @@
 [project]
 name = "sfkit"
-version = "0.0.181"
+version = "0.0.183"
 authors = [{ name = "Simon Mendelsohn", email = "smendels@broadinstitute.org" }]
 description = "Some CLI Tools For The Secure Multi-party Genomic Analysis Website"
 readme = "README.md"
@@ -19,7 +19,7 @@ dependencies = [
     'ipaddr',
     'PyNaCl',
     'requests',
-    'toml',
+    'tomlkit',
     'tqdm',
     'numpy',
     'scipy',

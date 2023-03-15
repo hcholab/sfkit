@@ -14,7 +14,7 @@ import time
 from typing import Union
 
 import requests
-import toml
+import tomlkit
 from bs4 import BeautifulSoup
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
@@ -148,12 +148,15 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
     config_file_path = f"sfgwas/config/{protocol}/configLocal.Party{role}.toml"
 
     try:
-        data: dict = toml.load(config_file_path)
+        with open(config_file_path, "r") as f:
+            data = tomlkit.parse(f.read())
+
     except FileNotFoundError:
         print(f"File {config_file_path} not found.")
         print("Creating it...")
         shutil.copyfile(f"sfgwas/config/{protocol}/configLocal.Party2.toml", config_file_path)
-        data = toml.load(config_file_path)
+        with open(config_file_path, "r") as f:
+            data = tomlkit.parse(f.read())
 
     if role != "0":
         update_data_file_paths(data)
@@ -164,11 +167,11 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
     data["local_num_threads"] = int(doc_ref_dict["personal_parameters"][user_id]["NUM_CPUS"]["value"])
-    data["assoc_num_blocks_parallel"] = int(data["local_num_threads"] / 8)
-    data["memory_limit"] = int(data["local_num_threads"]) * 8 * 1_000_000_000
+    data["assoc_num_blocks_parallel"] = int(data.get("local_num_threads", 16)) // 8
+    data["memory_limit"] = int(int(data.get("local_num_threads", 16)) * 8 * 1_000_000_000)
 
     with open(config_file_path, "w") as f:
-        toml.dump(data, f)
+        f.write(tomlkit.dumps(data))
 
 
 def update_data_file_paths(data: dict) -> None:
@@ -193,7 +196,8 @@ def update_config_global(protocol: str = "gwas") -> None:
     print("Updating configGlobal.toml")
     doc_ref_dict: dict = get_doc_ref_dict()
     config_file_path = f"sfgwas/config/{protocol}/configGlobal.toml"
-    data = toml.load(config_file_path)
+    with open(config_file_path, "r") as f:
+        data = tomlkit.parse(f.read())
 
     data["num_main_parties"] = len(doc_ref_dict["participants"]) - 1
 
@@ -201,28 +205,28 @@ def update_config_global(protocol: str = "gwas") -> None:
     col_name = "num_columns" if protocol == "pca" else "num_snps"
     data[row_name] = []
     for i, participant in enumerate(doc_ref_dict["participants"]):
-        data[row_name].append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
-        print(f"{row_name} for {participant} is {data[row_name][i]}")
-        condition_or_fail(i == 0 or data[row_name][i] > 0, f"{row_name} must be greater than 0")
+        data.get(row_name, []).append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
+        print(f"{row_name} for {participant} is {data.get(row_name, [])[i]}")
+        condition_or_fail(i == 0 or data.get(row_name, [])[i] > 0, f"{row_name} must be greater than 0")
     data[col_name] = (
         int(doc_ref_dict["parameters"]["num_snps"]["value"])
         if protocol == "gwas"
         else int(doc_ref_dict["parameters"]["num_columns"]["value"])
     )
     print(f"{col_name} is {data[col_name]}")
-    condition_or_fail(data[col_name] > 0, f"{col_name} must be greater than 0")
+    condition_or_fail(data.get(col_name, 0) > 0, f"{col_name} must be greater than 0")
 
     # Update the ip addresses and ports
     for i, participant in enumerate(doc_ref_dict["participants"]):
-        if f"party{i}" not in data["servers"]:
-            data["servers"][f"party{i}"] = copy.deepcopy(data["servers"][f"party{i-1}"])
+        if f"party{i}" not in data.get("servers", {}):
+            data.get("servers", {})[f"party{i}"] = copy.deepcopy(data.get("servers", {})[f"party{i-1}"])
 
         ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
-        data["servers"][f"party{i}"]["ipaddr"] = ip_addr
+        data.get("servers", {}).get(f"party{i}", {})["ipaddr"] = ip_addr
 
         ports: list = doc_ref_dict["personal_parameters"][participant]["PORTS"]["value"].split(",")
         for j, port in enumerate(ports):
-            data["servers"][f"party{i}"]["ports"][f"party{j}"] = port
+            data.get("servers", {}).get(f"party{i}", {}).get("ports", {})[f"party{j}"] = port
 
     # shared and advanced parameters
     pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
@@ -231,7 +235,7 @@ def update_config_global(protocol: str = "gwas") -> None:
             data[key] = to_float_int_or_bool(value["value"])
 
     with open(config_file_path, "w") as f:
-        toml.dump(data, f)
+        f.write(tomlkit.dumps(data))
 
 
 def update_config_global_phase(phase: str, demo: bool, protocol: str = "gwas") -> None:
@@ -240,7 +244,8 @@ def update_config_global_phase(phase: str, demo: bool, protocol: str = "gwas") -
     :param phase: "1", "2", "3"
     """
     config_file_path = f"sfgwas/config/{protocol}/configGlobal.toml"
-    data = toml.load(config_file_path)
+    with open(config_file_path, "r") as f:
+        data = tomlkit.parse(f.read())
 
     data["phase"] = phase
     if phase == "2":
@@ -255,7 +260,7 @@ def update_config_global_phase(phase: str, demo: bool, protocol: str = "gwas") -
         data["num_pcs_to_remove"] = 2
 
     with open(config_file_path, "w") as f:
-        toml.dump(data, f)
+        f.write(tomlkit.dumps(data))
 
 
 def update_sfgwas_go(protocol: str = "gwas") -> None:

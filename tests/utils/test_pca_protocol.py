@@ -17,12 +17,12 @@ def test_run_pca_protocol(mocker):
 
 
 def test_update_config_local(mocker):
-    mocker.patch("sfkit.utils.pca_protocol.toml.load")
+    mocker.patch("sfkit.utils.pca_protocol.tomlkit.parse")
     mocker.patch("sfkit.utils.pca_protocol.shutil.copyfile")
     mocker.patch("sfkit.utils.pca_protocol.open")
-    mocker.patch("sfkit.utils.pca_protocol.toml.dump")
+    mocker.patch("sfkit.utils.pca_protocol.tomlkit.dumps")
 
     pca_protocol.update_config_local("0")
 
-    mocker.patch("sfkit.utils.pca_protocol.toml.load", side_effect=[FileNotFoundError, {}])
+    mocker.patch("sfkit.utils.pca_protocol.tomlkit.parse", side_effect=[FileNotFoundError, {}])
     pca_protocol.update_config_local("1")

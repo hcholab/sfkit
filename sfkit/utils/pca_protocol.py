@@ -3,8 +3,7 @@ Run the PCA protocol
 """
 import os
 import shutil
-
-import toml
+import tomlkit
 
 from sfkit.utils import constants
 from sfkit.utils.sfgwas_protocol import (
@@ -37,12 +36,14 @@ def update_config_local(role: str) -> None:
     config_file_path = f"sfgwas/config/pca/configLocal.Party{role}.toml"
 
     try:
-        data = toml.load(config_file_path)
+        with open(config_file_path, "r") as f:
+            data = tomlkit.parse(f.read())
     except FileNotFoundError:
         print(f"File {config_file_path} not found.")
         print("Creating it...")
         shutil.copyfile("sfgwas/config/pca/configLocal.Party2.toml", config_file_path)
-        data = toml.load(config_file_path)
+        with open(config_file_path, "r") as f:
+            data = tomlkit.parse(f.read())
 
     if role != "0":
         with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
@@ -55,4 +56,4 @@ def update_config_local(role: str) -> None:
     data["cache_dir"] = f"cache/party{role}"
 
     with open(config_file_path, "w") as f:
-        toml.dump(data, f)
+        f.write(tomlkit.dumps(data))

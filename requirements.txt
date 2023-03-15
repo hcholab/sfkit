@@ -17,5 +17,5 @@ scipy
 sphinx
 sphinx-argparse
 sphinx-rtd-theme
-toml
+tomlkit
 tqdm
