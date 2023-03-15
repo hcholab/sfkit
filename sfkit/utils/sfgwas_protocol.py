@@ -299,7 +299,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
         protocol_command = "bash run_example.sh"
     command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && {protocol_command}"
 
-    run_sfgwas_with_task_updates(command, protocol, demo)
+    run_sfgwas_with_task_updates(command, protocol, demo, role)
     print(f"Finished {protocol} protocol")
 
     if role == "0":
@@ -309,7 +309,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> Non
     post_process_results(role, demo, protocol)
 
 
-def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool) -> None:
+def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool, role: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     num_power_iters: int = 2 if demo else int(doc_ref_dict["advanced_parameters"]["num_power_iters"]["value"])
 
@@ -342,7 +342,9 @@ def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool) -> Non
             if task_updates:
                 prev_task = current_task
                 current_task = task_updates.pop(0)
-        elif "Output collectively decrypted and saved to" in line:
+        elif "Output collectively decrypted and saved to" in line or (
+            protocol == "PCA" and f"Saved data to cache/party{role}/Qpc.txt" in line
+        ):
             waiting_time = 30
 
     process.wait()
