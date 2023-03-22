@@ -28,7 +28,8 @@ def auth() -> None:
         f.write(auth_key)
 
     try:
-        assert get_doc_ref_dict() is not None
+        doc_ref_dict = get_doc_ref_dict()
+        assert doc_ref_dict is not None
     except Exception as e:
         os.remove(constants.AUTH_KEY)
         print("Invalid auth_key.txt file.")
@@ -36,4 +37,4 @@ def auth() -> None:
         condition_or_fail(False)
         exit(1)
 
-    print("Successfully authenticated!")
+    print(f"Successfully authenticated with study {doc_ref_dict['title']}!")

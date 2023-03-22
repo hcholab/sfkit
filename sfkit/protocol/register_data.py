@@ -21,9 +21,10 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     study_type: str = doc_ref_dict["study_type"]
 
     if study_type == "SFGWAS":
-        geno_binary_file_prefix, data_path = validate_sfgwas(
-            doc_ref_dict, username, data_path, geno_binary_file_prefix
-        )
+        if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
+            geno_binary_file_prefix, data_path = validate_sfgwas(
+                doc_ref_dict, username, data_path, geno_binary_file_prefix
+            )
     elif study_type == "MPCGWAS":
         data_path = validate_mpcgwas(doc_ref_dict, username, data_path, role)
     elif study_type == "PCA":
@@ -32,8 +33,10 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
         raise ValueError(f"Unknown study type: {study_type}")
 
     update_firestore("update_firestore::status=validated data")
-    data_hash = checksumdir.dirhash(data_path, "md5")
-    update_firestore(f"update_firestore::DATA_HASH={data_hash}")
+
+    if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
+        data_hash = checksumdir.dirhash(data_path, "md5")
+        update_firestore(f"update_firestore::DATA_HASH={data_hash}")
 
     with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "w") as f:
         if study_type == "SFGWAS":

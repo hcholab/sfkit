@@ -1,8 +1,9 @@
 import os
 import re
 import select
+import shutil
 import subprocess
-from typing import Union
+from typing import Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,6 +18,35 @@ from sfkit.utils.helper_functions import (
     plot_assoc,
     postprocess_assoc,
 )
+
+
+def get_file_paths() -> Tuple[str, str]:
+    with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
+        geno_file_prefix = f.readline().rstrip()
+        data_path = f.readline().rstrip()
+    return geno_file_prefix, data_path
+
+
+def use_existing_config(role: str, doc_ref_dict: dict) -> None:
+    print("Using blocks with config files")
+    if role != "0":
+        _, data_path = get_file_paths()
+
+        source = f"{data_path}/p{role}/for_sfgwas"
+        destination = "sfgwas/for_sfgwas"
+        move(source, destination)
+
+    config = doc_ref_dict["description"].split(constants.BLOCKS_MODE)[1]
+
+    source = f"sfgwas/config/blocks/{config}"
+    destination = "sfgwas/config/gwas"
+    move(source, destination)
+
+
+def move(source: str, destination: str) -> None:
+    print(f"Moving {source} to {destination}...")
+    shutil.rmtree(destination, ignore_errors=True)
+    shutil.move(source, destination)
 
 
 def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool, role: str) -> None:
@@ -67,7 +97,13 @@ def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool, role: 
 
 
 def check_for_failure(command: str, protocol: str, process: subprocess.Popen, stream: list, line: str) -> None:
-    if stream == process.stderr and line and not line.startswith("W :") and "[watchdog] gc finished" not in line:
+    if (
+        stream == process.stderr
+        and line
+        and not line.startswith("W :")
+        and "[watchdog] gc finished" not in line
+        and "warning:" not in line
+    ):
         print(f"FAILED - {command}")
         print(f"Stderr: {line}")
         condition_or_fail(False, f"Failed {protocol} protocol")

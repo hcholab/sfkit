@@ -8,6 +8,7 @@ import os
 import random
 import shutil
 import time
+from typing import Tuple
 
 import tomlkit
 from nacl.encoding import HexEncoder
@@ -17,10 +18,12 @@ from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import condition_or_fail, run_command
 from sfkit.utils.sfgwas_helper_functions import (
+    get_file_paths,
     get_plink2_download_link,
     post_process_results,
     run_sfgwas_with_task_updates,
     to_float_int_or_bool,
+    use_existing_config,
 )
 
 
@@ -139,6 +142,11 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
     Update configLocal.Party{role}.toml
     :param role: 0, 1, 2, ...
     """
+    doc_ref_dict: dict = get_doc_ref_dict()
+    if constants.BLOCKS_MODE in doc_ref_dict["description"]:
+        use_existing_config(role, doc_ref_dict)
+        return
+
     config_file_path = f"sfgwas/config/{protocol}/configLocal.Party{role}.toml"
 
     try:
@@ -169,9 +177,7 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
 
 
 def update_data_file_paths(data: dict) -> None:
-    with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
-        geno_file_prefix = f.readline().rstrip()
-        data_path = f.readline().rstrip()
+    geno_file_prefix, data_path = get_file_paths()
 
     data["geno_binary_file_prefix"] = f"{geno_file_prefix}"
     data["geno_block_size_file"] = f"{data_path}/chrom_sizes.txt"
@@ -193,23 +199,6 @@ def update_config_global(protocol: str = "gwas") -> None:
     with open(config_file_path, "r") as f:
         data = tomlkit.parse(f.read())
 
-    data["num_main_parties"] = len(doc_ref_dict["participants"]) - 1
-
-    row_name = "num_rows" if protocol == "pca" else "num_inds"
-    col_name = "num_columns" if protocol == "pca" else "num_snps"
-    data[row_name] = []
-    for i, participant in enumerate(doc_ref_dict["participants"]):
-        data.get(row_name, []).append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
-        print(f"{row_name} for {participant} is {data.get(row_name, [])[i]}")
-        condition_or_fail(i == 0 or data.get(row_name, [])[i] > 0, f"{row_name} must be greater than 0")
-    data[col_name] = (
-        int(doc_ref_dict["parameters"]["num_snps"]["value"])
-        if protocol == "gwas"
-        else int(doc_ref_dict["parameters"]["num_columns"]["value"])
-    )
-    print(f"{col_name} is {data[col_name]}")
-    condition_or_fail(data.get(col_name, 0) > 0, f"{col_name} must be greater than 0")
-
     # Update the ip addresses and ports
     for i, participant in enumerate(doc_ref_dict["participants"]):
         if f"party{i}" not in data.get("servers", {}):
@@ -222,11 +211,29 @@ def update_config_global(protocol: str = "gwas") -> None:
         for j, port in enumerate(ports):
             data.get("servers", {}).get(f"party{i}", {}).get("ports", {})[f"party{j}"] = port
 
-    # shared and advanced parameters
-    pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
-    for key, value in pars.items():
-        if key in data:
-            data[key] = to_float_int_or_bool(value["value"])
+    if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
+        data["num_main_parties"] = len(doc_ref_dict["participants"]) - 1
+
+        row_name = "num_rows" if protocol == "pca" else "num_inds"
+        col_name = "num_columns" if protocol == "pca" else "num_snps"
+        data[row_name] = []
+        for i, participant in enumerate(doc_ref_dict["participants"]):
+            data.get(row_name, []).append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
+            print(f"{row_name} for {participant} is {data.get(row_name, [])[i]}")
+            condition_or_fail(i == 0 or data.get(row_name, [])[i] > 0, f"{row_name} must be greater than 0")
+        data[col_name] = (
+            int(doc_ref_dict["parameters"]["num_snps"]["value"])
+            if protocol == "gwas"
+            else int(doc_ref_dict["parameters"]["num_columns"]["value"])
+        )
+        print(f"{col_name} is {data[col_name]}")
+        condition_or_fail(data.get(col_name, 0) > 0, f"{col_name} must be greater than 0")
+
+        # shared and advanced parameters
+        pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
+        for key, value in pars.items():
+            if key in data:
+                data[key] = to_float_int_or_bool(value["value"])
 
     with open(config_file_path, "w") as f:
         f.write(tomlkit.dumps(data))

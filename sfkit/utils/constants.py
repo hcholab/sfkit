@@ -6,6 +6,7 @@ METADATA_VM_IDENTITY_URL = (
     "instance/service-accounts/default/identity?"
     "audience={}&format={}&licenses={}"
 )
+BLOCKS_MODE = "usingblocks-"
 SFKIT_DIR = os.path.expanduser("~/.config/sfkit")
 AUTH_FILE = os.path.join(SFKIT_DIR, "auth.txt")
 AUTH_KEY = os.path.join(SFKIT_DIR, "auth_key.txt")
