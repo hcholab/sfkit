@@ -4,6 +4,8 @@ import select
 import subprocess
 from typing import Union
 
+import matplotlib.pyplot as plt
+import numpy as np
 import requests
 from bs4 import BeautifulSoup
 
@@ -78,6 +80,8 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
 
     if protocol == "SFGWAS":
         make_new_assoc_and_manhattan_plot(doc_ref_dict, demo, role)
+    elif protocol == "PCA":
+        make_pca_plot(role)
 
     # copy results to cloud storage
     if doc_ref_dict["setup_configuration"] == "website":
@@ -104,6 +108,10 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
         if send_results == "Yes" and doc_ref_dict["setup_configuration"] == "website":
             with open(f"sfgwas/cache/party{role}/Qpc.txt", "r") as f:
                 website_send_file(f, "Qpc.txt")
+
+            with open(f"sfgwas/out/party{role}/pca_plot.png", "rb") as f:
+                website_send_file(f, "pca_plot.png")
+
             update_firestore("update_firestore::status=Finished protocol!")
         else:
             update_firestore(
@@ -111,6 +119,14 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
             )
 
     update_firestore(f"update_firestore::task=Running {protocol} protocol completed")
+
+
+def make_pca_plot(role: str) -> None:
+    pcs = np.loadtxt(f"sfgwas/cache/party{role}/Qpc.txt", delimiter=",")
+    plt.scatter(pcs[0], pcs[1])
+    plt.xlabel("PC1")
+    plt.ylabel("PC2")
+    plt.savefig(f"sfgwas/out/party{role}/pca_plot.png")
 
 
 def make_new_assoc_and_manhattan_plot(doc_ref_dict: dict, demo: bool, role: str) -> None:
