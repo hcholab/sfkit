@@ -53,8 +53,8 @@ def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool, role: 
     doc_ref_dict: dict = get_doc_ref_dict()
     num_power_iters: int = 2 if demo else int(doc_ref_dict["advanced_parameters"]["num_power_iters"]["value"])
 
-    task_updates = constants.task_updates(num_power_iters)
-    transform = constants.transform(num_power_iters)
+    task_updates = constants.task_updates(protocol, num_power_iters)
+    transform = constants.transform(protocol, num_power_iters)
 
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, executable="/bin/bash"
