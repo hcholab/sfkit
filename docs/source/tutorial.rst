@@ -105,6 +105,10 @@ This will use a secure key generation protocol to generate a pair of keys for yo
 
 This will validate that your input data for the protocol is in the correct format.  It will ask you for the paths to your input data.  For this tutorial, you can enter "demo" for both data paths and the demo data will be used.  If you get a message saying "Successfully registered and validated data!", then you are good to go.
 
+.. note::
+    
+    When running the MPC-GWAS workflow, this step will also encrypt your data.  This means that your full raw data is not necessary for the final `sfkit run_protocol` step if you prefer to remove it from your machine.  Of course, you will need to keep the encrypted data on your machine for the duration of the protocol.
+
 6. Run 
 
 .. code-block:: console 

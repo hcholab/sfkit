@@ -3,7 +3,6 @@ import multiprocessing
 import time
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
-from sfkit.encryption.mpc.encrypt_data import encrypt_data
 from sfkit.utils.helper_functions import (
     condition_or_fail,
     copy_results_to_cloud_storage,
@@ -22,7 +21,7 @@ def run_gwas_protocol(role: str, demo: bool = False) -> None:
     if not demo:
         update_parameters(role)
         # connect_to_other_vms(role)
-        encrypt_or_prepare_data("./encrypted_data", role)
+        prepare_data("./encrypted_data", role)
         copy_data_to_gwas_repo("./encrypted_data", role)
         sync_with_other_vms(role)
     start_datasharing(role, demo)
@@ -122,7 +121,7 @@ def update_parameters(role: str) -> None:
         print(line, end="")
 
 
-# this function currently has 2 main problems: 1. the other machine doesn't receive the connection 2. it uses the same ports as the main protocol, causing a conflict
+# this function currently has 2 main problems: 1. the other machine doesn't consistently receive the connection 2. it uses the same ports as the main protocol, causing a conflict
 # def connect_to_other_vms(role: str) -> None:
 #     print("\n\n Begin connecting to other VMs \n\n")
 
@@ -155,25 +154,18 @@ def update_parameters(role: str) -> None:
 #     print("\n\n Finished connecting to other VMs \n\n")
 
 
-def encrypt_or_prepare_data(data_path: str, role: str) -> None:
-    update_firestore("update_firestore::task=Encrypting data")
+def prepare_data(data_path: str, role: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     study_title: str = doc_ref_dict["title"].replace(" ", "").lower()
 
     if role == "0":
-        command = f"mkdir -p {data_path}"
-        run_command(command)
-        command = f"gsutil cp gs://sfkit/{study_title}/pos.txt {data_path}/pos.txt"
-        run_command(command)
-    elif role in {"1", "2"}:
-        try:
-            encrypt_data()
-        except Exception as e:
-            condition_or_fail(False, f"encrypt_data::error={e}")
-    update_firestore("update_firestore::task=Encrypting data completed")
+        run_command(f"mkdir -p {data_path}")
+        run_command(f"gsutil cp gs://sfkit/{study_title}/pos.txt {data_path}/pos.txt")
 
 
-def copy_data_to_gwas_repo(data_path: str, role: str) -> None:
+def copy_data_to_gwas_repo(
+    data_path: str, role: str
+) -> None:  # TODO: change the path in parameter file instead? Or move instead of copy?
     print("\n\n Copy data to GWAS repo \n\n")
     commands = f"""cp '{data_path}'/g.bin secure-gwas/test_data/g.bin 
     cp '{data_path}'/m.bin secure-gwas/test_data/m.bin 

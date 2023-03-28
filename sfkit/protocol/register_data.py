@@ -4,6 +4,7 @@ from typing import Tuple
 import checksumdir
 
 from sfkit.api import get_doc_ref_dict, update_firestore
+from sfkit.encryption.mpc.encrypt_data import encrypt_data
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import authenticate_user, condition_or_fail
 from sfkit.api import get_username, website_send_file
@@ -20,31 +21,49 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
     role: str = str(doc_ref_dict["participants"].index(username))
     study_type: str = doc_ref_dict["study_type"]
 
-    if study_type == "SFGWAS":
-        if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
-            geno_binary_file_prefix, data_path = validate_sfgwas(
-                doc_ref_dict, username, data_path, geno_binary_file_prefix
-            )
-    elif study_type == "MPCGWAS":
-        data_path = validate_mpcgwas(doc_ref_dict, username, data_path, role)
-    elif study_type == "PCA":
-        data_path = validate_pca(doc_ref_dict, username, data_path)
-    else:
-        raise ValueError(f"Unknown study type: {study_type}")
-
-    update_firestore("update_firestore::status=validated data")
-
-    if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
-        data_hash = checksumdir.dirhash(data_path, "md5")
-        update_firestore(f"update_firestore::DATA_HASH={data_hash}")
-
-    with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "w") as f:
+    validated = "validated" in doc_ref_dict["status"][username]
+    if not validated:
         if study_type == "SFGWAS":
-            f.write(geno_binary_file_prefix + "\n")
-        f.write(data_path + "\n")
+            if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
+                geno_binary_file_prefix, data_path = validate_sfgwas(
+                    doc_ref_dict, username, data_path, geno_binary_file_prefix
+                )
+        elif study_type == "MPCGWAS":
+            data_path = validate_mpcgwas(doc_ref_dict, username, data_path, role)
+        elif study_type == "PCA":
+            data_path = validate_pca(doc_ref_dict, username, data_path)
+        else:
+            raise ValueError(f"Unknown study type: {study_type}")
 
-    print("Successfully registered and validated data!")
+        update_firestore("update_firestore::status=validated data")
+
+        if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
+            data_hash = checksumdir.dirhash(data_path, "md5")
+            update_firestore(f"update_firestore::DATA_HASH={data_hash}")
+
+        with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "w") as f:
+            if study_type == "SFGWAS":
+                f.write(geno_binary_file_prefix + "\n")
+            f.write(data_path + "\n")
+
+        print("Successfully registered and validated data!")
+    else:
+        print("Data has already been validated; skipping validation step.")
+
+    encrypt_mpcgwas(role, study_type)
+
     return True
+
+
+def encrypt_mpcgwas(role: str, study_type: str) -> None:
+    if study_type == "MPCGWAS" and role in {"1", "2"}:
+        print("Now encrypting data...")
+        update_firestore("update_firestore::task=Encrypting data")
+        try:
+            encrypt_data()
+        except Exception as e:
+            condition_or_fail(False, f"encrypt_data::error={e}")
+    update_firestore("update_firestore::task=Encrypting data completed")
 
 
 def validate_sfgwas(

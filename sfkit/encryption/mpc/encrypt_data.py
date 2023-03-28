@@ -5,6 +5,7 @@
 import os
 import shutil
 import sys
+import time
 
 import checksumdir
 import nacl.secret
@@ -103,20 +104,12 @@ def get_shared_mpcgwas_keys(my_private_key: PrivateKey, other_public_key: Public
 
 def encrypt_data() -> None:
     username: str = get_username()
-
-    print("Downloading other party's public key...")
     doc_ref_dict: dict = get_doc_ref_dict()
     role = doc_ref_dict["participants"].index(username)
-    if len(doc_ref_dict["participants"]) == 3:
-        other_public_key = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][3 - role]]["PUBLIC_KEY"][
-            "value"
-        ]
-    else:
-        other_public_key = "ccc9b947a2faf59a0b78ac55ad1a84848333d8e757b2242d7e1499ab55147d2e"  # dummy key for demo
-    if other_public_key == "":
-        print("No public key found for other user. Exiting.")
-        sys.exit(1)
-    other_public_key = PublicKey(other_public_key, encoder=HexEncoder)  # type: ignore
+
+    other_public_key_str = get_other_user_public_key(doc_ref_dict, role)
+
+    other_public_key = PublicKey(other_public_key_str, encoder=HexEncoder)  # type: ignore
 
     print("Generating shared keys...")
     private_key_path = os.path.join(constants.SFKIT_DIR, "my_private_key.txt")
@@ -146,3 +139,34 @@ def encrypt_data() -> None:
     shutil.copyfile(f"{input_dir}/pos.txt", "./encrypted_data/pos.txt")
 
     print("\n\nThe encryption is complete.")
+
+
+def get_other_user_public_key(doc_ref_dict: dict, role: int) -> str:
+    print("Downloading other party's public key...")
+
+    other_role = 3 - role
+
+    if len(doc_ref_dict["participants"]) != 3:
+        print("Expected 2 participants (excluding Broad). Exiting.")
+        sys.exit(1)
+
+    i = 0
+    while True:
+        other_public_key_str = (
+            doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][other_role]]
+            .get("PUBLIC_KEY", {})
+            .get("value")
+        )
+        if other_public_key_str:
+            break
+
+        print("No public key found for other user. Waiting...")
+        i += 1
+        if i > 60:
+            print("Failed to find public key for other user after 5 minutes. Exiting.")
+            sys.exit(1)
+
+        time.sleep(5)
+        doc_ref_dict = get_doc_ref_dict()
+
+    return other_public_key_str
