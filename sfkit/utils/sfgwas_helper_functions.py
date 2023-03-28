@@ -127,33 +127,20 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
             data_path = f"sfkit_example_data/demo/{study_title}"
         copy_results_to_cloud_storage(role, data_path, f"sfgwas/out/party{role}")
 
-    if protocol == "SFGWAS":
-        if send_results == "Yes" and doc_ref_dict["setup_configuration"] == "website":
-            with open(f"sfgwas/out/party{role}/new_assoc.txt", "r") as f:
-                website_send_file(f, "new_assoc.txt")
+    if protocol == "SFGWAS" and send_results == "Yes":
+        with open(f"sfgwas/out/party{role}/new_assoc.txt", "r") as f:
+            website_send_file(f, "new_assoc.txt")
 
-            with open(f"sfgwas/out/party{role}/manhattan.png", "rb") as f:
-                website_send_file(f, "manhattan.png")
+        with open(f"sfgwas/out/party{role}/manhattan.png", "rb") as f:
+            website_send_file(f, "manhattan.png")
+    elif protocol == "PCA" and send_results == "Yes":
+        with open(f"sfgwas/cache/party{role}/Qpc.txt", "r") as f:
+            website_send_file(f, "Qpc.txt")
 
-            update_firestore("update_firestore::status=Finished protocol!")
-        else:
-            update_firestore(
-                "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
-            )
-    elif protocol == "PCA":
-        if send_results == "Yes" and doc_ref_dict["setup_configuration"] == "website":
-            with open(f"sfgwas/cache/party{role}/Qpc.txt", "r") as f:
-                website_send_file(f, "Qpc.txt")
+        with open(f"sfgwas/out/party{role}/pca_plot.png", "rb") as f:
+            website_send_file(f, "pca_plot.png")
 
-            with open(f"sfgwas/out/party{role}/pca_plot.png", "rb") as f:
-                website_send_file(f, "pca_plot.png")
-
-            update_firestore("update_firestore::status=Finished protocol!")
-        else:
-            update_firestore(
-                "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
-            )
-
+    update_firestore("update_firestore::status=Finished protocol!")
     update_firestore(f"update_firestore::task=Running {protocol} protocol completed")
 
 

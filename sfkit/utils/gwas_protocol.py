@@ -275,15 +275,11 @@ def process_output_files(role: str, demo: bool) -> None:
             data_path = f"sfkit_example_data/demo/{study_title}"
         copy_results_to_cloud_storage(role, data_path, "secure-gwas/out")
 
-    if send_results == "Yes" and doc_ref_dict["setup_configuration"] == "website":
+    if send_results == "Yes":
         with open("secure-gwas/out/new_assoc.txt", "r") as file:
             website_send_file(file, "new_assoc.txt")
 
         with open("secure-gwas/out/manhattan.png", "rb") as file:
             website_send_file(file, "manhattan.png")
 
-        update_firestore("update_firestore::status=Finished protocol!")
-    else:
-        update_firestore(
-            "update_firestore::status=Finished protocol! You can view the results in your cloud storage bucket or on your machine."
-        )
+    update_firestore("update_firestore::status=Finished protocol!")
