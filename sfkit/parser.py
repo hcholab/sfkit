@@ -32,5 +32,10 @@ def get_parser() -> argparse.ArgumentParser:
         "--phase", help="Phase of the protocol to run (e.g. '1' for QC, 2 for PCA, 3 for Association Statistics)"
     )
     runprotocol.add_argument("--demo", help="Run the demo protocol", action="store_true")
+    runprotocol.add_argument("--visualize_results", help="Visualize the results in the UI (Yes or No)")
+    runprotocol.add_argument(
+        "--results_path",
+        help="The path in a GCP bucket (you have access to) where you would like to send the results of the protocol.",
+    )
 
     return parser

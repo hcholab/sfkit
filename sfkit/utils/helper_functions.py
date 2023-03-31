@@ -102,8 +102,6 @@ def plot_assoc(plot_file: str, new_assoc_file: str) -> None:
 
 
 def copy_results_to_cloud_storage(role: str, data_path: str, output_directory: str) -> None:
-    # sourcery skip: extract-method
-
     os.makedirs(output_directory, exist_ok=True)
     if "sfgwas" in output_directory:
         shutil.copyfile(f"sfgwas/cache/party{role}/Qpc.txt", f"{output_directory}/Qpc.txt")

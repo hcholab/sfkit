@@ -24,6 +24,8 @@ def main() -> None:
     elif args.command == "run_protocol":
         phase: str = args.phase or ""
         demo: bool = args.demo or False
-        run_protocol(phase, demo)
+        visualize_results: str = args.visualize_results or ""
+        results_path: str = args.results_path or ""
+        run_protocol(phase, demo, visualize_results, results_path)
     else:
         parser.print_help()

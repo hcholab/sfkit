@@ -257,16 +257,11 @@ def process_output_files(role: str, demo: bool) -> None:
 
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
+
+    if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
+        copy_results_to_cloud_storage(role, results_path, "secure-gwas/out")
+
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
-
-    # copy results to cloud storage
-    if doc_ref_dict["setup_configuration"] == "website":
-        data_path = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
-        if demo and not data_path:
-            study_title: str = doc_ref_dict["title"].replace(" ", "").lower()
-            data_path = f"sfkit_example_data/demo/{study_title}"
-        copy_results_to_cloud_storage(role, data_path, "secure-gwas/out")
-
     if send_results == "Yes":
         with open("secure-gwas/out/new_assoc.txt", "r") as file:
             website_send_file(file, "new_assoc.txt")

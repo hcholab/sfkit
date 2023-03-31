@@ -112,21 +112,16 @@ def check_for_failure(command: str, protocol: str, process: subprocess.Popen, st
 def post_process_results(role: str, demo: bool, protocol: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
-    send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
 
     if protocol == "SFGWAS":
         make_new_assoc_and_manhattan_plot(doc_ref_dict, demo, role)
     elif protocol == "PCA":
         make_pca_plot(role)
 
-    # copy results to cloud storage
-    if doc_ref_dict["setup_configuration"] == "website":
-        data_path = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
-        if demo and not data_path:
-            study_title: str = doc_ref_dict["title"].replace(" ", "").lower()
-            data_path = f"sfkit_example_data/demo/{study_title}"
-        copy_results_to_cloud_storage(role, data_path, f"sfgwas/out/party{role}")
+    if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
+        copy_results_to_cloud_storage(role, results_path, f"sfgwas/out/party{role}")
 
+    send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
     if protocol == "SFGWAS" and send_results == "Yes":
         with open(f"sfgwas/out/party{role}/new_assoc.txt", "r") as f:
             website_send_file(f, "new_assoc.txt")
