@@ -205,7 +205,7 @@ def start_datasharing(role: str, demo: bool) -> None:
     if demo:
         command = "cd secure-gwas/code && bash run_example_datasharing.sh"
     else:
-        command = f"cd secure-gwas/code && bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
+        command = f"export PYTHONUNBUFFERED=TRUE && cd secure-gwas/code && bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
         if role != "0":
             command += " ../test_data/"
     run_command(command, fail_message="Failed MPC-GWAS data sharing protocol")
@@ -222,7 +222,7 @@ def start_gwas(role: str, demo: bool) -> None:
     if demo:
         command = "cd secure-gwas/code && bash run_example_gwas.sh"
     else:
-        command = f"cd secure-gwas/code && bin/GwasClient '{role}' ../par/test.par.'{role}'.txt"
+        command = f"export PYTHONUNBUFFERED=TRUE && cd secure-gwas/code && bin/GwasClient '{role}' ../par/test.par.'{role}'.txt"
     run_command(command, fail_message="Failed MPC-GWAS protocol")
     print("\n\n Finished GWAS \n\n")
 
