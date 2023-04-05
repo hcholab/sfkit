@@ -49,10 +49,12 @@ def install_gwas_dependencies() -> None:
 
 
 def install_gwas_repo() -> None:
+    update_firestore("update_firestore::task=Installing GWAS repo")
     print("\n\n Begin installing GWAS repo \n\n")
     command = "git clone https://github.com/simonjmendelsohn/secure-gwas secure-gwas"
     run_command(command)
     print("\n\n Finished installing GWAS repo \n\n")
+    update_firestore("update_firestore::task=Installing GWAS repo completed")
 
 
 def install_ntl_library() -> None:

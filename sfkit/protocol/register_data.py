@@ -157,7 +157,10 @@ def validate_data_path(data_path: str) -> str:
 
 def validate_sfgwas_data(geno_binary_file_prefix: str, data_path: str) -> int:
     for suffix in ["pgen", "pvar", "psam"]:
-        condition_or_fail(os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix))
+        condition_or_fail(
+            os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix),
+            f"Could not find {geno_binary_file_prefix % 1}.{suffix} file.",
+        )
 
     rows: int = num_rows(os.path.join(data_path, "pheno.txt"))
     condition_or_fail(
@@ -171,8 +174,12 @@ def validate_sfgwas_data(geno_binary_file_prefix: str, data_path: str) -> int:
 
 def validate_mpcgwas_data(data_path: str) -> Tuple[int, int]:
     rows = num_rows(os.path.join(data_path, "cov.txt"))
-    condition_or_fail(rows == num_rows(os.path.join(data_path, "geno.txt")))
-    condition_or_fail(rows == num_rows(os.path.join(data_path, "pheno.txt")))
+    condition_or_fail(
+        rows == num_rows(os.path.join(data_path, "geno.txt")), "cov and geno have different number of rows"
+    )
+    condition_or_fail(
+        rows == num_rows(os.path.join(data_path, "pheno.txt")), "cov and pheno have different number of rows"
+    )
 
     num_covs = num_cols(os.path.join(data_path, "cov.txt"))
 
