@@ -1,4 +1,5 @@
 import os
+import select
 import shutil
 import subprocess
 
@@ -24,13 +25,11 @@ def run_command(command: str, fail_message: str = "") -> None:
         command, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     ) as proc:
         while proc.poll() is None:
-            stdout_line = proc.stdout.readline().rstrip()  # type: ignore
-            stderr_line = proc.stderr.readline().rstrip()  # type: ignore
+            readable, _, _ = select.select([proc.stdout, proc.stderr], [], [])
 
-            if stdout_line:
-                print(stdout_line)
-            if stderr_line:
-                print(stderr_line)
+            for stream in readable:
+                if line := stream.readline().rstrip():
+                    print(line)
 
         res = proc.returncode
 

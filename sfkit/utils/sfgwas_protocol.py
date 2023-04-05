@@ -56,17 +56,25 @@ def install_sfgwas() -> None:
     plink2_download_link = get_plink2_download_link()
     plink2_zip_file = plink2_download_link.split("/")[-1]
 
-    commands = [
-        "sudo apt-get update -y",
-        "sudo apt-get install wget git zip unzip -y",
-        "wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz",
-        "sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz",
-        f"wget -nc {plink2_download_link}",
-        f"sudo unzip -o {plink2_zip_file} -d /usr/local/bin",
-        "pip3 install numpy",
-    ]
-    for command in commands:
-        run_command(command)
+    run_command("sudo apt-get update -y")
+    run_command("sudo apt-get install wget git zip unzip -y")
+
+    print("Installing go")
+    max_retries = 3
+    retries = 0
+    while retries < max_retries:
+        run_command("rm -f https://golang.org/dl/go1.18.1.linux-amd64.tar.gz")
+        run_command("wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz")
+        run_command("sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz")
+        if os.path.isdir("/usr/local/go"):
+            break
+    if not os.path.isdir("/usr/local/go"):
+        condition_or_fail(False, "go failed to install")
+    print("go successfully installed")
+
+    run_command(f"wget -nc {plink2_download_link}")
+    run_command(f"sudo unzip -o {plink2_zip_file} -d /usr/local/bin")
+    run_command("pip3 install numpy")
 
     # make sure plink2 successfully installed
     condition_or_fail(
