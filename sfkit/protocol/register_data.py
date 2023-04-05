@@ -138,7 +138,7 @@ def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> str:
 def validate_geno_binary_file_prefix(geno_binary_file_prefix: str) -> str:
     if not geno_binary_file_prefix:
         geno_binary_file_prefix = input(
-            f"Enter absolute path to geno binary file prefix (e.g. '/home/username/for_sfgwas/geno/chr%d'): "
+            f"Enter absolute path to geno binary file prefix (e.g. '/home/username/for_sfgwas/geno/ch%d'): "
         )  # sourcery skip: remove-redundant-fstring
     if geno_binary_file_prefix != "demo" and not os.path.isabs(geno_binary_file_prefix):
         print("I need an ABSOLUTE path for the geno_binary_file_prefix.")

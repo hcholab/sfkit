@@ -18,11 +18,11 @@ def get_parser() -> argparse.ArgumentParser:
     )
     registerdataparser.add_argument(
         "--geno_binary_file_prefix",
-        help="Path to the genotype binary file prefix (e.g. 'for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%%d')",
+        help="Path to the genotype binary file prefix (e.g. '/home/username/for_sfgwas/geno/ch%d')",
     )  # two percent-signs to escape the first one
     registerdataparser.add_argument(
         "--data_path",
-        help="Directory containing the data files (chrom_sizes.txt, pheno.txt, cov.txt, snp_pos.txt, sample_keep.txt, snp_ids.txt, all.gcount.transpose.bin)",
+        help="Directory containing the data files (chrom_sizes.txt, pheno.txt, cov.txt, snp_pos.txt, sample_keep.txt, snp_ids.txt, all.gcount.transpose.bin) (e.g. /home/username/for_sfgwas)",
     )
     runprotocol = subparsers.add_parser(
         "run_protocol",
