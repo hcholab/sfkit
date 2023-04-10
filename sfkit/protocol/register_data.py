@@ -1,5 +1,5 @@
 import os
-from typing import Tuple
+from typing import Optional, Tuple
 
 import checksumdir
 
@@ -63,7 +63,8 @@ def encrypt_mpcgwas(role: str, study_type: str) -> None:
             encrypt_data()
         except Exception as e:
             condition_or_fail(False, f"encrypt_data::error={e}")
-    update_firestore("update_firestore::task=Encrypting data completed")
+        else:
+            update_firestore("update_firestore::task=Encrypting data completed")
 
 
 def validate_sfgwas(
@@ -169,6 +170,10 @@ def validate_sfgwas_data(geno_binary_file_prefix: str, data_path: str) -> int:
     condition_or_fail(
         rows == num_rows(os.path.join(data_path, "sample_keep.txt")), "pheno and sample_keep differ in num-rows"
     )
+
+    duplicate_line = find_duplicate_line(os.path.join(data_path, "snp_ids.txt"))
+    condition_or_fail(duplicate_line is None, f"snp_ids.txt has duplicate line: {duplicate_line}")
+
     return rows
 
 
@@ -180,8 +185,10 @@ def validate_mpcgwas_data(data_path: str) -> Tuple[int, int]:
     condition_or_fail(
         rows == num_rows(os.path.join(data_path, "pheno.txt")), "cov and pheno have different number of rows"
     )
-
     num_covs = num_cols(os.path.join(data_path, "cov.txt"))
+
+    duplicate_line = find_duplicate_line(os.path.join(data_path, "pos.txt"))
+    condition_or_fail(duplicate_line is None, f"pos.txt has duplicate line: {duplicate_line}")
 
     return rows, num_covs
 
@@ -199,3 +206,13 @@ def using_demo() -> None:
     print("Using demo data!")
     print("Successfully registered and validated data!")
     exit(0)
+
+
+def find_duplicate_line(filename: str) -> Optional[str]:
+    with open(filename, "r") as file:
+        prev_line = None
+        for line in file:
+            if prev_line and line.strip() == prev_line.strip():
+                return prev_line.strip()
+            prev_line = line
+    return None
