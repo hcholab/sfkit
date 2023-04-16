@@ -33,7 +33,7 @@ if you are unfamiliar with GCP, you may find the documentation `here <https://cl
     If you are deciding what Virtual Machine (VM) size to use, 
     we generally recommend using the *e2-highmem-16* (16 vCPUs, 128 GB memory) 
     with at least a *100GB boot disk* as a reasonable default for this kind of analysis.  
-    This size has worked well for us on datasets with <30,000 samples and <700,000 SNPs for SFGWAS. 
+    This size has worked well for us on datasets with <30,000 samples and <700,000 SNPs for SF-GWAS. 
     If you are running a larger dataset, you may need to increase the size of the VM.  
     On a dataset with ~10 million SNPs, we have used the larger *n2-highmem-64* or *n2-highmem-128*
     with a 500GB disk. If you are running a smaller dataset, you may be able to use a smaller machine.  
@@ -152,7 +152,7 @@ The output should look something like this:
     2022/10/04 15:06:31 [watchdog] gc finished; heap watchdog stats: heap_alloc: 7554051560, heap_marked: 4316176560, next_gc: 8632353120, policy_next_gc: 23777025756, gogc: 100
     1!: gwas.go:393 (gwas.(*ProtocolInfo).Phase3) - 2022-10-04T15:06:32Z Output collectively decrypted and saved to: out/party2/assoc.txt
     1!: gwas.go:393 (gwas.(*ProtocolInfo).Phase3) - 2022-10-04T15:06:32Z Output collectively decrypted and saved to: out/party1/assoc.txt
-    Finished SFGWAS protocol
+    Finished SF-GWAS protocol
 
 And if you look in the sfgwas/out/party1 directory, you should see a file called assoc.txt that looks something like this:
 

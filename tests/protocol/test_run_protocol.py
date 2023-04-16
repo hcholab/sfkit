@@ -38,7 +38,7 @@ def test_run_protocol(mocker):
     run_protocol.run_protocol()
 
     mock_doc_ref_dict_copy["status"]["b@b.com"] = "validated data"
-    mock_doc_ref_dict_copy["study_type"] = "MPCGWAS"
+    mock_doc_ref_dict_copy["study_type"] = "MPC-GWAS"
     mocker.patch("sfkit.protocol.run_protocol.get_username", return_value="b@b.com")
     run_protocol.run_protocol(phase="1")
 

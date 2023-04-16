@@ -64,7 +64,7 @@ mock_doc_ref_dict = {
     },
     "participants": ["Broad", "a@a.com", "b@b.com"],
     "advanced_parameters": {"name": {"value": "value"}},
-    "study_type": "SFGWAS",
+    "study_type": "SF-GWAS",
     "status": {"Broad": "", "a@a.com": "", "b@b.com": ""},
 }
 
@@ -75,7 +75,7 @@ mock_doc_ref_dict_keys["participants"].remove("b@b.com")
 mock_doc_ref_dict_keys["personal_parameters"]["Broad"]["PUBLIC_KEY"]["value"] = "public_key"
 
 mock_doc_ref_dict_mpcgwas = copy.deepcopy(mock_doc_ref_dict)
-mock_doc_ref_dict_mpcgwas["study_type"] = "MPCGWAS"
+mock_doc_ref_dict_mpcgwas["study_type"] = "MPC-GWAS"
 
 mock_doc_ref_dict_pca = copy.deepcopy(mock_doc_ref_dict)
 mock_doc_ref_dict_pca["study_type"] = "PCA"

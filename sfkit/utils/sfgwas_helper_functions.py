@@ -113,7 +113,7 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
 
-    if protocol == "SFGWAS":
+    if protocol == "SF-GWAS":
         make_new_assoc_and_manhattan_plot(doc_ref_dict, demo, role)
     elif protocol == "PCA":
         make_pca_plot(role)
@@ -122,7 +122,7 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
         copy_results_to_cloud_storage(role, results_path, f"sfgwas/out/party{role}")
 
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
-    if protocol == "SFGWAS" and send_results == "Yes":
+    if protocol == "SF-GWAS" and send_results == "Yes":
         with open(f"sfgwas/out/party{role}/new_assoc.txt", "r") as f:
             website_send_file(f, "new_assoc.txt")
 

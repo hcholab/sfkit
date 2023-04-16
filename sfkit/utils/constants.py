@@ -13,7 +13,7 @@ AUTH_KEY = os.path.join(SFKIT_DIR, "auth_key.txt")
 
 
 def task_updates(protocol: str, num_power_iters: int) -> list:
-    if protocol == "SFGWAS":
+    if protocol == "SF-GWAS":
         task_updates = [
             "Starting QC",
             "Starting PCA",
@@ -50,7 +50,7 @@ def task_updates(protocol: str, num_power_iters: int) -> list:
 
 
 def transform(protocol: str, num_power_iters: int) -> dict:
-    if protocol == "SFGWAS":
+    if protocol == "SF-GWAS":
         return (
             {
                 "Starting QC": "Quality Control",

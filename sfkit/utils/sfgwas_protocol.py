@@ -295,14 +295,14 @@ def build_sfgwas() -> None:
     update_firestore("update_firestore::task=Compiling code completed")
 
 
-def start_sfgwas(role: str, demo: bool = False, protocol: str = "SFGWAS") -> None:
+def start_sfgwas(role: str, demo: bool = False, protocol: str = "SF-GWAS") -> None:
     """
     Start the actual sfgwas program
     :param role: 0, 1, 2, ...
     :param demo: True if running demo
     """
     update_firestore(f"update_firestore::task=Running {protocol} protocol")
-    print("Begin SFGWAS protocol")
+    print("Begin SF-GWAS protocol")
     protocol_command = f"export PID={role} && go run sfgwas.go | tee stdout_party{role}.txt"
     if demo:
         protocol_command = "bash run_example.sh"
