@@ -34,7 +34,6 @@ def auth() -> None:
         os.remove(constants.AUTH_KEY)
         print("Invalid auth_key.txt file.")
         print(e)
-        condition_or_fail(False)
-        exit(1)
-
-    print(f"Successfully authenticated with study {doc_ref_dict['title']}!")
+        condition_or_fail(False, "sfkit auth failed.")
+    else:
+        print(f"Successfully authenticated with study {doc_ref_dict['title']}!")

@@ -158,7 +158,7 @@ def update_parameters(role: str) -> None:
 
 def prepare_data(data_path: str, role: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
-    study_title: str = doc_ref_dict["title"].replace(" ", "").lower()
+    study_title: str = doc_ref_dict["title"]
 
     if role == "0":
         run_command(f"mkdir -p {data_path}")

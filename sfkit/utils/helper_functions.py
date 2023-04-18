@@ -44,7 +44,7 @@ def condition_or_fail(condition: bool, message: str = "The sfkit process has fai
         message = f"FAILED - {message}"
         print(message)
         update_firestore(f"update_firestore::status={message}")
-        exit(1)
+        exit(0)  # 0 so that the wrapper doesn't override the status with a more generic error
 
 
 def postprocess_assoc(
