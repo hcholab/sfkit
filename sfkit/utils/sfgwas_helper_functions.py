@@ -50,50 +50,34 @@ def move(source: str, destination: str) -> None:
 
 
 def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool, role: str) -> None:
-    doc_ref_dict: dict = get_doc_ref_dict()
-    num_power_iters: int = 2 if demo else int(doc_ref_dict["advanced_parameters"]["num_power_iters"]["value"])
-
-    task_updates = constants.task_updates(protocol, num_power_iters)
-    transform = constants.transform(protocol, num_power_iters)
-
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, executable="/bin/bash"
     )
 
-    waiting_time = 86_400
-    prev_task = ""
-    current_task = task_updates.pop(0)
+    timeout = 86_400
     while process.poll() is None:
-        rlist, _, _ = select.select([process.stdout, process.stderr], [], [], waiting_time)
+        rlist, _, _ = select.select([process.stdout, process.stderr], [], [], timeout)
 
         if not rlist:
-            if waiting_time == 86_400:
+            process.kill()
+            if timeout == 86_400:
                 print("WARNING: sfgwas has been stalling for 24 hours. Killing process.")
                 condition_or_fail(False, f"{protocol} protocol has been stalling for 24 hours. Killing process.")
-            process.kill()
-            update_firestore(f"update_firestore::task={transform[current_task]} completed")
             return
 
         for stream in rlist:
             line = stream.readline().decode("utf-8").strip()
             print(line)
-            if current_task in line:
-                if prev_task:
-                    update_firestore(f"update_firestore::task={transform[prev_task]} completed")
-                update_firestore(f"update_firestore::task={transform[current_task]}")
-                if task_updates:
-                    prev_task = current_task
-                    current_task = task_updates.pop(0)
+            if constants.SFKIT_PREFIX in line:
+                update_firestore(f"update_firestore::task={line.split(constants.SFKIT_PREFIX)[1]}")
             elif "Output collectively decrypted and saved to" in line or (
                 protocol == "PCA" and f"Saved data to cache/party{role}/Qpc.txt" in line
             ):
-                waiting_time = 30
+                timeout = 30
 
             check_for_failure(command, protocol, process, stream, line)
 
     process.wait()
-
-    update_firestore(f"update_firestore::task={transform[current_task]} completed")
 
 
 def check_for_failure(command: str, protocol: str, process: subprocess.Popen, stream: list, line: str) -> None:
@@ -136,7 +120,6 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
             website_send_file(f, "pca_plot.png")
 
     update_firestore("update_firestore::status=Finished protocol!")
-    update_firestore(f"update_firestore::task=Running {protocol} protocol completed")
 
 
 def make_pca_plot(role: str) -> None:

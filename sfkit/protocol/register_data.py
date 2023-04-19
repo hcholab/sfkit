@@ -63,8 +63,6 @@ def encrypt_mpcgwas(role: str, study_type: str) -> None:
             encrypt_data()
         except Exception as e:
             condition_or_fail(False, f"encrypt_data::error={e}")
-        else:
-            update_firestore("update_firestore::task=Encrypting data completed")
 
 
 def validate_sfgwas(

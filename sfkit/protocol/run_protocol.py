@@ -47,7 +47,6 @@ def run_protocol(phase: str = "", demo: bool = False, send_results: str = "", re
         else:
             update_firestore(f"update_firestore::status=running {study_type} protocol")
 
-        update_firestore("update_firestore::task=Waiting for other participant(s) to be ready completed")
         if study_type == "MPC-GWAS":
             run_gwas_protocol(role, demo)
         elif study_type == "SF-GWAS":

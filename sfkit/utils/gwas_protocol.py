@@ -45,7 +45,6 @@ def install_gwas_dependencies() -> None:
     for command in commands.split("\n"):
         run_command(command)
     print("\n\n Finished installing dependencies \n\n")
-    update_firestore("update_firestore::task=Installing dependencies completed")
 
 
 def install_gwas_repo() -> None:
@@ -54,7 +53,6 @@ def install_gwas_repo() -> None:
     command = "git clone https://github.com/simonjmendelsohn/secure-gwas secure-gwas"
     run_command(command)
     print("\n\n Finished installing GWAS repo \n\n")
-    update_firestore("update_firestore::task=Installing GWAS repo completed")
 
 
 def install_ntl_library() -> None:
@@ -70,7 +68,6 @@ def install_ntl_library() -> None:
     for command in commands.split("\n"):
         run_command(command)
     print("\n\n Finished installing NTL library \n\n")
-    update_firestore("update_firestore::task=Installing NTL library completed")
 
 
 def compile_gwas_code() -> None:
@@ -83,7 +80,6 @@ def compile_gwas_code() -> None:
                 sudo make"""
     run_command(command)
     print("\n\n Finished compiling GWAS code \n\n")
-    update_firestore("update_firestore::task=Compiling GWAS code completed")
 
 
 def update_parameters(role: str) -> None:
@@ -198,7 +194,6 @@ def sync_with_other_vms(role: str) -> None:
         time.sleep(5)
     time.sleep(15 + 15 * int(role))
     print("Finished syncing up")
-    update_firestore("update_firestore::task=Syncing up machines completed")
 
 
 def start_datasharing(role: str, demo: bool) -> None:
@@ -212,7 +207,6 @@ def start_datasharing(role: str, demo: bool) -> None:
             command += " ../test_data/"
     run_command(command, fail_message="Failed MPC-GWAS data sharing protocol")
     print("\n\n Finished data sharing protocol\n\n")
-    update_firestore("update_firestore::task=Performing data sharing protocol completed")
 
 
 def start_gwas(role: str, demo: bool) -> None:
@@ -232,7 +226,6 @@ def start_gwas(role: str, demo: bool) -> None:
         process_output_files(role, demo)
     else:
         update_firestore("update_firestore::status=Finished protocol!")
-    update_firestore("update_firestore::task=Performing GWAS protocol completed")
 
 
 def process_output_files(role: str, demo: bool) -> None:

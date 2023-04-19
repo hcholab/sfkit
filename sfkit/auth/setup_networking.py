@@ -42,8 +42,6 @@ def setup_networking(ports_str: str) -> None:
     update_firestore(f"update_firestore::PORTS={ports_str}")
     print("Successfully communicated networking information!")
 
-    update_firestore("update_firestore::task=Configuring your VM instance completed")
-
 
 def validate_port(port: str) -> str:
     if port.isdigit() and 1024 <= int(port) <= 65535:
