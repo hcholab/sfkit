@@ -1,5 +1,5 @@
-# sourcery skip: require-parameter-annotation, require-return-annotation
 import pytest
+
 from sfkit.auth import setup_networking
 
 
@@ -22,3 +22,9 @@ def test_setup_networking(mocker):
 
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         setup_networking.setup_networking("1,2,3")
+
+    mocker.patch(
+        "sfkit.auth.setup_networking.get_doc_ref_dict",
+        return_value={"participants": ["a@a.com", "b@b.com"], "setup_configuration": "user"},
+    )
+    setup_networking.setup_networking("")

@@ -16,3 +16,4 @@ dist/*
 docs/build/*
 .sourcery.yaml
 .coverage
+delete_old_versions.py

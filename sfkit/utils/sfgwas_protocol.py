@@ -68,6 +68,7 @@ def install_sfgwas() -> None:
         run_command("sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz")
         if os.path.isdir("/usr/local/go"):
             break
+        retries += 1
     if not os.path.isdir("/usr/local/go"):
         condition_or_fail(False, "go failed to install")
     print("go successfully installed")
@@ -193,6 +194,8 @@ def update_data_file_paths(data: dict) -> None:
     data["sample_keep_file"] = f"{data_path}/sample_keep.txt"
     data["snp_ids_file"] = f"{data_path}/snp_ids.txt"
     data["geno_count_file"] = f"{data_path}/all.gcount.transpose.bin"
+
+    # don't need to return anything because data is a mutable object
 
 
 def update_config_global(protocol: str = "gwas") -> None:

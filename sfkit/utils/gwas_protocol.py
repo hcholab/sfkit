@@ -3,13 +3,7 @@ import multiprocessing
 import time
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
-from sfkit.utils.helper_functions import (
-    condition_or_fail,
-    copy_results_to_cloud_storage,
-    plot_assoc,
-    postprocess_assoc,
-    run_command,
-)
+from sfkit.utils.helper_functions import copy_results_to_cloud_storage, plot_assoc, postprocess_assoc, run_command
 
 
 def run_gwas_protocol(role: str, demo: bool = False) -> None:

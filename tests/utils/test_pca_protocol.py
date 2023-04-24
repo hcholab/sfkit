@@ -1,7 +1,4 @@
-# sourcery skip: no-wildcard-imports, require-parameter-annotation, require-return-annotation
-
 from sfkit.utils import pca_protocol
-from tests.helper_functions_and_constants import *
 
 
 def test_run_pca_protocol(mocker):
@@ -14,6 +11,8 @@ def test_run_pca_protocol(mocker):
     mocker.patch("sfkit.utils.pca_protocol.start_sfgwas")
 
     pca_protocol.run_pca_protocol("1")
+
+    pca_protocol.run_pca_protocol("1", True)
 
 
 def test_update_config_local(mocker):

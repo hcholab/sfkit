@@ -1,4 +1,4 @@
-# for MPC GWAS
+# for MPC-GWAS
 
 # TODO: move ./encrypted_data to the data directory
 
@@ -12,13 +12,13 @@ import nacl.secret
 import nacl.utils
 from nacl.encoding import HexEncoder
 from nacl.public import Box, PrivateKey, PublicKey
+
+from sfkit.api import get_doc_ref_dict, get_username
 from sfkit.encryption.mpc.random_number_generator import PseudoRandomNumberGenerator
 from sfkit.utils import constants
-from sfkit.api import get_doc_ref_dict
-from tqdm import tqdm
-
-from sfkit.api import get_username
 from sfkit.utils.helper_functions import condition_or_fail
+
+# from tqdm import tqdm
 
 
 def encrypt_GMP(prng: PseudoRandomNumberGenerator, input_dir: str, output_dir: str = "./encrypted_data") -> None:

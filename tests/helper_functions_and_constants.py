@@ -33,6 +33,8 @@ def mock_fileinput_input(files, inplace):
 
 
 mock_doc_ref_dict = {
+    "title": "testtitle",
+    "description": "This is a description",
     "personal_parameters": {
         "a@a.com": {
             "PUBLIC_KEY": {"value": ""},
@@ -40,6 +42,9 @@ mock_doc_ref_dict = {
             "IP_ADDRESS": {"value": "127.0.0.1"},
             "PORTS": {"value": "80,80,80"},
             "DATA_HASH": {"value": "data_hash"},
+            "NUM_CPUS": {"value": 1},
+            "RESULTS_PATH": {"value": "results_path"},
+            "SEND_RESULTS": {"value": "Yes"},
         },
         "Broad": {
             "PUBLIC_KEY": {"value": ""},
@@ -47,6 +52,7 @@ mock_doc_ref_dict = {
             "IP_ADDRESS": {"value": "127.0.0.1"},
             "PORTS": {"value": "80,80,80"},
             "DATA_HASH": {"value": "data_hash"},
+            "NUM_CPUS": {"value": 1},
         },
         "b@b.com": {
             "PUBLIC_KEY": {"value": ""},
@@ -54,6 +60,7 @@ mock_doc_ref_dict = {
             "IP_ADDRESS": {"value": "127.0.0.1"},
             "PORTS": {"value": "80,80,80"},
             "DATA_HASH": {"value": "data_hash"},
+            "NUM_CPUS": {"value": 1},
         },
     },
     "parameters": {
@@ -61,9 +68,10 @@ mock_doc_ref_dict = {
         "NUM_SNPS": {"value": 1},
         "num_snps": {"value": 1},
         "color": {"value": "red"},
+        "NUM_COVS": {"value": 1},
     },
     "participants": ["Broad", "a@a.com", "b@b.com"],
-    "advanced_parameters": {"name": {"value": "value"}},
+    "advanced_parameters": {"name": {"value": "value"}, "BASE_P": {"value": 2}},
     "study_type": "SF-GWAS",
     "status": {"Broad": "", "a@a.com": "", "b@b.com": ""},
 }
@@ -79,6 +87,10 @@ mock_doc_ref_dict_mpcgwas["study_type"] = "MPC-GWAS"
 
 mock_doc_ref_dict_pca = copy.deepcopy(mock_doc_ref_dict)
 mock_doc_ref_dict_pca["study_type"] = "PCA"
+
+mock_doc_ref_dict_syncing_up = copy.deepcopy(mock_doc_ref_dict)
+mock_doc_ref_dict_syncing_up["status"] = {"Broad": "syncing up", "a@a.com": "syncing up", "b@b.com": "syncing up"}
+
 
 mock_toml_data = {
     "shared_key_path": "",

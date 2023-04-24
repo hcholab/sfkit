@@ -75,7 +75,7 @@ def postprocess_assoc(
     assert len(assoc) == gkeep1.sum()
 
     # Calculate p-values
-    t2 = (assoc**2) * (num_ind_total - num_cov) / (1 - assoc**2)
+    t2 = (assoc**2) * (num_ind_total - num_cov) / (1 - assoc**2 + 1e-10)
     log10p = np.log10(chi2.sf(t2, df=1))
 
     # Append SNP position information and write to a new file
