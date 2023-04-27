@@ -1,6 +1,6 @@
 [project]
 name = "sfkit"
-version = "0.0.216"
+version = "0.0.217"
 authors = [{ name = "Simon Mendelsohn", email = "smendels@broadinstitute.org" }]
 description = "Some CLI Tools For The Secure Multi-party Genomic Analysis Website"
 readme = "README.md"
@@ -33,7 +33,7 @@ sfkit = "sfkit.cli:main"
 
 [project.urls]
 "Website" = "https://sfkit.org/"
-"Github" = "https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption"
+"Github" = "https://github.com/simonjmendelsohn/sfkit"
 
 [build-system]
 requires = ["hatchling"]
