@@ -30,4 +30,4 @@ Contents
 
 Questions?
 ----------
-If you have questions or concerns, you can create an issue on the `github repository <https://github.com/simonjmendelsohn/sfkit/issues>`_ or reach me at `smendels@broadinstitute.org <smendels@broadinstitute.org>`_.
+If you have questions or concerns, you can create an issue on the `github repository <https://github.com/simonjmendelsohn/sfkit/issues>`_ or reach us at `support@sfkit.org <support@sfkit.org>`_.

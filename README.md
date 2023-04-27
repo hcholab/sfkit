@@ -26,4 +26,4 @@ Usage: sfkit <auth | networking | generate_keys | register_data | run_protocol>
 
 ### Questions
 
-If you have questions or concerns, you can reach me at [smendels@broadinstitute.org](mailto:smendels@broadinstitute.org).
+If you have questions or concerns, you can reach us at [support@sfkit.org](mailto:support@sfkit.org).
