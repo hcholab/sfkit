@@ -30,6 +30,9 @@ RUN python -m pytest
 # install sfkit for runtime use
 RUN pip install . --user
 
+# temp listing of the build dir
+RUN ls -al
+
 
 # Copy libraries and executable into a minimal hardened runtime image
 FROM cgr.dev/chainguard/python:${PYTHON_VER}
