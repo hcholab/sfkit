@@ -18,5 +18,7 @@ docs/build/*
 .coverage
 delete_old_versions.py
 
-.github/
+.dockerignore
+.git*
+.mypy*/
 Dockerfile
