@@ -31,7 +31,7 @@ RUN python -m pytest
 RUN pip install . --user
 
 
-# Copy libraries and executable into a minimal runtime image
+# Copy libraries and executable into a minimal hardened runtime image
 FROM cgr.dev/chainguard/python:${PYTHON_VER}
 
 COPY --from=dev /home/nonroot/.local/lib /home/nonroot/.local/lib
