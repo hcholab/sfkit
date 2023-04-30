@@ -14,6 +14,7 @@ pytest-mock
 qmplot
 requests
 scipy
+setuptools
 sphinx
 sphinx-argparse
 sphinx-rtd-theme
