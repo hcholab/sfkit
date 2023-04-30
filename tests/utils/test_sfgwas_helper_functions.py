@@ -86,6 +86,8 @@ def test_check_for_failure(mocker: Callable[..., Generator[MockerFixture, None, 
 
     sfgwas_helper_functions.check_for_failure(command, protocol, process, stream, line)
 
+    sfgwas_helper_functions.check_for_failure(command, protocol, process, stream, "warning: my warning message")
+
 
 def test_post_process_results(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     # Mock external functions
