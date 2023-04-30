@@ -99,7 +99,7 @@ def install_sfgwas() -> None:
         print("sfgwas already exists")
     else:
         print("Installing sfgwas")
-        run_command("git clone https://github.com/simonjmendelsohn/sfgwas && cd sfgwas")
+        run_command("git clone https://github.com/hcholab/sfgwas && cd sfgwas")
 
     print("Finished installing dependencies")
 
@@ -290,7 +290,7 @@ def build_sfgwas() -> None:
     """
     update_firestore("update_firestore::task=Compiling code")
     print("Building sfgwas code")
-    command = """export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && go get -t github.com/simonjmendelsohn/sfgwas && go build"""
+    command = """export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && go get -t github.com/hcholab/sfgwas && go build"""
     run_command(command)
     print("Finished building sfgwas code")
 
