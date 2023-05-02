@@ -18,14 +18,15 @@ from sfkit.utils.sfgwas_protocol import (
 
 
 def run_pca_protocol(role: str, demo: bool = False) -> None:
-    install_sfgwas()
+    if not constants.IS_DOCKER:
+        install_sfgwas()
     if not demo:
         generate_shared_keys(int(role))
         print("Begin updating config files")
         update_config_local(role)
         update_config_global(protocol="pca")
-    update_sfgwas_go("pca")
-    build_sfgwas()
+    if not constants.IS_DOCKER:
+        build_sfgwas()
     start_sfgwas(role, demo, protocol="PCA")
 
 

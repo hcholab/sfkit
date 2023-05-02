@@ -80,7 +80,7 @@ def test_update_parameters(mocker: Callable[..., Generator[MockerFixture, None, 
 
 
 def test_encrypt_or_prepare_data(mocker):
-    mocker.patch("sfkit.utils.gwas_protocol.run_command")
+    mocker.patch("google.cloud.storage.Client")
     mocker.patch("sfkit.utils.gwas_protocol.get_doc_ref_dict", return_value=mock_doc_ref_dict)
 
     gwas_protocol.prepare_data("data_path", "0")
