@@ -80,9 +80,9 @@ FROM cgr.dev/chainguard/python:${PYTHON_VER}
 
 WORKDIR /app
 
-ENV PATH="$PATH:."
+ENV PATH="$PATH:/app:/app/sfgwas"
 
-COPY --from=go --chown=nonroot /sfgwas ./
+COPY --from=go --chown=nonroot /sfgwas ./sfgwas/
 
 COPY --from=py /secure-gwas ./secure-gwas/
 COPY --from=py /home/nonroot/.local/lib /usr/lib/libgmp.so.10 /usr/lib/libpcre2-8.so.0 /usr/lib/libsodium.so.23 /usr/lib/
