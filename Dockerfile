@@ -77,12 +77,14 @@ WORKDIR /app
 
 ENV PATH="$PATH:."
 
+COPY --from=py /secure-gwas/code/*.sh ./secure-gwas/code/
 COPY --from=py /secure-gwas/code/bin ./secure-gwas/code/bin/
 COPY --from=py /home/nonroot/.local/lib /usr/lib/libgmp.so.10 /usr/lib/libpcre2-8.so.0 /usr/lib/libsodium.so.23 /usr/lib/
 COPY --from=py /home/nonroot/.local/bin/sfkit /usr/bin/awk /usr/bin/xargs /build/plink2 /bin /bin/
 
 COPY --from=go --chown=nonroot /src/cache ./cache
 COPY --from=go /src/config ./config
-COPY --from=go /src/sfgwas ./
+COPY --from=go /src/scripts ./scripts
+COPY --from=go /src/sfgwas /src/*.sh ./
 
 ENTRYPOINT ["sfkit"]
