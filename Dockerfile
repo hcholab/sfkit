@@ -6,10 +6,14 @@ FROM golang:1.18 AS go
 
 WORKDIR /sfgwas
 
+# compile Go code
 RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
     go build && \
     mkdir cache && \
     rm -rf .git
+
+# create missing python3 alias needed by shell scripts
+RUN ln -s /usr/bin/python python3
 
 
 ### Install C++ and Python dependencies, lint and test sfkit
