@@ -312,10 +312,10 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SF-GWAS") -> No
         if constants.IS_DOCKER:
             # cannot use "go run" from run_example.sh in Docker,
             # so reproducing that script in Python here
-            protocol_command = " & && ".join(
+            protocol_command = " & ".join(
                 f"PID={r} sfgwas | tee stdout_party{r}.txt"
                 for r in range(3)
-            )
+            ) + " & wait $(jobs -p)"
     command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && {protocol_command}"
     if constants.IS_DOCKER:
         command = f"export PYTHONUNBUFFERED=TRUE && {protocol_command}"
