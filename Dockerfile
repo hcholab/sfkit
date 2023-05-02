@@ -1,7 +1,7 @@
 ARG PYTHON_VER=3.10
 
 
-### Build sfgwas Go package
+### Build SF-GWAS Go package
 FROM golang:1.18 AS go
 
 WORKDIR /src
@@ -11,7 +11,7 @@ RUN git clone -b main --depth 1 https://github.com/hcholab/sfgwas . && \
     mkdir cache
 
 
-### Install Python dependencies, lint and test
+### Install C++ and Python dependencies, lint and test sfkit
 FROM cgr.dev/chainguard/python:${PYTHON_VER}-dev AS py
 
 ENV PATH="$PATH:/home/nonroot/.local/bin"
@@ -70,7 +70,7 @@ RUN python -m pytest
 RUN pip install . --user
 
 
-### Copy libraries and executable into a minimal hardened runtime image
+### Copy libraries and executables into a minimal hardened runtime image
 FROM cgr.dev/chainguard/python:${PYTHON_VER}
 
 WORKDIR /app
