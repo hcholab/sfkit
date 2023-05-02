@@ -16,7 +16,9 @@ You can read the full documentation [here](https://sfkit.readthedocs.io/en/lates
 
 ## Usage
 
-Usage: sfkit <auth | networking | generate_keys | register_data | run_protocol>
+### Python package
+
+`sfkit <auth | networking | generate_keys | register_data | run_protocol>`
 
 - auth: Authenticate with the CLI.
 - networking: Setup the networking, including your IP address and any relevant ports.
