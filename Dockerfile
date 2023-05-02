@@ -1,14 +1,24 @@
 ARG PYTHON_VER=3.10
 
 
-# Install dependencies, lint and test in a development image
+### Build sfgwas Go package
+FROM golang:1.18 AS go
+
+WORKDIR /src
+
+RUN git clone -b main --depth 1 https://github.com/hcholab/sfgwas . && \
+    go build && \
+    mkdir cache
+
+
+### Install Python dependencies, lint and test
 FROM cgr.dev/chainguard/python:${PYTHON_VER}-dev AS py
 
 ENV PATH="$PATH:/home/nonroot/.local/bin"
 WORKDIR /build
 USER root
 
-# install Secure-GWAS library
+# install Secure-GWAS package
 RUN git clone --depth 1 https://github.com/hcholab/secure-gwas /secure-gwas && \
     # install pre-requisites
     apk add clang-15 curl gmp-dev libsodium-dev openssl-dev perl && \
@@ -60,31 +70,21 @@ RUN python -m pytest
 RUN pip install . --user
 
 
-# Build Go package
-FROM golang:1.18 AS go
-
-WORKDIR /src
-
-RUN git clone -b main --depth 1 https://github.com/hcholab/sfgwas . && \
-    go build && \
-    mkdir cache
-
-
-# Copy libraries and executable into a minimal hardened runtime image
+### Copy libraries and executable into a minimal hardened runtime image
 FROM cgr.dev/chainguard/python:${PYTHON_VER}
 
 WORKDIR /app
 
 ENV PATH="$PATH:."
 
-COPY --from=py /secure-gwas/code/*.sh ./secure-gwas/code/
-COPY --from=py /secure-gwas/code/bin ./secure-gwas/code/bin/
-COPY --from=py /home/nonroot/.local/lib /usr/lib/libgmp.so.10 /usr/lib/libpcre2-8.so.0 /usr/lib/libsodium.so.23 /usr/lib/
-COPY --from=py /home/nonroot/.local/bin/sfkit /usr/bin/awk /usr/bin/xargs /build/plink2 /bin /bin/
-
 COPY --from=go --chown=nonroot /src/cache ./cache
 COPY --from=go /src/config ./config
 COPY --from=go /src/scripts ./scripts
 COPY --from=go /src/sfgwas /src/*.sh ./
+
+COPY --from=py /secure-gwas/code/*.sh ./secure-gwas/code/
+COPY --from=py /secure-gwas/code/bin ./secure-gwas/code/bin/
+COPY --from=py /home/nonroot/.local/lib /usr/lib/libgmp.so.10 /usr/lib/libpcre2-8.so.0 /usr/lib/libsodium.so.23 /usr/lib/
+COPY --from=py /home/nonroot/.local/bin/sfkit /usr/bin/awk /usr/bin/xargs /build/plink2 /bin /bin/
 
 ENTRYPOINT ["sfkit"]
