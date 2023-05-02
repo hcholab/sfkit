@@ -4,11 +4,12 @@ ARG PYTHON_VER=3.10
 ### Build SF-GWAS Go package
 FROM golang:1.18 AS go
 
-WORKDIR /src
+WORKDIR /sfgwas
 
-RUN git clone -b main --depth 1 https://github.com/hcholab/sfgwas . && \
+RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
     go build && \
-    mkdir cache
+    mkdir cache && \
+    rm -rf .git
 
 
 ### Install C++ and Python dependencies, lint and test sfkit
@@ -38,7 +39,7 @@ RUN git clone --depth 1 https://github.com/hcholab/secure-gwas /secure-gwas && \
     sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile && \
     sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
     make -j$(nproc) && \
-    rm bin/GenerateKey bin/LogiRegClient
+    rm -rf .git
 
 USER nonroot
 
@@ -77,13 +78,9 @@ WORKDIR /app
 
 ENV PATH="$PATH:."
 
-COPY --from=go --chown=nonroot /src/cache ./cache
-COPY --from=go /src/config ./config
-COPY --from=go /src/scripts ./scripts
-COPY --from=go /src/sfgwas /src/*.sh ./
+COPY --from=go --chown=nonroot /sfgwas ./
 
-COPY --from=py /secure-gwas/code/*.sh ./secure-gwas/code/
-COPY --from=py /secure-gwas/code/bin ./secure-gwas/code/bin/
+COPY --from=py /secure-gwas ./secure-gwas/
 COPY --from=py /home/nonroot/.local/lib /usr/lib/libgmp.so.10 /usr/lib/libpcre2-8.so.0 /usr/lib/libsodium.so.23 /usr/lib/
 COPY --from=py /home/nonroot/.local/bin/sfkit /usr/bin/awk /usr/bin/tee /usr/bin/xargs /build/plink2 /bin /bin/
 
