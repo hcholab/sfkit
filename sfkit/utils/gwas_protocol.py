@@ -10,8 +10,8 @@ from sfkit.utils.helper_functions import copy_results_to_cloud_storage, plot_ass
 
 def run_gwas_protocol(role: str, demo: bool = False) -> None:
     print("\n\n Begin running GWAS protocol \n\n")
-    install_gwas_dependencies()
     if not constants.IS_DOCKER:
+        install_gwas_dependencies()
         install_gwas_repo()
         install_ntl_library()
         compile_gwas_code()
@@ -155,8 +155,7 @@ def prepare_data(data_path: str, role: str) -> None:
 
     if role == "0":
         run_command(f"mkdir -p {data_path}")
-        storage.Client().bucket('sfkit').blob(f"{study_title}/pos.txt") \
-            .download_to_filename(f"{data_path}/pos.txt")
+        storage.Client().bucket("sfkit").blob(f"{study_title}/pos.txt").download_to_filename(f"{data_path}/pos.txt")
 
 
 def copy_data_to_gwas_repo(

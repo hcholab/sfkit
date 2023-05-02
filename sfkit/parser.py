@@ -12,6 +12,10 @@ def get_parser() -> argparse.ArgumentParser:
         "--ports",
         help="Comma-separated list of ports to use for communication.  If not provided, you will be prompted to enter them.",
     )
+    networking.add_argument(
+        "--ip_address",
+        help="ip address you want to use for communication.  If not provided, your external ip address will be determined automatically.",
+    )
     subparsers.add_parser("generate_keys", help="Generate your public and private cryptographic keys")
     registerdataparser = subparsers.add_parser(
         "register_data", help="Register and validate your data.", description="Register and validate your data."
@@ -37,5 +41,6 @@ def get_parser() -> argparse.ArgumentParser:
         "--results_path",
         help="The path in a GCP bucket (you have access to) where you would like to send the results of the protocol.",
     )
+    runprotocol.add_argument("--retry", help="Retry the protocol", action="store_true")
 
     return parser

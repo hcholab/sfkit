@@ -17,11 +17,9 @@ def test_run_protocol(mocker):
     mocker.patch("sfkit.protocol.run_protocol.run_pca_protocol")
     mocker.patch("sfkit.protocol.run_protocol.other_participant_not_ready", side_effect=[True] + [False] * 10)
 
-    # expect ValueError
     with pytest.raises(ValueError):
         run_protocol.run_protocol(phase="5")
 
-    # expect exit(1)
     with pytest.raises(SystemExit):
         run_protocol.run_protocol(send_results="Yes", results_path="path/to/results")
 

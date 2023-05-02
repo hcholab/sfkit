@@ -14,7 +14,8 @@ def main() -> None:
         auth()
     elif args.command == "networking":
         ports = args.ports or ""
-        setup_networking(ports)
+        ip_address = args.ip_address or ""
+        setup_networking(ports, ip_address)
     elif args.command == "generate_keys":
         generate_personal_keys()
     elif args.command == "register_data":
@@ -26,6 +27,7 @@ def main() -> None:
         demo: bool = args.demo or False
         visualize_results: str = args.visualize_results or ""
         results_path: str = args.results_path or ""
-        run_protocol(phase, demo, visualize_results, results_path)
+        retry: bool = args.retry or False
+        run_protocol(phase, demo, visualize_results, results_path, retry)
     else:
         parser.print_help()

@@ -6,7 +6,7 @@ from sfkit.api import get_doc_ref_dict, get_username, update_firestore
 from sfkit.utils.helper_functions import authenticate_user
 
 
-def setup_networking(ports_str: str) -> None:
+def setup_networking(ports_str: str, ip_address: str = "") -> None:
     print("Setting up networking...")
     print(
         "NOTE: this step should be run after all participants have joined the study.  If you run this step before all participants have joined, you will need to re-run this step after all participants have joined."
@@ -15,14 +15,14 @@ def setup_networking(ports_str: str) -> None:
     authenticate_user()
     doc_ref_dict: dict = get_doc_ref_dict()
 
-    if (
-        doc_ref_dict["setup_configuration"] == "website"
-    ):  # if ports are specified we're using auto-configuration and internal ip_addresses
-        ip_address: str = socket.gethostbyname(socket.gethostname())
-        print("Using internal ip address:", ip_address)
-    else:
-        ip_address: str = get("https://api.ipify.org").content.decode("utf-8")
-        print("Using external ip address:", ip_address)
+    if not ip_address:  # determine automatically
+        if doc_ref_dict["setup_configuration"] == "website":
+            # website configuration uses internal ip address
+            ip_address = socket.gethostbyname(socket.gethostname())
+            print("Using internal ip address:", ip_address)
+        else:
+            ip_address = get("https://api.ipify.org").content.decode("utf-8")
+            print("Using external ip address:", ip_address)
 
     print("Processing...")
     update_firestore(f"update_firestore::IP_ADDRESS={ip_address}")

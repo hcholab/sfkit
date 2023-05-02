@@ -37,9 +37,11 @@ def mock_get_parser():
 class MockArgs:
     command: str = "auth"
     ports: str = ""
+    ip_address: str = ""
     geno_binary_file_prefix: str = ""
     data_path: str = ""
     phase: str = ""
     demo: bool = False
     visualize_results: str = ""
     results_path: str = ""
+    retry: bool = False

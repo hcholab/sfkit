@@ -8,7 +8,9 @@ from sfkit.api import create_cp0, get_username
 from sfkit.utils.helper_functions import authenticate_user
 
 
-def run_protocol(phase: str = "", demo: bool = False, send_results: str = "", results_path: str = "") -> None:
+def run_protocol(
+    phase: str = "", demo: bool = False, send_results: str = "", results_path: str = "", retry: bool = False
+) -> None:
     authenticate_user()
 
     if phase and phase not in ["1", "2", "3"]:
@@ -16,6 +18,9 @@ def run_protocol(phase: str = "", demo: bool = False, send_results: str = "", re
 
     doc_ref_dict: dict = get_doc_ref_dict()
     username = get_username()
+
+    if doc_ref_dict["demo"]:
+        demo = True
 
     if send_results:
         update_firestore(f"update_firestore::SEND_RESULTS={send_results}")
@@ -26,8 +31,10 @@ def run_protocol(phase: str = "", demo: bool = False, send_results: str = "", re
     study_type: str = doc_ref_dict["study_type"]
     statuses: dict = doc_ref_dict["status"]
 
-    if (statuses[username] in ["validated data", "running1", "running2"]) or (
-        role == "0" and statuses[username] == "ready to begin sfkit"
+    if (
+        statuses[username] in ["validated data", "running1", "running2"]
+        or (role == "0" and statuses[username] == "ready to begin sfkit")
+        or retry
     ):
         statuses[username] = "ready to begin protocol"
         update_firestore("update_firestore::status=ready to begin protocol")

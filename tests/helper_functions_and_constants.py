@@ -35,6 +35,7 @@ def mock_fileinput_input(files, inplace):
 mock_doc_ref_dict = {
     "title": "testtitle",
     "description": "This is a description",
+    "demo": False,
     "personal_parameters": {
         "a@a.com": {
             "PUBLIC_KEY": {"value": ""},

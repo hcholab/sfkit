@@ -84,7 +84,7 @@ ENV PATH="$PATH:/app:/app/sfgwas"
 
 COPY --from=go --chown=nonroot /sfgwas ./sfgwas/
 
-COPY --from=py /secure-gwas ./secure-gwas/
+COPY --from=py --chown=nonroot /secure-gwas ./secure-gwas/
 COPY --from=py /home/nonroot/.local/lib /usr/lib/libgmp.so.10 /usr/lib/libpcre2-8.so.0 /usr/lib/libsodium.so.23 /usr/lib/
 COPY --from=py /home/nonroot/.local/bin/sfkit /usr/bin/awk /usr/bin/tee /usr/bin/xargs /build/plink2 /bin /bin/
 
