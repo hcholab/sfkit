@@ -2,6 +2,8 @@ import fileinput
 import multiprocessing
 import time
 
+from google.cloud import storage
+from sfkit.utils import constants
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.utils.helper_functions import copy_results_to_cloud_storage, plot_assoc, postprocess_assoc, run_command
 
@@ -9,9 +11,10 @@ from sfkit.utils.helper_functions import copy_results_to_cloud_storage, plot_ass
 def run_gwas_protocol(role: str, demo: bool = False) -> None:
     print("\n\n Begin running GWAS protocol \n\n")
     install_gwas_dependencies()
-    install_gwas_repo()
-    install_ntl_library()
-    compile_gwas_code()
+    if not constants.IS_DOCKER:
+        install_gwas_repo()
+        install_ntl_library()
+        compile_gwas_code()
     if not demo:
         update_parameters(role)
         # connect_to_other_vms(role)
@@ -25,16 +28,16 @@ def run_gwas_protocol(role: str, demo: bool = False) -> None:
 def install_gwas_dependencies() -> None:
     update_firestore("update_firestore::task=Installing dependencies")
     print("\n\n Begin installing dependencies \n\n")
-    commands = """sudo apt-get --assume-yes update 
-                    sudo apt-get --assume-yes install build-essential 
-                    sudo apt-get --assume-yes install clang-3.9 
-                    sudo apt-get --assume-yes install libgmp3-dev 
-                    sudo apt-get --assume-yes install libssl-dev 
-                    sudo apt-get --assume-yes install libsodium-dev 
-                    sudo apt-get --assume-yes install libomp-dev 
-                    sudo apt-get --assume-yes install netcat 
-                    sudo apt-get --assume-yes install git 
-                    sudo apt-get --assume-yes install python3-pip 
+    commands = """sudo apt-get --assume-yes update
+                    sudo apt-get --assume-yes install build-essential
+                    sudo apt-get --assume-yes install clang-3.9
+                    sudo apt-get --assume-yes install libgmp3-dev
+                    sudo apt-get --assume-yes install libssl-dev
+                    sudo apt-get --assume-yes install libsodium-dev
+                    sudo apt-get --assume-yes install libomp-dev
+                    sudo apt-get --assume-yes install netcat
+                    sudo apt-get --assume-yes install git
+                    sudo apt-get --assume-yes install python3-pip
                     sudo pip3 install numpy"""
     for command in commands.split("\n"):
         run_command(command)
@@ -152,17 +155,18 @@ def prepare_data(data_path: str, role: str) -> None:
 
     if role == "0":
         run_command(f"mkdir -p {data_path}")
-        run_command(f"gsutil cp gs://sfkit/{study_title}/pos.txt {data_path}/pos.txt")
+        storage.Client().bucket('sfkit').blob(f"{study_title}/pos.txt") \
+            .download_to_filename(f"{data_path}/pos.txt")
 
 
 def copy_data_to_gwas_repo(
     data_path: str, role: str
 ) -> None:  # TODO: change the path in parameter file instead? Or move instead of copy?
     print("\n\n Copy data to GWAS repo \n\n")
-    commands = f"""cp '{data_path}'/g.bin secure-gwas/test_data/g.bin 
-    cp '{data_path}'/m.bin secure-gwas/test_data/m.bin 
-    cp '{data_path}'/p.bin secure-gwas/test_data/p.bin 
-    cp '{data_path}'/other_shared_key.bin secure-gwas/test_data/other_shared_key.bin 
+    commands = f"""cp '{data_path}'/g.bin secure-gwas/test_data/g.bin
+    cp '{data_path}'/m.bin secure-gwas/test_data/m.bin
+    cp '{data_path}'/p.bin secure-gwas/test_data/p.bin
+    cp '{data_path}'/other_shared_key.bin secure-gwas/test_data/other_shared_key.bin
     cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"""
 
     if role == "0":

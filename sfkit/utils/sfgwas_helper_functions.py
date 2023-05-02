@@ -50,8 +50,14 @@ def move(source: str, destination: str) -> None:
 
 
 def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool, role: str) -> None:
+    env = os.environ.copy()
+    if protocol == "SF-GWAS":
+        env['PROTOCOL'] = 'gwas'
+    elif protocol == "PCA":
+        env['PROTOCOL'] = 'pca'
+
     process = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, executable="/bin/bash"
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, executable="/bin/bash", env=env,
     )
 
     timeout = 86_400

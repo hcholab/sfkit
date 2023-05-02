@@ -2,16 +2,45 @@ ARG PYTHON_VER=3.10
 
 
 # Install dependencies, lint and test in a development image
-FROM cgr.dev/chainguard/python:${PYTHON_VER}-dev AS dev
+FROM cgr.dev/chainguard/python:${PYTHON_VER}-dev AS py
 
 ENV PATH="$PATH:/home/nonroot/.local/bin"
-WORKDIR /app
+WORKDIR /build
+USER root
 
-# install dev dependencies globally
+# install Secure-GWAS library
+RUN git clone --depth 1 https://github.com/hcholab/secure-gwas /secure-gwas && \
+    # install pre-requisites
+    apk add clang-15 curl gmp-dev libsodium-dev openssl-dev perl && \
+    # compile NTL library
+    mkdir /ntl && \
+    curl -so- https://libntl.org/ntl-10.3.0.tar.gz \
+    | tar -C /ntl -zxvf- --strip-components=1 && \
+    cp /secure-gwas/code/NTL_mod/ZZ.h /ntl/include/NTL/ && \
+    cp /secure-gwas/code/NTL_mod/ZZ.cpp /ntl/src/ && \
+    cd /ntl/src && \
+    ./configure NTL_THREAD_BOOST=on && \
+    make -j$(nproc) all && \
+    make install && \
+    # compile Secure-GWAS
+    cd /secure-gwas/code && COMP=$(which clang++) && \
+    sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile && \
+    sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile && \
+    sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
+    make -j$(nproc) && \
+    rm bin/GenerateKey bin/LogiRegClient
+
+USER nonroot
+
+# download Plink2
+RUN curl -so plink2.zip https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20221024.zip && \
+    unzip plink2.zip
+
+# install dev Python dependencies globally
 RUN python -m pip install --upgrade pip && \
     pip install flake8
 
-# install runtime dependencies into the user lib folder
+# install runtime Python dependencies into the user lib folder
 COPY requirements.txt .
 RUN pip install -r requirements.txt --ignore-installed --user
 
@@ -31,10 +60,29 @@ RUN python -m pytest
 RUN pip install . --user
 
 
+# Build Go package
+FROM golang:1.18 AS go
+
+WORKDIR /src
+
+RUN git clone -b main --depth 1 https://github.com/hcholab/sfgwas . && \
+    go build && \
+    mkdir cache
+
+
 # Copy libraries and executable into a minimal hardened runtime image
 FROM cgr.dev/chainguard/python:${PYTHON_VER}
 
-COPY --from=dev /home/nonroot/.local/lib /home/nonroot/.local/lib
-COPY --from=dev /home/nonroot/.local/bin/sfkit /usr/local/bin/
+WORKDIR /app
+
+ENV PATH="$PATH:."
+
+COPY --from=py /secure-gwas/code/bin ./secure-gwas/code/bin/
+COPY --from=py /home/nonroot/.local/lib /usr/lib/libgmp.so.10 /usr/lib/libpcre2-8.so.0 /usr/lib/libsodium.so.23 /usr/lib/
+COPY --from=py /home/nonroot/.local/bin/sfkit /usr/bin/awk /usr/bin/xargs /build/plink2 /bin /bin/
+
+COPY --from=go --chown=nonroot /src/cache ./cache
+COPY --from=go /src/config ./config
+COPY --from=go /src/sfgwas ./
 
 ENTRYPOINT ["sfkit"]
