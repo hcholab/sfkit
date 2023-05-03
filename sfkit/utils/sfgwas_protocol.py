@@ -306,7 +306,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SF-GWAS") -> No
     print("Begin SF-GWAS protocol")
     protocol_command = f"export PID={role} && go run sfgwas.go | tee stdout_party{role}.txt"
     if constants.IS_DOCKER:
-        protocol_command = f"(cd sfgwas && PID={role} sfgwas | tee stdout_party{role}.txt)"
+        protocol_command = f"cd sfgwas && PID={role} sfgwas | tee stdout_party{role}.txt"
     if demo:
         protocol_command = "bash run_example.sh"
         if constants.IS_DOCKER:

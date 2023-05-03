@@ -30,7 +30,7 @@ def get_parser() -> argparse.ArgumentParser:
     )
     runprotocol = subparsers.add_parser(
         "run_protocol",
-        help="Run the protocol. As this command may be long-running, you may want to run it using nohup or screen or tmux",
+        help="Run the protocol. When not using docker, this command will also install required dependencies and software updates as needed. As this command may be long-running, you may want to run it using nohup or screen or tmux",
     )
     runprotocol.add_argument(
         "--phase", help="Phase of the protocol to run (e.g. '1' for QC, 2 for PCA, 3 for Association Statistics)"

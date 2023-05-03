@@ -24,26 +24,26 @@ WORKDIR /build
 USER root
 
 # install Secure-GWAS package
-RUN git clone --depth 1 https://github.com/hcholab/secure-gwas /secure-gwas && \
-    # install pre-requisites
-    apk add clang-15 curl gmp-dev libsodium-dev openssl-dev perl && \
-    # compile NTL library
-    mkdir /ntl && \
-    curl -so- https://libntl.org/ntl-10.3.0.tar.gz \
-    | tar -C /ntl -zxvf- --strip-components=1 && \
+RUN git clone --depth 1 https://github.com/hcholab/secure-gwas /secure-gwas
+# install pre-requisites
+RUN apk add clang-15 curl gmp-dev libsodium-dev openssl-dev perl
+RUN mkdir /ntl && \
+    curl -so- https://libntl.org/ntl-10.3.0.tar.gz | tar -C /ntl -zxvf- --strip-components=1 && \
     cp /secure-gwas/code/NTL_mod/ZZ.h /ntl/include/NTL/ && \
-    cp /secure-gwas/code/NTL_mod/ZZ.cpp /ntl/src/ && \
-    cd /ntl/src && \
+    cp /secure-gwas/code/NTL_mod/ZZ.cpp /ntl/src/
+RUN cd /ntl/src && \
     ./configure NTL_THREAD_BOOST=on && \
     make -j$(nproc) all && \
-    make install && \
-    # compile Secure-GWAS
-    cd /secure-gwas/code && COMP=$(which clang++) && \
+    make install
+# compile Secure-GWAS
+RUN set -e && echo "Changing directory to /secure-gwas/code" && cd /secure-gwas/code && \
+    echo "Setting COMP variable" && COMP=$(which clang++) && \
+    echo "Updating Makefile" && \
     sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile && \
     sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile && \
     sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
-    make -j$(nproc) && \
-    rm -rf .git
+    echo "Running make" && make -j$(nproc)
+RUN rm -rf /secure-gwas/.git
 
 USER nonroot
 

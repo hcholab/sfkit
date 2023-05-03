@@ -24,7 +24,7 @@ You can read the full documentation [here](https://sfkit.readthedocs.io/en/lates
 - networking: Setup the networking, including your IP address and any relevant ports.
 - generate_keys: Generate your public and private cryptographic keys for use in encrypting the data.
 - register_data: Register and validate your data.
-- run_protocol: Run the protocol. As this command may be long-running, you may want to run it with a tool like nohup, screen or tmux to prevent it from terminating if you close this window/terminal. For example, `nohup sfkit run_protocol & tail -f nohup.out`.
+- run_protocol: Run the protocol. When not using docker, this command will also install required dependencies and software updates as needed. As this command may be long-running, you may want to run it with a tool like nohup, screen or tmux to prevent it from terminating if you close this window/terminal. For example, `nohup sfkit run_protocol & tail -f nohup.out`.
 
 ### Docker image
 
