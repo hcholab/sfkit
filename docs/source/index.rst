@@ -7,15 +7,8 @@ Welcome to the sfkit CLI documentation!
    :align: center
    :class: my-class
 
-**sfkit CLI** is a collection of command line interface (CLI) tools to help run 
-privacy-preserving collaborative analyses on genomic data.  
-It is a companion to the `sfkit website <https://sfkit.org/>`_.
-
-Check out the :doc:`tutorial` to get started. 
-
-.. note::
-
-   This project is under active development.
+The **sfkit CLI** is a collection of command-line interface tools to facilitate privacy perserving and secure genomics analyses with multiple parties. 
+It is a companion to the `sfkit <https://sfkit.org/>`_ website.
 
 Contents
 --------
@@ -24,10 +17,18 @@ Contents
    :maxdepth: 3
 
    installation
+
+.. toctree::
+   :maxdepth: 1
+
    tutorial
-   workflows
+   tutorial_2
+
+.. toctree::
+   :maxdepth: 3
+   
    commands
 
-Questions?
-----------
-If you have questions or concerns, you can create an issue on the `github repository <https://github.com/hcholab/sfkit/issues>`_ or reach us at `support@sfkit.org <support@sfkit.org>`_.
+Questions
+---------
+For questions or concerns, you can create an issue on the `github repository <https://github.com/hcholab/sfkit/issues>`_ or reach us at `support@sfkit.org <support@sfkit.org>`_.

@@ -8,7 +8,6 @@ import os
 import random
 import shutil
 import time
-from typing import Tuple
 
 import tomlkit
 from nacl.encoding import HexEncoder

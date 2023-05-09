@@ -1,5 +1,5 @@
-Tutorial
-========
+Tutorial 1 (Quick test for one user)
+====================================
 
 Introduction
 ------------
@@ -18,8 +18,7 @@ used to perform the actual analysis.  The sfkit CLI is run on a machine controll
 
 .. note::
 
-    If you would like to run this workflow, but are not very comfortable with the command line, 
-    there is also a `website-only tutorial <https://sfkit.org/tutorial>`_ that you can follow.
+    There is also a website-only *auto-configured* version of this tutorial available at `sfkit.org/tutorial <https://sfkit.org/tutorial>`_.
 
 Prerequisites
 -------------
@@ -67,53 +66,114 @@ You should click the button to download the the Auth key, and then you should up
 CLI 
 ---
 
-1. SSH into your VM where you will be running the workflow and follow the instructions to install sfkit if you haven't already (see :doc:`installation`).  Also upload the auth_key.txt to your machine if you have not done so already.
+0. SSH into your VM where you will be running the workflow and follow the instructions to install sfkit if you haven't already (see :doc:`installation`).  Also upload the auth_key.txt to your machine if you have not done so already.
+
+1. Run
+
+.. tab:: pip
+
+    .. code-block:: console
+
+        $ sfkit auth
+
+.. tab:: docker
+
+    .. code-block:: console
+
+        $ docker run --rm -it --pull always \
+            -v $HOME/.config:/home/nonroot/.config \
+            -v $PWD/auth_key.txt:/app/auth_key.txt:ro \
+            ghcr.io/hcholab/sfkit auth
+
+    Note that this assumes your auth_key.txt is in the current directory.  If it is not, you will need to change the path accordingly.  See :doc:`installation` for more information on running sfkit with docker.
+
+This will authenticate your VM with the website. It does this by making a request to the website, which can authenticate you based on the key that you downloaded. If you get a message saying "Successfully authenticated!", then you are good to go.
+
 
 2. Run 
 
-.. code-block:: console 
-     
-    $ sfkit auth
+.. tab:: pip
 
-This will authenticate your VM with the website.  It does this by making a request to the website, which can authenticate you based on the key that you downloaded.  If you get a message saying "Successfully authenticated!", then you are good to go.
+    .. code-block:: console
 
-3. Run 
+        $ sfkit networking
 
-.. code-block:: console 
+.. tab:: docker
 
-    $ sfkit networking
+    .. code-block:: console
 
-This will share your IP address to other study participants so their machines can communicate with your VM.  If you get a message saying "Successfully communicated networking information!", then you are good to go.
+        $ docker run --rm -it --pull always \
+            -v $HOME/.config:/home/nonroot/.config \
+            ghcr.io/hcholab/sfkit networking 
+
+This will share your IP address to other study participants so their machines can communicate with your VM.  In this one-person tutorial, it will do nothing. If you get a message saying "Successfully communicated networking information!", then you are good to go.
 
 .. note:: 
     
-    When running a real study (where there are other participants on other machines), it will also ask you for preferred port numbers to use when direct socket connections are made during the protocol.
+    When running a real study (where there are other participants on other machines), it will also ask you for preferred port numbers to use when direct socket connections are made during the protocol. This port number (and optionally a custom IP address) can also be set via the `--ports` and `--ip_address` flags.  You will need to coordinate with the other study participants to ensure that you are not using the same port numbers as one another.  You will also need to ensure that your firewall rules allow for TCP connections on these ports.  
 
-4. Run 
+3. Run 
 
-.. code-block:: console 
-    
-    $ sfkit generate_keys
+.. tab:: pip
+
+    .. code-block:: console
+
+        $ sfkit generate_keys
+
+.. tab:: docker
+
+    .. code-block:: console
+
+        $ docker run --rm -it --pull always \
+            -v $HOME/.config:/home/nonroot/.config \
+            ghcr.io/hcholab/sfkit generate_keys
 
 This will use a secure key generation protocol to generate a pair of keys for your study.  It will also communicate the public key to the website so that all study participants will be able to communicate with your VM.  If you get a message saying "Your public key has been uploaded to the website and is available for all participants in your study.", then you are good to go.  During the actual protocol, your private key (not shared) will be combined with each other participant's public key to a create shared secret key that is only known to you and this other participant.  See `Diffie-Hellman Key Exchange <https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange>`_ for more information on how this works.
 
-5. Run 
+4. Run 
 
-.. code-block:: console 
-    
-    $ sfkit register_data
+.. tab:: pip
 
-This will validate that your input data for the protocol is in the correct format.  It will ask you for the paths to your input data.  For this tutorial, you can enter "demo" for both data paths and the demo data will be used.  If you get a message saying "Successfully registered and validated data!", then you are good to go.
+    .. code-block:: console
+
+        $ sfkit register_data
+
+.. tab:: docker
+
+    .. code-block:: console
+
+        $ docker run --rm -it --pull always \
+            -v $HOME/.config:/home/nonroot/.config \
+            -v $PWD/data:/app/data \
+            ghcr.io/hcholab/sfkit register_data
+
+    Note that this assumes your data is in a directory called "data" in the current directory.  If it is not, you will need to change the path accordingly.  See :doc:`installation` for more information on running sfkit with docker.
+
+This will validate that your input data for the protocol is in the correct format.  It will ask you for the paths to your input data (this can also be provided via command-line arguments).  For this tutorial, you can enter "demo" for both data paths and the demo data will be used.  If you get a message saying "Successfully registered and validated data!", then you are good to go.
 
 .. note::
     
-    When running the MPC-GWAS workflow, this step will also encrypt your data.  This means that your full raw data is not necessary for the final `sfkit run_protocol` step if you prefer to remove it from your machine.  Of course, you will need to keep the encrypted data on your machine for the duration of the protocol.
+    When running the MPC-GWAS workflow, this step will also encrypt your data. This means that your full raw data is *not* necessary for the final `sfkit run_protocol` step if you prefer to remove it from your machine or run the protocol on a different machine. Of course, you will need to keep the encrypted data on your machine for the duration of the protocol.
 
-6. Run 
+5. Run 
 
-.. code-block:: console 
-    
-    $ sfkit run_protocol --demo
+.. tab:: pip
+
+    .. code-block:: console
+
+        $ sfkit run_protocol
+
+.. tab:: docker
+
+    .. code-block:: console
+
+        $ docker run --rm -it --pull always \
+            -v $HOME/.config:/home/nonroot/.config \
+            -v $PWD/data:/app/data \
+            -p 8100-8120:8100-8120 \
+            ghcr.io/hcholab/sfkit run_protocol
+
+    Note that this assumes your data is in a directory called "data" in the current directory.  It also assumes that you chose port 8100 in the `networking` step.  See :doc:`installation` for more information on running sfkit with docker.
 
 This will run the entire secure federated gwas protocol.  It should take about half an hour on the toy example dataset.  
 
@@ -169,9 +229,5 @@ And if you look in the sfgwas/out/party1 directory, you should see a file called
     1	70000	0.04874529	-1.5335656035638792
     1	80000	0.01069461	-0.19869300651888114
 
-.. note::
 
-   If you are running a real study, you will want to run the protocol without the ``--demo`` flag.  If you tried this right now, it would stall with the message "The other participant is not yet ready.  Waiting... (press CTRL-C to cancel)" as it expects other participants to run the program on their machines to initiate the joint protocol.
-
-
-**Click "Next" to go to the Workflows page and read more details on what run_protocol is doing!**
+Congratulations! You have successfully completed the *user-configured* Tutorial 1.  You should have a better understanding of how to confiugre and execute a study using sfkit. Feel free to explore other workflows and data types or to use the platform for your own research projects.  We also encourage you to go through Tutorial 2, which will show you haow to run a study with multiple participants. 

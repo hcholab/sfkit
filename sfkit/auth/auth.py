@@ -29,7 +29,7 @@ def auth() -> None:
 
     try:
         doc_ref_dict = get_doc_ref_dict()
-        assert doc_ref_dict is not None
+        assert doc_ref_dict is not None and "title" in doc_ref_dict
     except Exception as e:
         os.remove(constants.AUTH_KEY)
         print("Invalid auth_key.txt file.")

@@ -1,45 +1,9 @@
-## sfkit
+## sfkit CLI
 
-`sfkit` is a collection of CLI tools to help run certain types of federated and/or secure multi-party computation especially on genomic data. It is a companion to the website [here](https://sfkit.org/).
+This is a collection of command-line interface tools to facilitate privacy perserving and secure genomics analyses with multiple parties. 
 
-## Documentation
+The full documentation, including installation instructions and tutorials can be found at [sfkit.readthedocs.io](https://sfkit.readthedocs.io/en/latest/).
 
-You can read the full documentation [here](https://sfkit.readthedocs.io/en/latest/).
+The companion website is [sfkit.org](https://sfkit.org/), with a github repo at [github.com/hcholab/sfkit-website](https://github.com/hcholab/sfkit-website).
 
-## Prerequisites
-
-[python3](https://www.python.org/downloads/)
-
-## Installation
-
-`pip install sfkit`
-
-## Usage
-
-### Python package
-
-`sfkit <auth | networking | generate_keys | register_data | run_protocol>`
-
-- auth: Authenticate with the CLI.
-- networking: Setup the networking, including your IP address and any relevant ports.
-- generate_keys: Generate your public and private cryptographic keys for use in encrypting the data.
-- register_data: Register and validate your data.
-- run_protocol: Run the protocol. When not using docker, this command will also install required dependencies and software updates as needed. As this command may be long-running, you may want to run it with a tool like nohup, screen or tmux to prevent it from terminating if you close this window/terminal. For example, `nohup sfkit run_protocol & tail -f nohup.out`.
-
-### Docker image
-
-```sh
-# one-time setup
-mkdir -p ~/.config/sfkit ~/.config/matplotlib
-chmod -R 777 ~/.config/sfkit ~/.config/matplotlib
-
-docker run --rm -it --pull always \
-  -v $HOME/.config/sfkit:/home/nonroot/.config/sfkit \
-  -v $HOME/.config/matplotlib:/home/nonroot/.config/matplotlib \
-  -v </absolute/path/to/auth_key.txt>:/app/auth_key.txt:ro \
-  ghcr.io/hcholab/sfkit <auth | networking | generate_keys | register_data | run_protocol>
-```
-
-### Questions
-
-If you have questions or concerns, you can reach us at [support@sfkit.org](mailto:support@sfkit.org).
+For questions or concerns, you can contact us at [support@sfkit.org](mailto:support@sfkit.org).

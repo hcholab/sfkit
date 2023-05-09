@@ -18,5 +18,7 @@ setuptools
 sphinx
 sphinx-argparse
 sphinx-rtd-theme
+sphinx-inline-tabs
 tomlkit
 tqdm
+urllib3==1.26.15

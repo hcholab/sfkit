@@ -75,10 +75,14 @@ def validate_sfgwas(
         using_demo()
 
     num_inds: int = validate_sfgwas_data(geno_binary_file_prefix, data_path)
-    condition_or_fail(
-        num_inds == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
-        "NUM_INDS does not match the number of individuals in the data.",
-    )
+    num_inds_value = doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]
+    if num_inds_value == "":
+        condition_or_fail(False, "NUM_INDS is not set. Please set it and try again.")
+    else:
+        condition_or_fail(
+            num_inds == int(num_inds_value),
+            "NUM_INDS does not match the number of individuals in the data.",
+        )
     num_snps: int = num_rows(os.path.join(data_path, "snp_ids.txt"))
     condition_or_fail(
         num_snps == int(doc_ref_dict["parameters"]["num_snps"]["value"]),
