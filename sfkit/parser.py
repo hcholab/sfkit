@@ -10,7 +10,7 @@ def get_parser() -> argparse.ArgumentParser:
     )
     networking.add_argument(
         "--ports",
-        help="Comma-separated list of ports to use for communication.  If not provided, you will be prompted to enter them.",
+        help="Comma-separated list of ports you want to use for communication for each other User respectively. In a two-party study, you only need to provide one port (e.g. 8100). For each port provided, you should be sure to open that port and the next few ports (for faster communication) in your firewall. If not provided, you may be prompted to enter a port for each participant.",
     )
     networking.add_argument(
         "--ip_address",
@@ -36,7 +36,7 @@ def get_parser() -> argparse.ArgumentParser:
         "--phase", help="Phase of the protocol to run (e.g. '1' for QC, 2 for PCA, 3 for Association Statistics)"
     )
     runprotocol.add_argument("--demo", help="Run the demo protocol", action="store_true")
-    runprotocol.add_argument("--visualize_results", help="Visualize the results in the UI (Yes or No)")
+    runprotocol.add_argument("--visualize_results", help="Visualize the results in the UI (Yes or No) (default is No)")
     runprotocol.add_argument(
         "--results_path",
         help="The path in a GCP bucket (you have access to) where you would like to send the results of the protocol.",

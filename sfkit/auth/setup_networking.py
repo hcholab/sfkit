@@ -15,9 +15,8 @@ def setup_networking(ports_str: str, ip_address: str = "") -> None:
     authenticate_user()
     doc_ref_dict: dict = get_doc_ref_dict()
 
-    if not ip_address:  # determine automatically
+    if not ip_address:
         if doc_ref_dict["setup_configuration"] == "website":
-            # website configuration uses internal ip address
             ip_address = socket.gethostbyname(socket.gethostname())
             print("Using internal ip address:", ip_address)
         else:
@@ -32,6 +31,14 @@ def setup_networking(ports_str: str, ip_address: str = "") -> None:
 
     if ports_str:
         [validate_port(port) for port in ports_str.split(",")]
+        # pad ports_str with nulls if necessary
+        pad_length = len(doc_ref_dict["participants"]) - len(ports_str.split(","))
+        if pad_length < 0:
+            print(
+                "WARNING: You have provided more ports than there are participants.  The extra ports will be ignored."
+            )
+            ports_str = ",".join(ports_str.split(",")[: len(doc_ref_dict["participants"])])
+        ports_str = "null," * pad_length + ports_str
     else:
         ports = ["null" for _ in range(len(doc_ref_dict["participants"]))]
         for r in range(int(role) + 1, len(doc_ref_dict["participants"])):  # for each other participant
@@ -45,5 +52,5 @@ def setup_networking(ports_str: str, ip_address: str = "") -> None:
 def validate_port(port: str) -> str:
     if port.isdigit() and 1024 <= int(port) <= 65535:
         return port
-    print("Invalid port number.  Please enter a number between 1024 and 65535.")
+    print(f"{port} is an invalid port number.  Please enter a number between 1024 and 65535.")
     exit(1)
