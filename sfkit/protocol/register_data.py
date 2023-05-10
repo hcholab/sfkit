@@ -140,9 +140,13 @@ def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> str:
 
 def validate_geno_binary_file_prefix(geno_binary_file_prefix: str) -> str:
     if not geno_binary_file_prefix:
-        geno_binary_file_prefix = input(
-            f"Enter absolute path to geno binary file prefix (e.g. '/home/username/for_sfgwas/geno/ch%d'): "
-        )  # sourcery skip: remove-redundant-fstring
+        if constants.IS_DOCKER and os.path.exists("/app/data/geno"):
+            geno_binary_file_prefix = f"/app/data/geno/ch%d"
+            print(f"Using default geno_binary_file_prefix for docker: {geno_binary_file_prefix}")
+        else:
+            geno_binary_file_prefix = input(
+                f"Enter absolute path to geno binary file prefix (e.g. '/home/username/for_sfgwas/geno/ch%d'): "
+            )  # sourcery skip: remove-redundant-fstring
     if geno_binary_file_prefix != "demo" and not os.path.isabs(geno_binary_file_prefix):
         print("I need an ABSOLUTE path for the geno_binary_file_prefix.")
         exit(1)
@@ -151,7 +155,11 @@ def validate_geno_binary_file_prefix(geno_binary_file_prefix: str) -> str:
 
 def validate_data_path(data_path: str) -> str:
     if not data_path:
-        data_path = input("Enter the (absolute) path to your data files (e.g. /home/username/for_sfgwas): ")
+        if constants.IS_DOCKER and os.path.exists("/app/data"):
+            data_path = "/app/data"
+            print(f"Using default data_path for docker: {data_path}")
+        else:
+            data_path = input("Enter the (absolute) path to your data files (e.g. /home/username/for_sfgwas): ")
     if data_path != "demo" and not os.path.isabs(data_path):
         print("I need an ABSOLUTE path for the data_path.")
         exit(1)

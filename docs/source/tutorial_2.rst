@@ -68,9 +68,15 @@ The commands that each user will need to run will be similar to those in :doc:`t
             -v $HOME/.config:/home/nonroot/.config \
             ghcr.io/hcholab/sfkit networking 
 
-For User 1, this will prompt the user to input a port they will use to communicate with User 2.  The port provided should be the lower end of a range of open ports for communication (e.g. 8100 for a range of 8100-8120).  
+For User 1, this will prompt the user to input a port they will use to communicate with User 2.  The port provided should be the lower end of a range of open ports for communication (e.g. 8100 for a range of 8100-8120).  User 1 can alternatively specify the port in the command line using the --ports flag.   
 
 3. Run
+
+.. tab:: pip
+
+    .. code-block:: console
+
+        $ sfkit generate_keys
 
 .. tab:: docker
 
@@ -87,6 +93,8 @@ For User 1, this will prompt the user to input a port they will use to communica
     .. code-block:: console
 
         $ sfkit register_data
+
+    You can optionally use the --data_path and --geno_binary_file_prefix flags if you want to specify them in the command line.  Otherwise, you will be prompted to enter them.  
 
 .. tab:: docker
 
