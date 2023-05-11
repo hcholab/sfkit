@@ -5,7 +5,13 @@ import time
 from google.cloud import storage
 from sfkit.utils import constants
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
-from sfkit.utils.helper_functions import copy_results_to_cloud_storage, plot_assoc, postprocess_assoc, run_command
+from sfkit.utils.helper_functions import (
+    copy_results_to_cloud_storage,
+    copy_to_out_folder,
+    plot_assoc,
+    postprocess_assoc,
+    run_command,
+)
 
 
 def run_gwas_protocol(role: str, demo: bool = False) -> None:
@@ -249,6 +255,9 @@ def process_output_files(role: str, demo: bool) -> None:
 
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
+
+    relevant_paths = ["secure-gwas/out"]
+    copy_to_out_folder(relevant_paths)
 
     if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
         copy_results_to_cloud_storage(role, results_path, "secure-gwas/out")

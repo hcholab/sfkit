@@ -12,3 +12,4 @@ AUTH_FILE = os.path.join(SFKIT_DIR, "auth.txt")
 AUTH_KEY = os.path.join(SFKIT_DIR, "auth_key.txt")
 IS_DOCKER = os.path.exists("/.dockerenv")
 SFKIT_PREFIX = "sfkit: "
+OUT_FOLDER = "out"

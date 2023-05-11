@@ -170,6 +170,7 @@ This will validate that your input data for the protocol is in the correct forma
         $ docker run --rm -it --pull always \
             -v $HOME/.config:/home/nonroot/.config \
             -v $PWD/data:/app/data \
+            -v $PWD/out:/app/out \
             -p 8100-8120:8100-8120 \
             ghcr.io/hcholab/sfkit run_protocol
 

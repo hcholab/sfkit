@@ -128,3 +128,21 @@ def copy_results_to_cloud_storage(role: str, data_path: str, output_directory: s
     except Exception as e:
         print("Failed to upload results to cloud storage")
         print(e)
+
+
+def copy_to_out_folder(relevant_paths: list) -> None:
+    """
+    Overwrite the contents of the out folder with the files/folders in relevant_paths
+    """
+    if not os.path.exists(constants.OUT_FOLDER):
+        os.makedirs(constants.OUT_FOLDER)
+
+    for path in relevant_paths:
+        if os.path.exists(path):
+            destination = f"{constants.OUT_FOLDER}/{os.path.basename(path)}"
+            if os.path.isfile(path):
+                shutil.copy2(path, destination)
+            elif os.path.isdir(path):
+                if os.path.exists(destination):
+                    shutil.rmtree(destination)
+                shutil.copytree(path, destination)

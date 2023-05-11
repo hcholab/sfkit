@@ -120,6 +120,7 @@ For User 1, this will prompt the user to input a port they will use to communica
         $ docker run --rm -it --pull always \
             -v $HOME/.config:/home/nonroot/.config \
             -v $PWD/data:/app/data \
+            -v $PWD/out:/app/out \
             -p 8100-8120:8100-8120 \
             ghcr.io/hcholab/sfkit run_protocol
 

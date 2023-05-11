@@ -15,6 +15,7 @@ from sfkit.utils import constants
 from sfkit.utils.helper_functions import (
     condition_or_fail,
     copy_results_to_cloud_storage,
+    copy_to_out_folder,
     plot_assoc,
     postprocess_assoc,
 )
@@ -52,12 +53,17 @@ def move(source: str, destination: str) -> None:
 def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool, role: str) -> None:
     env = os.environ.copy()
     if protocol == "SF-GWAS":
-        env['PROTOCOL'] = 'gwas'
+        env["PROTOCOL"] = "gwas"
     elif protocol == "PCA":
-        env['PROTOCOL'] = 'pca'
+        env["PROTOCOL"] = "pca"
 
     process = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, executable="/bin/bash", env=env,
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=True,
+        executable="/bin/bash",
+        env=env,
     )
 
     timeout = 86_400
@@ -110,6 +116,9 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
 
     if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
         copy_results_to_cloud_storage(role, results_path, f"sfgwas/out/party{role}")
+
+    relevant_paths = [f"sfgwas/out/party{role}", f"sfgwas/cache/party{role}/Qpc.txt", f"sfgwas/stdout_party{role}.txt"]
+    copy_to_out_folder(relevant_paths)
 
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
     if protocol == "SF-GWAS" and send_results == "Yes":
