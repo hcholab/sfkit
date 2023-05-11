@@ -128,3 +128,29 @@ def test_copy_results_to_cloud_storage(mocker: Callable[..., Generator[MockerFix
     # failure case
     mock_storage_client = mocker.patch("google.cloud.storage.Client", side_effect=Exception("test"))
     helper_functions.copy_results_to_cloud_storage("1", "bucket_name/prefix", "output_directory")
+
+
+def test_copy_to_out_folder(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    # sourcery skip: extract-duplicate-method
+    mocker.patch("os.path.exists", return_value=True)
+    mocker.patch("os.makedirs")
+    mocker.patch("os.path.isfile", return_value=True)
+    mocker.patch("shutil.copy2")
+    mocker.patch("os.path.isdir", return_value=True)
+    mocker.patch("shutil.copytree")
+    mocker.patch("shutil.rmtree")
+
+    helper_functions.copy_to_out_folder(["file1"])
+
+    mocker.patch("os.path.isfile", return_value=False)
+    helper_functions.copy_to_out_folder(["file1"])
+
+    mocker.patch("os.path.exists", side_effect=[True, True, False])
+    helper_functions.copy_to_out_folder(["file1"])
+
+    mocker.patch("os.path.exists", return_value=True)
+    mocker.patch("os.path.isdir", return_value=False)
+    helper_functions.copy_to_out_folder(["file1"])
+
+    mocker.patch("os.path.exists", return_value=False)
+    helper_functions.copy_to_out_folder(["file1"])

@@ -25,7 +25,10 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinxarg.ext",
+    "sphinx_copybutton",
 ]
+
+copybutton_exclude = ".linenos, .gp"
 
 autosummary_generate = True
 

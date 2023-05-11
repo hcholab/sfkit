@@ -19,6 +19,9 @@ def test_run_sfgwas_protocol(mocker):
     sfgwas_protocol.run_sfgwas_protocol("1")
     sfgwas_protocol.generate_shared_keys.assert_called_once()
 
+    mocker.patch("sfkit.utils.sfgwas_protocol.constants.IS_DOCKER", True)
+    sfgwas_protocol.run_sfgwas_protocol("1")
+
 
 def test_install_sfgwas(mocker):
     mocker.patch("sfkit.utils.sfgwas_protocol.run_command")
@@ -115,4 +118,7 @@ def test_start_sfgwas(mocker):
 
     sfgwas_protocol.start_sfgwas("0")
     sfgwas_protocol.start_sfgwas("1")
+    sfgwas_protocol.start_sfgwas("2", demo=True, protocol="garbage")
+
+    mocker.patch("sfkit.utils.sfgwas_protocol.constants.IS_DOCKER", True)
     sfgwas_protocol.start_sfgwas("2", demo=True, protocol="garbage")

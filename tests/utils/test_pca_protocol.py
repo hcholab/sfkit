@@ -6,13 +6,15 @@ def test_run_pca_protocol(mocker):
     mocker.patch("sfkit.utils.pca_protocol.generate_shared_keys")
     mocker.patch("sfkit.utils.pca_protocol.update_config_local")
     mocker.patch("sfkit.utils.pca_protocol.update_config_global")
-    mocker.patch("sfkit.utils.pca_protocol.update_sfgwas_go")
     mocker.patch("sfkit.utils.pca_protocol.build_sfgwas")
     mocker.patch("sfkit.utils.pca_protocol.start_sfgwas")
 
     pca_protocol.run_pca_protocol("1")
 
     pca_protocol.run_pca_protocol("1", True)
+
+    mocker.patch("sfkit.utils.pca_protocol.constants.IS_DOCKER", True)
+    pca_protocol.run_pca_protocol("1")
 
 
 def test_update_config_local(mocker):

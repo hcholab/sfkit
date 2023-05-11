@@ -23,6 +23,9 @@ def test_run_gwas_protocol(mocker: Callable[..., Generator[MockerFixture, None, 
     gwas_protocol.run_gwas_protocol("1")
     gwas_protocol.run_gwas_protocol("1", demo=True)
 
+    mocker.patch("sfkit.utils.gwas_protocol.constants.IS_DOCKER", True)
+    gwas_protocol.run_gwas_protocol("1")
+
 
 def test_install_gwas_dependencies(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     mocker.patch("sfkit.utils.gwas_protocol.run_command")

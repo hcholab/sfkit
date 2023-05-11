@@ -52,7 +52,7 @@ When using the containerized version of sfkit, you will need to set up the .conf
 .. code-block:: console 
 
     # one-time setup
-    mkdir -p ~/.config && chmod -R 777 ~/.config
+    mkdir -p ~/.config $PWD/out && chmod -R 777 ~/.config $PWD/out
 
 Running sfkit via docker is similar to running it directly from the command line, but with a few extra command-line arguments. 
 

@@ -1,6 +1,10 @@
 Tutorial 2 (Examples with two users)
 ====================================
 
+.. note::
+
+    There is also a website-only *auto-configured* version of this tutorial available at `sfkit.org/tutorial#2-person-tutorial <https://sfkit.org/tutorial#2-person-tutorial>`_.
+
 Introduction
 ------------
 
@@ -11,10 +15,6 @@ Tip: If you haven't already, we recommend that you go through Tutorial 1 first, 
 .. note::
 
     You can complete this tutorial on your own, but it's desinged for two separate users.  To achieve this, you will need two independent browser sessions. We also recommend you have two independent compute environments, but this is not strictly necessary if you are careful about authenticating each user separately.
-
-.. note::
-
-    There is also a website-only *auto-configured* version of this tutorial available at `sfkit.org/tutorial <https://sfkit.org/tutorial#2-person-tutorial>`_.
 
 
 Website

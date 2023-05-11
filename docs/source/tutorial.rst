@@ -1,6 +1,10 @@
 Tutorial 1 (Quick test for one user)
 ====================================
 
+.. note::
+
+    There is also a website-only *auto-configured* version of this tutorial available at `sfkit.org/tutorial <https://sfkit.org/tutorial>`_.
+
 Introduction
 ------------
 
@@ -15,10 +19,6 @@ There are two main components to the sfkit workflow: the website and the sfkit c
 The website is a web application that serves to provide a convenient UI for the study participants to 
 create a joint study and set up the study parameters. The sfkit CLI is a command line tool that is 
 used to perform the actual analysis.  The sfkit CLI is run on a machine controlled by the study participant. 
-
-.. note::
-
-    There is also a website-only *auto-configured* version of this tutorial available at `sfkit.org/tutorial <https://sfkit.org/tutorial>`_.
 
 Prerequisites
 -------------

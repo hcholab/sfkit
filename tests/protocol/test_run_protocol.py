@@ -37,6 +37,7 @@ def test_run_protocol(mocker):
     run_protocol.run_protocol()
 
     mock_doc_ref_dict_copy["study_type"] = "garbage"
+    mock_doc_ref_dict_copy["demo"] = True
     with pytest.raises(ValueError):
         run_protocol.run_protocol()
 

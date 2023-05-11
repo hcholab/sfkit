@@ -78,6 +78,10 @@ def test_validate_sfgwas(mocker: Callable[..., Generator[MockerFixture, None, No
     register_data.validate_sfgwas(mock_doc_ref_dict, "a@a.com", "data_path", "geno_binary_file_prefix")
     register_data.validate_sfgwas(mock_doc_ref_dict, "a@a.com", "demo", "geno_binary_file_prefix")
 
+    mock_doc_ref_dict_copy = copy.deepcopy(mock_doc_ref_dict)
+    mock_doc_ref_dict_copy["personal_parameters"]["a@a.com"]["NUM_INDS"]["value"] = ""
+    register_data.validate_sfgwas(mock_doc_ref_dict_copy, "a@a.com", "data_path", "geno_binary_file_prefix")
+
 
 def test_validate_mpcgwas(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     mocker.patch("sfkit.protocol.register_data.validate_data_path", lambda x: x)
@@ -103,6 +107,7 @@ def test_validate_pca(mocker: Callable[..., Generator[MockerFixture, None, None]
 
 
 def test_validate_geno_binary_file_prefix(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    # sourcery skip: remove-redundant-fstring
     mocker.patch("sfkit.protocol.register_data.input", return_value="demo")
     mocker.patch("sfkit.protocol.register_data.os.path.isabs", return_value=False)
 
@@ -111,6 +116,11 @@ def test_validate_geno_binary_file_prefix(mocker: Callable[..., Generator[Mocker
     mocker.patch("sfkit.protocol.register_data.input", return_value="")
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         register_data.validate_geno_binary_file_prefix("geno_binary_file_prefix")
+
+    mocker.patch("sfkit.protocol.register_data.constants.IS_DOCKER", True)
+    mocker.patch("sfkit.protocol.register_data.os.path.isabs", return_value=True)
+    mocker.patch("os.path.exists", return_value=True)
+    assert register_data.validate_geno_binary_file_prefix("") == f"/app/data/geno/ch%d"
 
 
 def test_validate_data_path(mocker: Callable[..., Generator[MockerFixture, None, None]]):
@@ -122,6 +132,11 @@ def test_validate_data_path(mocker: Callable[..., Generator[MockerFixture, None,
     mocker.patch("sfkit.protocol.register_data.input", return_value="")
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         register_data.validate_data_path("data_path")
+
+    mocker.patch("sfkit.protocol.register_data.constants.IS_DOCKER", True)
+    mocker.patch("sfkit.protocol.register_data.os.path.isabs", return_value=True)
+    mocker.patch("os.path.exists", return_value=True)
+    assert register_data.validate_data_path("") == "/app/data"
 
 
 def test_validate_sfgwas_data(mocker: Callable[..., Generator[MockerFixture, None, None]]):

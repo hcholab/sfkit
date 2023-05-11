@@ -48,13 +48,13 @@ def test_move(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     sfgwas_helper_functions.move(source, destination)
 
 
-def test_run_sfgwas_with_task_updates(mocker) -> None:
+def test_run_sfgwas_with_task_updates(mocker: Callable[..., Generator[MockerFixture, None, None]]) -> None:
     mocker.patch("sfkit.utils.sfgwas_helper_functions.condition_or_fail")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.update_firestore")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.check_for_failure")
 
-    sfgwas_helper_functions.run_sfgwas_with_task_updates("true", "", False, "1")
-    sfgwas_helper_functions.run_sfgwas_with_task_updates('echo "sfkit: hi"', "", False, "1")
+    sfgwas_helper_functions.run_sfgwas_with_task_updates("true", "SF-GWAS", False, "1")
+    sfgwas_helper_functions.run_sfgwas_with_task_updates('echo "sfkit: hi"', "PCA", False, "1")
     sfgwas_helper_functions.run_sfgwas_with_task_updates(
         'echo "Output collectively decrypted and saved to"', "", False, "1"
     )
@@ -124,7 +124,7 @@ def test_post_process_results(mocker: Callable[..., Generator[MockerFixture, Non
     sfgwas_helper_functions.post_process_results("1", True, "Other")
 
 
-def test_make_pca_plot(tmp_path, mocker):
+def test_make_pca_plot(tmp_path: Path, mocker: Callable[..., Generator[MockerFixture, None, None]]):
     mocker.patch("numpy.loadtxt")
     mocker.patch("matplotlib.pyplot.scatter")
     mocker.patch("matplotlib.pyplot.xlabel")
@@ -174,7 +174,7 @@ def test_to_float_int_or_bool():
     assert sfgwas_helper_functions.to_float_int_or_bool("-inf") == float("-inf")
 
 
-def test_get_plink2_download_link(monkeypatch):
+def test_get_plink2_download_link(monkeypatch: pytest.MonkeyPatch):
     # Mock the response of the requests.get function
     class MockResponse:
         def __init__(self, content):

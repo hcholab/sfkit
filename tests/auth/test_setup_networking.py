@@ -28,3 +28,6 @@ def test_setup_networking(mocker):
         return_value={"participants": ["a@a.com", "b@b.com"], "setup_configuration": "user"},
     )
     setup_networking.setup_networking("")
+
+    # with too many ports and an ip_address specifed
+    setup_networking.setup_networking("8000,8000,8000,8000,8000", ip_address="127.0.0.1")

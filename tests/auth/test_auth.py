@@ -8,7 +8,12 @@ from sfkit.auth import auth
 def test_auth(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     mocker.patch("sfkit.auth.auth.open", mock_open)
     mocker.patch("sfkit.auth.auth.input", return_value="")
-    mocker.patch("sfkit.auth.auth.get_doc_ref_dict")
+    mocker.patch(
+        "sfkit.auth.auth.get_doc_ref_dict",
+        return_value={
+            "title": "title",
+        },
+    )
     mocker.patch("sfkit.auth.auth.condition_or_fail")
     mocker.patch("sfkit.auth.auth.os.makedirs")
     mocker.patch("sfkit.auth.auth.os.remove")

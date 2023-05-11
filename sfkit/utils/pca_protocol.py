@@ -13,7 +13,6 @@ from sfkit.utils.sfgwas_protocol import (
     install_sfgwas,
     start_sfgwas,
     update_config_global,
-    update_sfgwas_go,
 )
 
 
