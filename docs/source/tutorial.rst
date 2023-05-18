@@ -79,7 +79,7 @@ CLI
 
     Note that this assumes your auth_key.txt is in the current directory.  If it is not, you will need to change the path accordingly.  See :doc:`installation` for more information on running sfkit with docker.
 
-This will authenticate your VM with the website. It does this by making a request to the website, which can authenticate you based on the key that you downloaded. If you get a message saying "Successfully authenticated!", then you are good to go.
+This will authenticate your VM with the website. It does this by making a request to the website, which can authenticate you based on the key that you downloaded. If you get a message saying "Successfully authenticated", then you are good to go.
 
 
 2. Run 

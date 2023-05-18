@@ -16,10 +16,10 @@ def test_encrypt_GMP(mocker: Callable[..., Generator[MockerFixture, None, None]]
     mocker.patch("sfkit.encryption.mpc.encrypt_data.os.makedirs")
     mocker.patch("sfkit.encryption.mpc.encrypt_data.PseudoRandomNumberGenerator", mock_PseudoRandomNumberGenerator)
 
-    encrypt_data.encrypt_GMP(mock_PseudoRandomNumberGenerator(), "input_dir")  # type: ignore
+    encrypt_data.encrypt_GMP(mock_PseudoRandomNumberGenerator(), "input_dir", "output_dir")  # type: ignore
 
     mocker.patch("sfkit.encryption.mpc.encrypt_data.os.path.exists", return_value=False)
-    encrypt_data.encrypt_GMP(mock_PseudoRandomNumberGenerator(), "input_dir")  # type: ignore
+    encrypt_data.encrypt_GMP(mock_PseudoRandomNumberGenerator(), "input_dir", "output_dir")  # type: ignore
 
 
 def test_get_shared_mpcgwas_keys(mocker: Callable[..., Generator[MockerFixture, None, None]]):

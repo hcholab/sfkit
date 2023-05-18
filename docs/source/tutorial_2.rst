@@ -113,6 +113,8 @@ For User 1, this will prompt the user to input a port they will use to communica
 
         $ sfkit run_protocol
 
+    You can view the output on your study page of the website or directly in the ``sfgwas/out`` directory.
+
 .. tab:: docker
 
     .. code-block:: console
@@ -122,6 +124,8 @@ For User 1, this will prompt the user to input a port they will use to communica
             -v $PWD/data:/app/data \
             -p 8100-8120:8100-8120 \
             ghcr.io/hcholab/sfkit run_protocol
+
+    You can view the output on your study page of the website or directly in the ``sfkit/out`` directory.
 
     The port range is only necessary for User 1 and should reflect the range from the `networking` command. 
 

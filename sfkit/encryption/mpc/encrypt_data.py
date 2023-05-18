@@ -1,7 +1,5 @@
 # for MPC-GWAS
 
-# TODO: move ./encrypted_data to the data directory
-
 import os
 import shutil
 import sys
@@ -21,7 +19,7 @@ from sfkit.utils.helper_functions import condition_or_fail
 # from tqdm import tqdm
 
 
-def encrypt_GMP(prng: PseudoRandomNumberGenerator, input_dir: str, output_dir: str = "./encrypted_data") -> None:
+def encrypt_GMP(prng: PseudoRandomNumberGenerator, input_dir: str, output_dir: str) -> None:
     # sourcery skip: avoid-global-variables, avoid-single-character-names-variables, ensure-file-closed, require-parameter-annotation, snake-case-functions, switch
     """
     Converts the data to GMP vectors (genotype, missing data, phenotype), encrypts
@@ -130,13 +128,15 @@ def encrypt_data() -> None:
 
     print("Encrypting data...")
     base_p: int = int(doc_ref_dict["advanced_parameters"]["BASE_P"]["value"])
-    encrypt_GMP(PseudoRandomNumberGenerator(shared_keys[role], base_p), input_dir)
+    encrypt_GMP(
+        PseudoRandomNumberGenerator(shared_keys[role], base_p), input_dir, output_dir=constants.ENCRYPTED_DATA_FOLDER
+    )
 
     print("saving shared key")
-    with open("./encrypted_data/other_shared_key.bin", "wb") as f:
+    with open(os.path.join(constants.ENCRYPTED_DATA_FOLDER, "other_shared_key.bin"), "wb") as f:
         f.write(shared_keys[3 - role])
     print("copying over pos.txt")
-    shutil.copyfile(f"{input_dir}/pos.txt", "./encrypted_data/pos.txt")
+    shutil.copyfile(f"{input_dir}/pos.txt", os.path.join(constants.ENCRYPTED_DATA_FOLDER, "pos.txt"))
 
     print("\n\nThe encryption is complete.")
 

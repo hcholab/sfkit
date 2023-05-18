@@ -1,5 +1,6 @@
 import fileinput
 import multiprocessing
+import os
 import time
 
 from google.cloud import storage
@@ -24,8 +25,8 @@ def run_gwas_protocol(role: str, demo: bool = False) -> None:
     if not demo:
         update_parameters(role)
         # connect_to_other_vms(role)
-        prepare_data("./encrypted_data", role)
-        copy_data_to_gwas_repo("./encrypted_data", role)
+        prepare_data(constants.ENCRYPTED_DATA_FOLDER, role)
+        copy_data_to_gwas_repo(constants.ENCRYPTED_DATA_FOLDER, role)
         sync_with_other_vms(role)
     start_datasharing(role, demo)
     start_gwas(role, demo)
@@ -175,7 +176,6 @@ def copy_data_to_gwas_repo(
     cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"""
 
     if role == "0":
-        # assuming CP0's pos.txt is in ./encrypted folder
         commands = f"cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"
 
     for command in commands.split("\n"):

@@ -13,3 +13,4 @@ AUTH_KEY = os.path.join(SFKIT_DIR, "auth_key.txt")
 IS_DOCKER = os.path.exists("/.dockerenv")
 SFKIT_PREFIX = "sfkit: "
 OUT_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "out")
+ENCRYPTED_DATA_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "encrypted_data")
