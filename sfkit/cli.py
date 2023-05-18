@@ -23,7 +23,7 @@ def main() -> None:
         data_path = args.data_path or ""
         register_data(geno_binary_file_prefix, data_path)
     elif args.command == "run_protocol":
-        phase: str = args.phase or ""
+        phase: str = ""  # args.phase or ""
         demo: bool = args.demo or False
         visualize_results: str = args.visualize_results or ""
         results_path: str = args.results_path or ""

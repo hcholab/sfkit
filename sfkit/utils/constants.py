@@ -7,9 +7,9 @@ METADATA_VM_IDENTITY_URL = (
     "audience={}&format={}&licenses={}"
 )
 BLOCKS_MODE = "usingblocks-"
-SFKIT_DIR = os.path.expanduser("~/.config/sfkit")
+SFKIT_DIR = os.environ.get("SFKIT_DIR", os.path.join(os.path.expanduser("~"), ".config", "sfkit"))
 AUTH_FILE = os.path.join(SFKIT_DIR, "auth.txt")
 AUTH_KEY = os.path.join(SFKIT_DIR, "auth_key.txt")
 IS_DOCKER = os.path.exists("/.dockerenv")
 SFKIT_PREFIX = "sfkit: "
-OUT_FOLDER = "out"
+OUT_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "out")

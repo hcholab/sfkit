@@ -71,7 +71,7 @@ def validate_sfgwas(
     geno_binary_file_prefix = validate_geno_binary_file_prefix(geno_binary_file_prefix)
     data_path = validate_data_path(data_path)
 
-    if data_path == "demo":
+    if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
         using_demo()
 
     num_inds: int = validate_sfgwas_data(geno_binary_file_prefix, data_path)
@@ -96,7 +96,7 @@ def validate_sfgwas(
 def validate_mpcgwas(doc_ref_dict: dict, username: str, data_path: str, role: str) -> str:
     data_path = validate_data_path(data_path)
 
-    if data_path == "demo":
+    if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
         using_demo()
 
     num_inds, num_covs = validate_mpcgwas_data(data_path)
@@ -120,7 +120,7 @@ def validate_mpcgwas(doc_ref_dict: dict, username: str, data_path: str, role: st
 def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> str:
     data_path = validate_data_path(data_path)
 
-    if data_path == "demo":
+    if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
         using_demo()
 
     number_of_rows: int = num_rows(os.path.join(data_path, "data.txt"))

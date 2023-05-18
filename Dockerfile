@@ -81,6 +81,7 @@ FROM cgr.dev/chainguard/python:${PYTHON_VER}
 WORKDIR /app
 
 ENV PATH="$PATH:/app:/app/sfgwas"
+ENV SFKIT_DIR="/app/.sfkit"
 
 COPY --from=go --chown=nonroot /sfgwas ./sfgwas/
 
