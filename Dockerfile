@@ -40,6 +40,7 @@ RUN set -e && echo "Changing directory to /secure-gwas/code" && cd /secure-gwas/
     echo "Setting COMP variable" && COMP=$(which clang++) && \
     echo "Updating Makefile" && \
     sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile && \
+    sed -i "s|-march=native|-march=x86-64 -maes|g" Makefile && \
     sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile && \
     sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
     echo "Running make" && make -j$(nproc)
