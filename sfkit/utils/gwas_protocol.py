@@ -110,6 +110,13 @@ def update_parameters(role: str) -> None:
     # update pars with ipaddresses and ports
     for i in range(len(doc_ref_dict["participants"])):
         ip = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["IP_ADDRESS"]["value"]
+        while ip == "":
+            print(f"IP address for {doc_ref_dict['participants'][i]} is empty. Waiting...")
+            time.sleep(5)
+
+            doc_ref_dict = get_doc_ref_dict()
+            ip = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["IP_ADDRESS"]["value"]
+
         pars[f"IP_ADDR_P{i}"] = {"value": ip}
 
         ports = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][i]]["PORTS"]["value"]

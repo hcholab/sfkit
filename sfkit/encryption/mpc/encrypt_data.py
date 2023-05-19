@@ -38,7 +38,10 @@ def encrypt_GMP(prng: PseudoRandomNumberGenerator, input_dir: str, output_dir: s
     p_file = open(f"{output_dir}/p.bin", "wb")
 
     num_lines = sum(1 for _ in open(f"{input_dir}/pheno.txt", "r"))
-    for _ in range(num_lines):
+    for i in range(num_lines):
+        if i > 0 and num_lines > 10 and i % (num_lines // 10) == 0:
+            print(f"Finished encrypting {i} lines out of {num_lines} lines")
+
         p = pheno_file.readline().rstrip().split() + cov_file.readline().rstrip().split()
         p = [str((int(x) - prng.next()) % prng.base_p) for x in p]
 
