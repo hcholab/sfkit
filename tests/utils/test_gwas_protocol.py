@@ -60,7 +60,11 @@ def test_compile_gwas_code(mocker: Callable[..., Generator[MockerFixture, None, 
 def test_update_parameters(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
     mocker.patch("sfkit.utils.gwas_protocol.fileinput.input", mock_fileinput_input)
-    mocker.patch("sfkit.utils.gwas_protocol.get_doc_ref_dict", return_value=mock_doc_ref_dict)
+
+    mock_doc_ref_dict_copy = copy.deepcopy(mock_doc_ref_dict)
+    mock_doc_ref_dict_copy["personal_parameters"]["a@a.com"]["IP_ADDRESS"]["value"] = ""
+    mocker.patch("sfkit.utils.gwas_protocol.get_doc_ref_dict", side_effect=[mock_doc_ref_dict_copy, mock_doc_ref_dict])
+    mocker.patch("sfkit.utils.gwas_protocol.time.sleep")
 
     gwas_protocol.update_parameters("1")
 

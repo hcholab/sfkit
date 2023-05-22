@@ -103,7 +103,7 @@ def test_get_other_user_public_key(mocker: Callable[..., Generator[MockerFixture
 
 
 def mock_open(path, mode):
-    return StringIO("0\n1 2\n3 4 5") if mode == "r" else BytesIO()
+    return StringIO("0\n1 2\n3 \n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n3\n4 5") if mode == "r" else BytesIO()
 
 
 class mock_PseudoRandomNumberGenerator:
