@@ -1,5 +1,4 @@
 ARG PYTHON_VER=3.10
-ARG MARCH=native
 
 ### Build SF-GWAS Go package
 FROM golang:1.18 AS go
@@ -36,6 +35,7 @@ RUN cd /ntl/src && \
     make -j$(nproc) all && \
     make install
 # compile Secure-GWAS
+ARG MARCH=native
 RUN set -e && echo "Changing directory to /secure-gwas/code" && cd /secure-gwas/code && \
     echo "Setting COMP variable" && COMP=$(which clang++) && \
     echo "Updating Makefile" && \
