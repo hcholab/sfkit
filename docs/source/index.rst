@@ -29,6 +29,13 @@ Contents
    
    commands
 
+Related Publication
+-------------------
+
+Our project has been documented in a research article published in the Nucleic Acids Research journal. For a more detailed understanding of our work, you can access the article via the link below:
+
+`sfkit: a web-based toolkit for secure and federated genomic analysis <https://academic.oup.com/nar/advance-article/doi/10.1093/nar/gkad464/7184156>`_
+
 Questions
 ---------
 For questions or concerns, you can create an issue on the `github repository <https://github.com/hcholab/sfkit/issues>`_ or reach us at `support@sfkit.org <support@sfkit.org>`_.
