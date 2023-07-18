@@ -43,8 +43,8 @@ def run_protocol(
             print("Other participant(s) not yet ready.  Waiting... (press CTRL-C to cancel)")
             update_firestore("update_firestore::task=Waiting for other participant(s) to be ready")
             time.sleep(5)
-            doc_ref_dict: dict = get_doc_ref_dict()
-            statuses: dict = doc_ref_dict["status"]
+            doc_ref_dict = get_doc_ref_dict()
+            statuses = doc_ref_dict["status"]
 
         if not demo and role == "1":
             create_cp0()

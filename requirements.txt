@@ -12,7 +12,7 @@ PyNaCl
 pytest
 pytest-mock
 qmplot
-requests
+requests[socks] # socks if we want to do anything with a proxy server (SOCKS5)
 scipy
 setuptools
 sphinx

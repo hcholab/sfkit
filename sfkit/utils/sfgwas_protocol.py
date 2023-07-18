@@ -127,8 +127,8 @@ def generate_shared_keys(role: int) -> None:
             else:
                 print(f"No public key found for {other_username}.  Waiting...")
             time.sleep(5)
-            doc_ref_dict: dict = get_doc_ref_dict()
-            other_public_key_str: str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
+            doc_ref_dict = get_doc_ref_dict()
+            other_public_key_str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
         other_public_key = PublicKey(other_public_key_str.encode(), encoder=HexEncoder)
         condition_or_fail(my_private_key != other_public_key, "Private and public keys must be different")
         shared_key = Box(my_private_key, other_public_key).shared_key()
@@ -173,7 +173,7 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
     data["output_dir"] = f"out/party{role}"
     data["cache_dir"] = f"cache/party{role}"
 
-    doc_ref_dict: dict = get_doc_ref_dict()
+    doc_ref_dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
     data["local_num_threads"] = int(doc_ref_dict["personal_parameters"][user_id]["NUM_CPUS"]["value"])
     data["assoc_num_blocks_parallel"] = int(data.get("local_num_threads", 16)) // 8
