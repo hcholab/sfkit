@@ -14,12 +14,12 @@ jobs:
   build_lint_test_push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
     env:
       REGISTRY: ghcr.io
       IMAGE: ${{ github.repository }}
-      
+
     steps:
     - uses: actions/checkout@v3
 
@@ -42,12 +42,58 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build, lint, test and push Docker image
+    - name: Build and load Docker image
+      id: docker_build
       uses: docker/build-push-action@v4
       with:
-        push: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+        push: false
+        load: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: MARCH=x86-64
+    
+    - name: Push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        push: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+    
+    - name: Get image name
+      id: get_image_name
+      run: echo "image_name=${{ steps.docker_build.outputs.digest }}" >> $GITHUB_ENV
+
+    - name: Save Docker image to .tar
+      run: docker save ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest > image.tar
+
+    - name: Compress Docker image to .tar.gz
+      run: gzip image.tar
+
+    - name: Extract branch name
+      id: extract_branch
+      run: echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})"
+      shell: bash
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Provided by Actions, you do not need to create your own token
+      with:
+        tag_name: ${{ steps.extract_branch.outputs.branch }}
+        release_name: Release ${{ steps.extract_branch.outputs.branch }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./image.tar.gz
+        asset_name: image.tar.gz
+        asset_content_type: application/gzip
