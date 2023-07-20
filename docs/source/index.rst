@@ -29,12 +29,15 @@ Contents
    
    commands
 
-Related Publication
--------------------
+Related Publications
+--------------------
 
-Our project has been documented in a research article published in the Nucleic Acids Research journal. For a more detailed understanding of our work, you can access the article via the link below:
+Our project has been documented in several research articles. For a more detailed understanding of our work, you can access these articles via the links below:
 
-`sfkit: a web-based toolkit for secure and federated genomic analysis <https://academic.oup.com/nar/advance-article/doi/10.1093/nar/gkad464/7184156>`_
+- `sfkit: a web-based toolkit for secure and federated genomic analysis <https://academic.oup.com/nar/advance-article/doi/10.1093/nar/gkad464/7184156>`_ (Nucleic Acids Research, 2023): This article provides an overview of the entire sfkit project.  
+- `Secure Genome-wide Association Analysis Using Multiparty Computation <https://www.nature.com/articles/nbt.4108>`_ (Nature Biotechnology, 2018): This paper introduces the MPC-GWAS workflow.
+- `Truly Privacy-Preserving Federated Analytics for Precision Medicine with Multiparty Homomorphic Encryption <https://www.nature.com/articles/s41467-021-25972-y>`_ (Nature Communications, 2021): This paper details the SF-GWAS workflow.
+- `Secure and Federated Genome-Wide Association Studies for Biobank-Scale Datasets <https://www.biorxiv.org/content/10.1101/2022.11.30.518537v1>`_ (Preprint): This paper outlines recent enhancements to the SF-GWAS workflow.
 
 Questions
 ---------
