@@ -54,11 +54,7 @@ jobs:
         load: true
 
     - name: Push Docker image
-      uses: docker/build-push-action@v4
-      if: ${{ env.RELEASE == 'true' }}
-      with:
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+      run: docker push ${{ steps.meta.outputs.tags }}
 
     - name: Extract Docker image into archive
       run: |
