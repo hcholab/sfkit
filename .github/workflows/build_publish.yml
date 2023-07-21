@@ -46,13 +46,19 @@ jobs:
       id: docker_build
       uses: docker/build-push-action@v4
       with:
-        push: ${{ env.RELEASE == 'true' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: MARCH=x86-64
         load: true
+
+    - name: Push Docker image
+      uses: docker/build-push-action@v4
+      if: ${{ env.RELEASE == 'true' }}
+      with:
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
 
     - name: Extract Docker image into archive
       run: |
