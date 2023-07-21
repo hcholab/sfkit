@@ -14,7 +14,7 @@ practice.py
 .vscode
 */*.egg*
 dist/*
-docs/build/*
+docs/
 .sourcery.yaml
 .coverage
 delete_old_versions.py
