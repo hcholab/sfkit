@@ -58,6 +58,7 @@ jobs:
       run: docker push ${{ steps.meta.outputs.tags }}
 
     - name: Extract Docker image into archive
+      if: ${{ env.RELEASE == 'true' }}
       run: |
         docker create --name sfkit "${{ steps.docker_build.outputs.digest }}"
         docker export sfkit | tar -xvf - app/
