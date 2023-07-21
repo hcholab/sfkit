@@ -15,36 +15,36 @@ The purpose of a GWAS study is to identify genetic variants that are associated 
 Prerequisites
 -------------
 
-Before you begin, you will need access to a machine where you can run the protocol. 
+Before you begin, you will need access to a machine where you can run the protocol.
 If you do not already have a machine set up, the recommended option is to use Google Cloud Platform (GCP):
 if you are unfamiliar with GCP, you may find the documentation `here <https://cloud.google.com/compute>`_ helpful.
 
 .. note::
 
-    If you are deciding what Virtual Machine (VM) size to use, 
-    we generally recommend using the *e2-highmem-16* (16 vCPUs, 128 GB memory) 
-    with at least a *100GB boot disk* as a reasonable default for this kind of analysis.  
-    This size has worked well for us on datasets with <30,000 samples and <700,000 SNPs for SF-GWAS. 
-    If you are running a larger dataset, you may need to increase the size of the VM.  
+    If you are deciding what Virtual Machine (VM) size to use,
+    we generally recommend using the *e2-highmem-16* (16 vCPUs, 128 GB memory)
+    with at least a *100GB boot disk* as a reasonable default for this kind of analysis.
+    This size has worked well for us on datasets with <30,000 samples and <700,000 SNPs for SF-GWAS.
+    If you are running a larger dataset, you may need to increase the size of the VM.
     On a dataset with ~10 million SNPs, we have used the larger *n2-highmem-64* or *n2-highmem-128*
-    with a 500GB disk. If you are running a smaller dataset, you may be able to use a smaller machine.  
+    with a 500GB disk. If you are running a smaller dataset, you may be able to use a smaller machine.
     Feel free to reach out if you have questions.
 
 Networking
 ----------
 
-.. note:: 
-    
-    When running a real study, you will need to coordinate with the other study collaborators 
-    to set up your networking and firewall rules such that your machines can communicate with one another. 
-    This may include allowing one another's IP addresses on specific ports that you will specify for 
+.. note::
+
+    When running a real study, you will need to coordinate with the other study collaborators
+    to set up your networking and firewall rules such that your machines can communicate with one another.
+    This may include allowing one another's IP addresses on specific ports that you will specify for
     TCP connections during the course of the protocol.  For the purposes of this tutorial,
     we will be running the protocol on a single machine, so we will not need to worry about this.
 
 Website
 -------
 
-1. Go to the companion `website <https://sfkit.org/>`_ and register or login.  
+1. Go to the companion `website <https://sfkit.org/>`_ and register or login.
 2. Go to the `studies <https://sfkit.org/index>`_ page to create a study on the website.  For this tutorial, you should choose the "SF-GWAS" workflow with the "user-configured" option.  You can choose to enter any title, description and study information and then check "Demo Study" and Confirm.  You can leave the parameters as they are, for now (when you run a real study, you'll want to set the parameters accordingly). After you submit, you should see a page that looks something like this:
 
 .. image:: images/study.png
@@ -55,7 +55,7 @@ You should click the button to download the Auth key, and then you should upload
 
    When running a real study, you will want to allow multiple participants for a study.  A new participant can request to join a study by clicking "Request to Join Study" under a study on the Studies page.  Alternatively, you can invite a new study participant with the button on your study page.  For this tutorial, we have automatically added an "Example Collaborator" to imitate another study participant.
 
-CLI 
+CLI
 ---
 
 0. SSH into your VM where you will be running the workflow and follow the instructions to install sfkit if you haven't already (see :doc:`installation`).  Also upload the auth_key.txt to your machine if you have not done so already.
@@ -73,8 +73,8 @@ CLI
     .. code-block:: console
 
         $ docker run --rm -it --pull always \
-            -v $PWD/sfkit:/app/.sfkit \
-            -v $PWD/auth_key.txt:/app/auth_key.txt:ro \
+            -v $PWD/sfkit:/sfkit/.sfkit \
+            -v $PWD/auth_key.txt:/sfkit/auth_key.txt:ro \
             ghcr.io/hcholab/sfkit auth
 
     Note that this assumes your auth_key.txt is in the current directory.  If it is not, you will need to change the path accordingly.  See :doc:`installation` for more information on running sfkit with docker.
@@ -82,7 +82,7 @@ CLI
 This will authenticate your VM with the website. It does this by making a request to the website, which can authenticate you based on the key that you downloaded. If you get a message saying "Successfully authenticated", then you are good to go.
 
 
-2. Run 
+2. Run
 
 .. tab:: pip
 
@@ -95,16 +95,16 @@ This will authenticate your VM with the website. It does this by making a reques
     .. code-block:: console
 
         $ docker run --rm -it --pull always \
-            -v $PWD/sfkit:/app/.sfkit \
-            ghcr.io/hcholab/sfkit networking 
+            -v $PWD/sfkit:/sfkit/.sfkit \
+            ghcr.io/hcholab/sfkit networking
 
 This will share your IP address to other study participants so their machines can communicate with your VM.  In this one-person tutorial, it will do nothing. If you get a message saying "Successfully communicated networking information!", then you are good to go.
 
-.. note:: 
-    
+.. note::
+
     When running a real study (where there are other participants on other machines), it will also ask you for preferred port numbers to use when direct socket connections are made during the protocol. This port number (and optionally a custom IP address) can also be set via the `--ports` and `--ip_address` flags.  You will need to coordinate with the other study participants to ensure that you are not using the same port numbers as one another.  You will also need to ensure that your firewall rules allow for TCP connections on these ports. Please `contact us <mailto:support@sfkit.org>`__ if this is not possible in your environment.
 
-3. Run 
+3. Run
 
 .. tab:: pip
 
@@ -117,12 +117,12 @@ This will share your IP address to other study participants so their machines ca
     .. code-block:: console
 
         $ docker run --rm -it --pull always \
-            -v $PWD/sfkit:/app/.sfkit \
+            -v $PWD/sfkit:/sfkit/.sfkit \
             ghcr.io/hcholab/sfkit generate_keys
 
 This will use a secure key generation protocol to generate a pair of keys for your study.  It will also communicate the public key to the website so that all study participants will be able to communicate with your VM.  If you get a message saying "Your public key has been uploaded to the website and is available for all participants in your study.", then you are good to go.  During the actual protocol, your private key (not shared) will be combined with each other participant's public key to create a shared secret key that is only known to you and this other participant.  See `Diffie-Hellman Key Exchange <https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange>`_ for more information on how this works.
 
-4. Run 
+4. Run
 
 .. tab:: pip
 
@@ -135,8 +135,8 @@ This will use a secure key generation protocol to generate a pair of keys for yo
     .. code-block:: console
 
         $ docker run --rm -it --pull always \
-            -v $PWD/sfkit:/app/.sfkit \
-            -v $PWD/data:/app/data \
+            -v $PWD/sfkit:/sfkit/.sfkit \
+            -v $PWD/data:/sfkit/data \
             ghcr.io/hcholab/sfkit register_data
 
     Note that this assumes your data is in a directory called "data" in the current directory.  If it is not, you will need to change the path accordingly.  See :doc:`installation` for more information on running sfkit with docker.
@@ -144,10 +144,10 @@ This will use a secure key generation protocol to generate a pair of keys for yo
 This will validate that your input data for the protocol is in the correct format.  It will ask you for the paths to your input data (this can also be provided via command-line arguments).  For this tutorial, you can enter "demo" for both data paths and the demo data will be used.  If you get a message saying "Successfully registered and validated data!", then you are good to go.
 
 .. note::
-    
+
     When running the MPC-GWAS workflow, this step will also encrypt your data. This means that your full raw data is *not* necessary for the final `sfkit run_protocol` step if you prefer to remove it from your machine or run the protocol on a different machine. Of course, you will need to keep the encrypted data on your machine for the duration of the protocol.
 
-5. Run 
+5. Run
 
 .. tab:: pip
 
@@ -160,16 +160,16 @@ This will validate that your input data for the protocol is in the correct forma
     .. code-block:: console
 
         $ docker run --rm -it --pull always \
-            -v $PWD/sfkit:/app/.sfkit \
-            -v $PWD/data:/app/data \
+            -v $PWD/sfkit:/sfkit/.sfkit \
+            -v $PWD/data:/sfkit/data \
             -p 8100-8120:8100-8120 \
             ghcr.io/hcholab/sfkit run_protocol
 
     Note that this assumes your data is in a directory called "data" in the current directory.  It also assumes that you chose port 8100 in the `networking` step.  See :doc:`installation` for more information on running sfkit with docker.
 
-This will run the entire secure federated GWAS protocol.  It should take about half an hour on the toy example dataset.  
+This will run the entire secure federated GWAS protocol.  It should take about half an hour on the toy example dataset.
 
-The output should look something like this: 
+The output should look something like this:
 
 .. code-block:: console
 
@@ -222,4 +222,4 @@ And if you look in the ``sfgwas/out/party1`` directory (see ``sfkit/out`` if you
     1	80000	0.01069461	-0.19869300651888114
 
 
-Congratulations! You have successfully completed the *user-configured* Tutorial 1.  You should have a better understanding of how to configure and execute a study using sfkit. Feel free to explore other workflows and data types or to use the platform for your own research projects.  We also encourage you to go through `Tutorial 2 <https://sfkit.readthedocs.io/en/latest/tutorial_2.html>`__, which will show you how to run a study with multiple participants. 
+Congratulations! You have successfully completed the *user-configured* Tutorial 1.  You should have a better understanding of how to configure and execute a study using sfkit. Feel free to explore other workflows and data types or to use the platform for your own research projects.  We also encourage you to go through `Tutorial 2 <https://sfkit.readthedocs.io/en/latest/tutorial_2.html>`__, which will show you how to run a study with multiple participants.

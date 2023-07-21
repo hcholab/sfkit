@@ -8,7 +8,7 @@ Tutorial 2 (Examples with two users)
 Introduction
 ------------
 
-This two-person tutorial is designed to guide you and a partner through the process of running a study using real genomic data with the *user-configured* option.  You'll both download sample data, configure your respective parts of the study, and execute a workflow together. For the purposes of this tutorial, we will refer to the two users as "User 1" and "User 2". 
+This two-person tutorial is designed to guide you and a partner through the process of running a study using real genomic data with the *user-configured* option.  You'll both download sample data, configure your respective parts of the study, and execute a workflow together. For the purposes of this tutorial, we will refer to the two users as "User 1" and "User 2".
 
 Tip: If you haven't already, we recommend that you go through Tutorial 1 first, as this tutorial will assume you have some familiarity with the basics of the workflow.
 
@@ -47,12 +47,12 @@ The commands that each user will need to run will be similar to those in :doc:`t
     .. code-block:: console
 
         $ docker run --rm -it --pull always \
-            -v $PWD/sfkit:/app/.sfkit \
-            -v $PWD/auth_key.txt:/app/auth_key.txt:ro \
+            -v $PWD/sfkit:/sfkit/.sfkit \
+            -v $PWD/auth_key.txt:/sfkit/auth_key.txt:ro \
             ghcr.io/hcholab/sfkit auth
 
 
-2. Run 
+2. Run
 
 .. tab:: pip
 
@@ -65,10 +65,10 @@ The commands that each user will need to run will be similar to those in :doc:`t
     .. code-block:: console
 
         $ docker run --rm -it --pull always \
-            -v $PWD/sfkit:/app/.sfkit \
-            ghcr.io/hcholab/sfkit networking 
+            -v $PWD/sfkit:/sfkit/.sfkit \
+            ghcr.io/hcholab/sfkit networking
 
-For User 1, this will prompt the user to input a port they will use to communicate with User 2.  The port provided should be the lower end of a range of open ports for communication (e.g. 8100 for a range of 8100-8120).  User 1 can alternatively specify the port in the command line using the ``--ports`` flag.   
+For User 1, this will prompt the user to input a port they will use to communicate with User 2.  The port provided should be the lower end of a range of open ports for communication (e.g. 8100 for a range of 8100-8120).  User 1 can alternatively specify the port in the command line using the ``--ports`` flag.
 
 3. Run
 
@@ -83,10 +83,10 @@ For User 1, this will prompt the user to input a port they will use to communica
     .. code-block:: console
 
         $ docker run --rm -it --pull always \
-            -v $PWD/sfkit:/app/.sfkit \
+            -v $PWD/sfkit:/sfkit/.sfkit \
             ghcr.io/hcholab/sfkit generate_keys
 
-4. Run 
+4. Run
 
 .. tab:: pip
 
@@ -94,18 +94,18 @@ For User 1, this will prompt the user to input a port they will use to communica
 
         $ sfkit register_data
 
-    You can optionally use the ``--data_path`` and ``--geno_binary_file_prefix`` flags if you want to specify them in the command line.  Otherwise, you will be prompted to enter them.  
+    You can optionally use the ``--data_path`` and ``--geno_binary_file_prefix`` flags if you want to specify them in the command line.  Otherwise, you will be prompted to enter them.
 
 .. tab:: docker
 
     .. code-block:: console
 
         $ docker run --rm -it --pull always \
-            -v $PWD/sfkit:/app/.sfkit \
-            -v $PWD/data:/app/data \
+            -v $PWD/sfkit:/sfkit/.sfkit \
+            -v $PWD/data:/sfkit/data \
             ghcr.io/hcholab/sfkit register_data
 
-5. Run 
+5. Run
 
 .. tab:: pip
 
@@ -120,14 +120,14 @@ For User 1, this will prompt the user to input a port they will use to communica
     .. code-block:: console
 
         $ docker run --rm -it --pull always \
-            -v $PWD/sfkit:/app/.sfkit \
-            -v $PWD/data:/app/data \
+            -v $PWD/sfkit:/sfkit/.sfkit \
+            -v $PWD/data:/sfkit/data \
             -p 8100-8120:8100-8120 \
             ghcr.io/hcholab/sfkit run_protocol
 
     You can view the output on your study page of the website or directly in the ``sfkit/out`` directory.
 
-    The port range is only necessary for User 1 and should reflect the range from the `networking` command. 
+    The port range is only necessary for User 1 and should reflect the range from the `networking` command.
 
 
-Congratulations! You have successfully completed the *user-configured* Tutorial 2.  You should have a better understanding of how to configure and execute a study using sfkit. Feel free to explore other `workflows <https://sfkit.org/workflows>`__ and data types or to use the platform for your own research projects.  
+Congratulations! You have successfully completed the *user-configured* Tutorial 2.  You should have a better understanding of how to configure and execute a study using sfkit. Feel free to explore other `workflows <https://sfkit.org/workflows>`__ and data types or to use the platform for your own research projects.
