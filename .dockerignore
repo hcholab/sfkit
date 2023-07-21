@@ -1,5 +1,6 @@
 .DS_STORE
 __*
+*.bak
 keys.txt
 keys2.txt
 venv/
