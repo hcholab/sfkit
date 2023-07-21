@@ -11,21 +11,34 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    'black',
     'bs4',
     'checksumdir',
     'google-auth',
     'google-cloud-storage',
     'ipaddr',
+    'matplotlib',
+    'numpy',
+    'pandas',
     'PyNaCl',
+    'qmplot',
     'requests[socks]',
+    'scipy',
     'tomlkit',
     'tqdm',
-    'numpy',
-    'scipy',
-    'pandas',
-    'qmplot',
-    'matplotlib',
+]
+
+[project.optional-dependencies]
+dev = [
+  'black',
+  'flake8',
+  'pyinstaller',
+  'pytest-mock',
+]
+doc = [
+  'sphinx-argparse',
+  'sphinx-copybutton',
+  'sphinx-inline-tabs',
+  'sphinx-rtd-theme',
 ]
 
 [project.scripts]
