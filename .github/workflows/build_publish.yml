@@ -54,6 +54,7 @@ jobs:
         load: true
 
     - name: Push Docker image
+      if: ${{ env.RELEASE == 'true' }}
       run: docker push ${{ steps.meta.outputs.tags }}
 
     - name: Extract Docker image into archive
