@@ -15,6 +15,7 @@ a = Analysis(
     binaries=[(b, '.') for b in (
         'plink2',
         '/lib/libc.so.6',
+        '/lib/libm.so.6',
         '/usr/lib/libgmp.so.10',
         '/usr/lib/libpcre2-8.so.0',
         '/usr/lib/libsodium.so.23',
