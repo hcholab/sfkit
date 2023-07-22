@@ -59,10 +59,11 @@ jobs:
 
     - name: Extract Docker image into archive
       if: ${{ env.RELEASE == 'true' }}
+      working-directory: ./temp
       run: |
         docker create --name sfkit "${{ steps.meta.outputs.tags }}"
         docker export sfkit | tar -xvf - sfkit/
-        tar czvf ${ARCHIVE} sfkit/
+        tar czvf "../${ARCHIVE}" sfkit/
 
     - name: Publish release archive
       uses: softprops/action-gh-release@v1
