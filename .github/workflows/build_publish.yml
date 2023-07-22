@@ -57,7 +57,7 @@ jobs:
       run: docker push ${{ steps.meta.outputs.tags }}
 
     - name: Publish release archive
-      if: ${{ env.RELEASE == 'true' }}
+      if: ${{ env.RELEASE == 'true' && false }}
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
