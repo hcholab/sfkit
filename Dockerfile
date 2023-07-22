@@ -34,19 +34,18 @@ RUN git clone --depth 1 https://github.com/hcholab/secure-gwas . && \
     rm -rf .git
 
 # compile NTL with Secure-GWAS mods
+ARG MARCH=native
 RUN mkdir /ntl && \
     curl -so- https://libntl.org/ntl-10.3.0.tar.gz | tar -C /ntl -zxvf- --strip-components=1 && \
     cp /build/code/NTL_mod/ZZ.h /ntl/include/NTL/ && \
     cp /build/code/NTL_mod/ZZ.cpp /ntl/src/ && \
     cd /ntl/src && \
-    ./configure NTL_THREAD_BOOST=on && \
+    ./configure NTL_THREAD_BOOST=on CXXFLAGS="-g -O2 -march=${MARCH}" && \
     make -j$(nproc) all && \
     make install
 
 # patch and compile Secure-GWAS
-ARG MARCH=native
-RUN set -e && \
-    cd code && \
+RUN cd code && \
     COMP=$(which clang++) && \
     sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile && \
     sed -i "s|-march=native|-march=${MARCH} -maes|g" Makefile && \
