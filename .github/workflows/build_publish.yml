@@ -71,5 +71,7 @@ jobs:
         tar czvf "${archive}" sfkit/
         popd
 
-        next_release=$(gh release list -L 1 | awk '{print $3}' | perl -pe 's/(\d+)$/($1+1)/e')
-        gh release create "${next_release}" --generate-notes "${archive}"
+        last_release=$(gh release list -L 1 | awk '{print $3}')
+        next_release=$(perl -pe 's/(\d+)$/($1+1)/e' <<< "$last_release")
+        gh release create --generate-notes \
+          --notes-start-tag "${last_release}" "${next_release}" "${archive}"
