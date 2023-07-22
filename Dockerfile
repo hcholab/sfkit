@@ -5,7 +5,8 @@ WORKDIR /build
 
 # compile Go code
 RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
-    go build && \
+    # use static compilation
+    CGO_ENABLED=0 go build && \
     mkdir cache && \
     rm -rf .git
 
@@ -19,15 +20,25 @@ FROM cgr.dev/chainguard/python:latest-dev AS dev
 WORKDIR /build
 USER root
 
-# install common prerequisites
-RUN apk add curl gmp-dev libsodium-dev
+# install common prerequisite
+RUN apk add --no-cache curl
+
+
+### Download static Plink2 executable according to the platform
+FROM dev AS plink2
+
+ARG VERSION=20230707
+
+RUN ARCH=$(grep -q avx2 /proc/cpuinfo && echo "avx2" || echo "x86_64") && \
+    curl -so plink2.zip "https://s3.amazonaws.com/plink2-assets/plink2_linux_${ARCH}_${VERSION}.zip" && \
+    unzip plink2.zip
 
 
 ### Bulid Secure-GWAS
 FROM dev AS secure-gwas
 
 # install toolchain
-RUN apk add clang-15 openssl-dev perl
+RUN apk add --no-cache clang-15 gmp-dev libsodium-dev libsodium-static openssl-dev perl
 
 # download source
 RUN git clone --depth 1 https://github.com/hcholab/secure-gwas . && \
@@ -48,7 +59,7 @@ RUN mkdir /ntl && \
 RUN cd code && \
     COMP=$(which clang++) && \
     sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile && \
-    sed -i "s|-march=native|-march=${MARCH} -maes|g" Makefile && \
+    sed -i "s|-march=native|-march=${MARCH} -maes -static|g" Makefile && \
     sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile && \
     sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
     make -j$(nproc)
@@ -57,12 +68,8 @@ RUN cd code && \
 ### Build SFKit
 FROM dev AS sfkit
 
-# install ldd tool for PyInstaller
-RUN apk add posix-libc-utils
-
-# download Plink2
-RUN curl -so plink2.zip https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20221024.zip && \
-    unzip plink2.zip
+# install static analysis tools
+RUN apk add --no-cache patchelf posix-libc-utils
 
 # install Python dependencies
 RUN pip install hatch
@@ -81,12 +88,13 @@ RUN flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --sta
 # run tests
 RUN python -m pytest
 
-# install and compile sfkit for runtime use
+# build static sfkit executable for runtime use
 RUN pip install .
 RUN pyinstaller pyinstaller.spec
+RUN staticx dist/cli dist/sfkit
 
 
-### Copy distributables into the minimal hardened runtime image
+### Copy distributables into a minimal hardened runtime image
 FROM cgr.dev/chainguard/bash
 
 WORKDIR /sfkit
@@ -97,8 +105,9 @@ RUN ln -s $(pwd) /app
 ENV PATH="$PATH:/sfkit:/sfkit/sfgwas" \
     SFKIT_DIR="/sfkit/.sfkit"
 
-COPY --from=secure-gwas --chown=nonroot /build ./secure-gwas/
-COPY --from=sfgwas      --chown=nonroot /build ./sfgwas/
+COPY --from=plink2      --chown=nonroot /build/plink2     ./
+COPY --from=secure-gwas --chown=nonroot /build            ./secure-gwas/
+COPY --from=sfgwas      --chown=nonroot /build            ./sfgwas/
 COPY --from=sfkit       --chown=nonroot /build/dist/sfkit ./
 
 ENTRYPOINT ["sfkit"]

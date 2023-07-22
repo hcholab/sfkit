@@ -33,6 +33,7 @@ dev = [
   'flake8',
   'pyinstaller',
   'pytest-mock',
+  'staticx',
 ]
 doc = [
   'sphinx-argparse',
