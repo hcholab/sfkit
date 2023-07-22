@@ -67,6 +67,4 @@ jobs:
 
     - name: Publish release archive
       if: ${{ env.RELEASE == 'true' }}
-      run: |
-        sha_short=$(git rev-parse --short HEAD)
-        gh release create "${sha_short}" --generate-notes "${ARCHIVE}"
+      run: gh release create --generate-notes "${ARCHIVE}"
