@@ -17,7 +17,6 @@ jobs:
     env:
       REGISTRY: ghcr.io
       IMAGE: ${{ github.repository }}
-      ARCHIVE: "sfkit_linux_x86_64.tar.gz"
       RELEASE: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
 
     steps:
@@ -57,14 +56,12 @@ jobs:
       if: ${{ env.RELEASE == 'true' }}
       run: docker push ${{ steps.meta.outputs.tags }}
 
-    - name: Extract Docker image into archive
-      if: ${{ env.RELEASE == 'true' }}
-      working-directory: ./temp
-      run: |
-        docker create --name sfkit "${{ steps.meta.outputs.tags }}"
-        docker export sfkit | tar -xvf - sfkit/
-        tar czvf "../${ARCHIVE}" sfkit/
-
     - name: Publish release archive
       if: ${{ env.RELEASE == 'true' }}
-      run: gh release create --generate-notes "${ARCHIVE}"
+      run: |
+        cd $(mktemp -d)
+        docker create --name sfkit "${{ steps.meta.outputs.tags }}"
+        docker export sfkit | tar -xvf - sfkit/
+        archive="sfkit_linux_x86_64.tar.gz"
+        tar czvf "${archive}" sfkit/
+        gh release create --generate-notes "${archive}"
