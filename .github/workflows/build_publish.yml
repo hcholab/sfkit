@@ -69,6 +69,5 @@ jobs:
         tar czvf "${archive}" sfkit/
         popd
 
-        tag=$(git describe)
-        echo "Release tag: ${tag}"
-        gh release create "${tag}" --generate-notes "${archive}"
+        next_release=$(gh release list -L 1 | awk '{print $3}' | perl -pe 's/(\d+)$/($1+1)/e')
+        gh release create "${next_release}" --generate-notes "${archive}"
