@@ -61,6 +61,8 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
+        set -euo pipefail
+
         pushd $(mktemp -d)
         docker create --name sfkit "${{ steps.meta.outputs.tags }}"
         docker export sfkit | tar -xvf - sfkit/
