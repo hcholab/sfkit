@@ -57,13 +57,13 @@ jobs:
       run: docker push ${{ steps.meta.outputs.tags }}
 
     - name: Publish release archive
-      if: ${{ env.RELEASE == 'true' && false }}
+      if: ${{ env.RELEASE == 'true' }}
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
         cd $(mktemp -d)
         docker create --name sfkit "${{ steps.meta.outputs.tags }}"
         docker export sfkit | tar -xvf - sfkit/
-        archive="sfkit_linux_x86_64.tar.gz"
-        tar czvf "${archive}" sfkit/
+        archive="$(pwd)/sfkit_linux_x86_64.tar.gz"
+        tar czvf "${archive}" sfkit/ && popd
         gh release create --generate-notes "${archive}"
