@@ -12,13 +12,13 @@ dateutil_path = os.path.dirname(pkgutil.get_loader("dateutil").path)
 a = Analysis(
     [sys.prefix + '/bin/sfkit'],
     pathex=[],
-    binaries=[('plink2', '.')] + [
-        ('/usr/lib/' + lib, '.') for lib in (
-            'libgmp.so.10',
-            'libpcre2-8.so.0',
-            'libsodium.so.23',
-        )
-    ],
+    binaries=[(b, '.') for b in (
+        'plink2',
+        '/lib/libc.so.6',
+        '/usr/lib/libgmp.so.10',
+        '/usr/lib/libpcre2-8.so.0',
+        '/usr/lib/libsodium.so.23',
+    )],
     datas=[(dateutil_path, 'dateutil')],
     hiddenimports=[],
     hookspath=[],
