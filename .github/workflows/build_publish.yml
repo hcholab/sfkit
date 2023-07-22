@@ -66,6 +66,9 @@ jobs:
         docker export sfkit | tar -xvf - sfkit/
 
         archive="$(pwd)/sfkit_linux_x86_64.tar.gz"
-        tar czvf "${archive}" sfkit/ && popd
+        tar czvf "${archive}" sfkit/
+        popd
 
-        gh release create $(git describe) --generate-notes "${archive}"
+        tag=$(git describe)
+        echo "Release tag: ${tag}"
+        gh release create "${tag}" --generate-notes "${archive}"
