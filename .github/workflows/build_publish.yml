@@ -65,10 +65,10 @@ jobs:
 
         pushd $(mktemp -d)
         docker create --name sfkit "${{ steps.meta.outputs.tags }}"
-        docker export sfkit | tar -xvf - sfkit/
+        docker export sfkit | tar -xf - sfkit/
 
         archive="$(pwd)/sfkit_linux_x86_64.tar.gz"
-        tar czvf "${archive}" sfkit/
+        tar czf "${archive}" sfkit/
         popd
 
         last_release=$(gh release list -L 1 | awk '{print $3}')
