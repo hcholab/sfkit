@@ -12,7 +12,7 @@ old_code/
 practice.py
 .vscode
 */*.egg*
-dist/*
+dist*
 docs/build/*
 .sourcery.yaml
 .coverage

@@ -18,6 +18,8 @@ jobs:
       REGISTRY: ghcr.io
       IMAGE: ${{ github.repository }}
       RELEASE: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+      PLATFORMS: linux/amd64,linux/amd64/v1,linux/amd64/v2,linux/amd64/v3
+      OCI_TAR: dist.tar
 
     steps:
     - uses: actions/checkout@v3
@@ -33,7 +35,7 @@ jobs:
         tags: |
           type=raw,value=latest
 
-    - name: Build, lint, test and push Docker image
+    - name: Build OCI image
       id: docker_build
       uses: docker/build-push-action@v4
       with:
@@ -41,37 +43,27 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        build-args: MARCH=x86-64
-        load: true
+        platforms: ${{ env.PLATFORMS }}
+        outputs: type=oci,dest=${{ env.OCI_TAR }}
 
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v2
-      if: ${{ env.RELEASE == 'true' }}
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Download regctl tool
+      if: ${{ env.RELEASE }}
+      run: |
+        curl -Lo regctl https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64
+        chmod +x regctl
 
     - name: Push Docker image
-      if: ${{ env.RELEASE == 'true' }}
-      run: docker push ${{ steps.meta.outputs.tags }}
+      if: ${{ env.RELEASE }}
+      run: |
+        regctl image import "${{ steps.meta.outputs.tags }}" "${{ env.OCI_TAR }}"
 
-    - name: Publish release archive
-      if: ${{ env.RELEASE == 'true' }}
+    - name: Download Crane tool
+      uses: imjasonh/setup-crane@v0.3
+      if: ${{ env.RELEASE }}
+
+    - name: Publish release archives
+      if: ${{ env.RELEASE }}
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        set -euo pipefail
-
-        pushd $(mktemp -d)
-        docker create --name sfkit "${{ steps.meta.outputs.tags }}"
-        docker export sfkit | tar -xf - sfkit/
-
-        archive="$(pwd)/sfkit_linux_x86_64.tar.gz"
-        tar czf "${archive}" sfkit/
-        popd
-
-        last_release=$(gh release list -L 1 | awk '{print $3}')
-        next_release=$(perl -pe 's/(\d+)$/($1+1)/e' <<< "$last_release")
-        gh release create --generate-notes \
-          --notes-start-tag "${last_release}" "${next_release}" "${archive}"
+        ./publish_release "${{ env.PLATFORMS }}" "$(pwd)/${{ env.OCI_TAR }}"

@@ -13,11 +13,12 @@ old_code/
 practice.py
 .vscode
 */*.egg*
-dist/*
+dist*
 docs/
 .sourcery.yaml
 .coverage
 delete_old_versions.py
+publish_release.sh
 
 .dockerignore
 .git*
