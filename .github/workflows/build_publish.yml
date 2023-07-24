@@ -84,7 +84,7 @@ jobs:
       id: cache-flags
       run: |
         # Set the cache-to output
-        echo 'cache-to=type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }}' >> "${GITHUB_OUTPUT}"
+        echo 'cache-to=type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }},mode=max' >> "${GITHUB_OUTPUT}"
 
         # Set the cache-from output
         if [[ '${{ github.event_name }}' == 'push' ]]; then
