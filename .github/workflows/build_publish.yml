@@ -61,7 +61,6 @@ jobs:
       matrix:
         platform:
         - linux/amd64
-        - linux/amd64/v1
         - linux/amd64/v2
         - linux/amd64/v3
 
