@@ -20,7 +20,7 @@ sfkit_dir="sfkit/"
 
 platforms=$(
     docker buildx imagetools inspect "${IMAGE}" \
-        --format "{{range .Manifest.Manifests}} {{.Platform.OS}}/{{.Platform.Architecture}}{{with .Platform.Variant}}{{if .}}/{{.}}{{end}}{{end}}{{end}}"
+        --format '{{range .Manifest.Manifests}}{{with .Platform}}{{if (ne .OS "unknown")}}  {{.OS}}/{{.Architecture}}{{if .Variant}}/{{.Variant}}{{end}}{{end}}{{end}}{{end}}'
 )
 for p in ${platforms} ; do
     (
