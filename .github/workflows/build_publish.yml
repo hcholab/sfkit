@@ -141,6 +141,9 @@ jobs:
       IMAGE: ${{ format('{0}:{1}', needs.prepare.outputs.image, needs.prepare.outputs.meta-version) }}
 
     steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
     - name: Download digests
       uses: actions/download-artifact@v3
       with:
