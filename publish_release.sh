@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Extracts platform-specific TAR archives
-# containing static executables from the OCI image tar,
+# containing static executables from the OCI image,
 # and publishes them in a GitHub release.
 #
 # For more details, see
@@ -9,33 +9,32 @@
 
 set -euxo pipefail
 
-PLATFORMS=$1
-OCI_TAR=$2
+IMAGE=$1
 
-sfkit_dir="sfkit/"
 dist_dir="$(pwd)/dist"
 rm -rf "${dist_dir}"
-
-oci_dir="ocidir://${dist_dir}/oci"
-regctl image import "${oci_dir}" "${OCI_TAR}"
+mkdir -p "${dist_dir}"
 
 archive_base="${dist_dir}/sfkit_"
+sfkit_dir="sfkit/"
 
-for p in ${PLATFORMS//,/ } ; do
+platforms=$(
+    docker buildx imagetools inspect "${IMAGE}" \
+        --format "{{range .Manifest.Manifests}} {{.Platform.OS}}/{{.Platform.Architecture}}{{with .Platform.Variant}}{{if .}}/{{.}}{{end}}{{end}}{{end}}"
+)
+for p in ${platforms} ; do
     (
-        pushd "$(mktemp -d)"
-        digest=$(regctl image digest -p "$p" "${oci_dir}")
+        tmp_dir=$(mktemp -d)
+        pushd "${tmp_dir}"
 
-        regctl image export "${oci_dir}@${digest}" \
-        | crane export - - --platform "$p" \
-        | tar -xf - "${sfkit_dir}"
-
+        crane export "${IMAGE}" - --platform "$p" | tar -xf - "${sfkit_dir}"
         tar -czf "${archive_base}${p//\//_}.tar.gz" "${sfkit_dir}"
-        rm -rf "${sfkit_dir}"
+
         popd
+        rm -rf "${tmp_dir}"
     ) &
 done
-wait
+wait -n
 
 last_release=$(gh release list -L 1 | awk '{print $3}')
 next_release=$(perl -pe 's/(\d+)$/($1+1)/e' <<< "${last_release}")
