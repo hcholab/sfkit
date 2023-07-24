@@ -170,4 +170,4 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        ./publish_release "${{ env.IMAGE }}"
+        ./publish_release.sh "${{ env.IMAGE }}"
