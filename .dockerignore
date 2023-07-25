@@ -1,26 +1,7 @@
-.DS_STORE
-__*
-*.bak
-keys.txt
-keys2.txt
-venv/
-test.py
-output_data/*
-encrypted_data/*
-my_p*
-public_key_*
-old_code/
-practice.py
-.vscode
-*/*.egg*
-dist*
-docs/
-.sourcery.yaml
-.coverage
-delete_old_versions.py
-publish_release.sh
-
-.dockerignore
-.git*
-.mypy*/
-Dockerfile
+# Ignore everything except for specific files and folders;
+# this avoids unnecesary rebuilds in the GitHub Workflow
+*
+!/py*
+!/README.md
+!/sfkit
+!/tests
