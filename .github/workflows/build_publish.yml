@@ -125,6 +125,10 @@ jobs:
         # Set MARCH Docker build arg
         echo "march=$(echo '${{ matrix.platform }}' | sed 's|linux/amd64|x86-64|; s|/\(.*\)|-\1|')" >> "${GITHUB_OUTPUT}"
 
+    # to improve Docker layer caching/reproducibility
+    - name: Reset timestamps
+      run: find . -exec touch -t 197001010000 {} +
+
     - name: Build and push by digest
       id: build
       uses: docker/build-push-action@v4
