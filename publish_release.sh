@@ -39,9 +39,6 @@ wait -n
 last_release=$(gh release list -L 1 | awk '{print $3}')
 next_release=$(perl -pe 's/(\d+)$/($1+1)/e' <<< "${last_release}")
 
-ls -l "${archive_base}"*
-gh --version
-
 gh release create --generate-notes --notes-start-tag "${last_release}" "${next_release}"
 
 # Currently, we have to retry upload of each asset,
@@ -52,16 +49,17 @@ for f in "${archive_base}"* ; do
         n=1
         max=3
         while true ; do
-            set -- gh release upload "${next_release}" "$f"
-            if "$@" ; then
-                break;
-            fi
-            if [[ $n -lt $max ]]; then
-                sleep $n
-                ((n++))
-                echo "Retrying upload for $f (attempt $n/$max):"
+            if gh release upload "${next_release}" "$f" ; then
+                break
             else
-                fail "Upload for $f failed after $n attempts."
+                if [[ $n -lt $max ]]; then
+                    sleep $n
+                    ((n++))
+                    echo "Retrying upload for $f (attempt $n/$max):"
+                else
+                    echo "Upload for $f failed after $n attempts."
+                    exit 1
+                fi
             fi
         done
     ) &
