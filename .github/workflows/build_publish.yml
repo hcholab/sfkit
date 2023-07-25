@@ -60,7 +60,7 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-        - linux/amd64
+        - linux/amd64/v1
         - linux/amd64/v2
         - linux/amd64/v3
 
@@ -79,8 +79,8 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set cache flags
-      id: cache-flags
+    - name: Set flags
+      id: flags
       run: |
         # Set the cache-to output
         echo 'cache-to=type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }},mode=max' >> "${GITHUB_OUTPUT}"
@@ -105,18 +105,22 @@ jobs:
           echo "${EOF}" >> "${GITHUB_OUTPUT}"
         fi
 
+        # Set MARCH Docker build arg
+        echo 'march=$(echo "${{ matrix.platform }}" | sed 's|linux/amd64/\(.*\)|x86-64-\1|')'
+
     - name: Build and push by digest
       id: build
       uses: docker/build-push-action@v4
       with:
         platforms: ${{ matrix.platform }}
+        build-args: MARCH=${{ steps.flags.outputs.march }}
         labels: ${{ needs.prepare.outputs.meta-labels }}
         outputs: |
           type=image,name=${{ needs.prepare.outputs.image }},push-by-digest=true,name-canonical=true,push=${{ needs.prepare.outputs.push }}
         cache-from: |
-          ${{ steps.cache-flags.outputs.cache-from }}
+          ${{ steps.flags.outputs.cache-from }}
         cache-to: |
-          ${{ steps.cache-flags.outputs.cache-to }}
+          ${{ steps.flags.outputs.cache-to }}
 
     - name: Export digest
       run: |
