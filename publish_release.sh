@@ -42,7 +42,30 @@ next_release=$(perl -pe 's/(\d+)$/($1+1)/e' <<< "${last_release}")
 ls -l "${archive_base}"*
 gh --version
 
-gh release create --generate-notes \
-    --notes-start-tag "${last_release}" "${next_release}" "${archive_base}"*
+gh release create --generate-notes --notes-start-tag "${last_release}" "${next_release}"
+
+# Currently, we have to retry upload of each asset,
+# due to intermittent issues with file uploads:
+# https://github.com/cli/cli/issues/7750
+for f in "${archive_base}"* ; do
+    (
+        n=1
+        max=3
+        while true ; do
+            set -- gh release upload "${next_release}" "$f"
+            if "$@" ; then
+                break;
+            fi
+            if [[ $n -lt $max ]]; then
+                sleep $n
+                ((n++))
+                echo "Retrying upload for $f (attempt $n/$max):"
+            else
+                fail "Upload for $f failed after $n attempts."
+            fi
+        done
+    ) &
+done
+wait -n
 
 rm -rf "${dist_dir}"
