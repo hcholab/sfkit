@@ -106,7 +106,7 @@ jobs:
         fi
 
         # Set MARCH Docker build arg
-        echo 'march=$(echo "${{ matrix.platform }}" | sed 's|linux/amd64/\(.*\)|x86-64-\1|')'
+        echo 'march=$(echo "${{ matrix.platform }}" | sed "s|linux/amd64/\(.*\)|x86-64-\1|")'
 
     - name: Build and push by digest
       id: build
