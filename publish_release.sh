@@ -37,6 +37,7 @@ last_release=$(gh release list -L 1 | awk '{print $3}')
 next_release=$(perl -pe 's/(\d+)$/($1+1)/e' <<< "${last_release}")
 
 gh release create --generate-notes \
+    -n "To install **sfkit**, please run:<br/>\`curl -sLo- https://github.com/hcholab/sfkit/releases/latest/download/install.sh | bash\`" \
     --notes-start-tag "${last_release}" "${next_release}" "install.sh" "${archive_base}"*
 
 rm -rf "${dist_dir}"
