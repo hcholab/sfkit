@@ -37,6 +37,6 @@ last_release=$(gh release list -L 1 | awk '{print $3}')
 next_release=$(perl -pe 's/(\d+)$/($1+1)/e' <<< "${last_release}")
 
 gh release create --generate-notes \
-    --notes-start-tag "${last_release}" "${next_release}" "${archive_base}"*
+    --notes-start-tag "${last_release}" "${next_release}" "download_release.sh" "${archive_base}"*
 
 rm -rf "${dist_dir}"
