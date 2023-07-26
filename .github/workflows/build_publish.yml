@@ -194,10 +194,10 @@ jobs:
 
     - name: Download Crane tool
       uses: imjasonh/setup-crane@v0.3
-      if: env.RELEASE
+      # if: env.RELEASE
 
     - name: Publish release archives
-      if: env.RELEASE
+      # if: env.RELEASE
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
