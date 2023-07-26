@@ -23,6 +23,7 @@ dependencies = [
     'qmplot',
     'requests[socks]',
     'scipy',
+    'setuptools',
     'tomlkit',
     'tqdm',
 ]
@@ -31,9 +32,7 @@ dependencies = [
 dev = [
   'black',
   'flake8',
-  'pyinstaller',
   'pytest-mock',
-  'staticx',
 ]
 doc = [
   'sphinx-argparse',

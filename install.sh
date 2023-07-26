@@ -46,5 +46,9 @@ fi
 echo Downloading and unpacking sfkit...
 curl -sLo- "https://github.com/hcholab/sfkit/releases/latest/download/sfkit_linux_amd64${microarch}.tar.gz" | tar -xzf-
 
-echo Installation is complete.
+echo Installing sfkit...
+python -m pip install -U sfkit/*.whl
+rm sfkit/*.whl
 cd sfkit
+
+echo Installation is complete.
