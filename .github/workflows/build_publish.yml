@@ -20,9 +20,6 @@ on:
     - 'tests/**'
     - '.github/workflows/build_publish.yml'
 
-env:
-  RELEASE: ${{ github.ref == format('refs/heads/{0}', 'main') }}
-
 # Use multi-platform matrix job optimized for build speed. For more details, see:
 # https://github.com/docker/build-push-action/issues/846
 # https://github.com/TECH7Fox/asterisk-hass-addons/blob/main/.github/workflows/ci.yaml
@@ -56,7 +53,7 @@ jobs:
           ${{ steps.set-outputs.outputs.image }}
         tags: |
           # set latest tag for main branch
-          type=raw,value=latest,enable=${{ env.RELEASE }}
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
           type=ref,event=branch
           type=ref,event=pr
           type=semver,pattern={{version}}
@@ -194,10 +191,10 @@ jobs:
 
     - name: Download Crane tool
       uses: imjasonh/setup-crane@v0.3
-      if: env.RELEASE
+      if: github.ref == 'refs/heads/main'
 
     - name: Publish release archives
-      if: env.RELEASE
+      if: github.ref == 'refs/heads/main'
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
