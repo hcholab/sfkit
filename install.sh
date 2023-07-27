@@ -8,8 +8,11 @@
 
 set -euo pipefail
 
+RED="\e[31m"
+NOCOLOR="\e[0m"
+
 if ! uname -a | grep -qE '(Linux|Microsoft)' ; then
-  echo "Sorry, at the moment sfkit supports only Linux or WSL =("
+  echo -e "${RED}Sorry, at the moment sfkit supports only Linux or WSL =("
   exit 1
 fi
 
@@ -18,7 +21,7 @@ check_instr() {
 }
 
 more_info() {
-  echo
+  echo -e "${NOCOLOR}"
   echo "For more information about these features, please see "
   echo "https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels"
   echo
@@ -32,12 +35,12 @@ if check_instr avx2 ; then
   more_info
 elif check_instr sse2 ; then
   microarch="_v2"
-  echo "WARNING: Detected x86-64-v2 microarchitecture, which supports SSE2 but not AVX2." >&2
-  echo "This means some operations will be accelerated, but some may run sub-optimically =("
+  echo -e "${RED}WARNING: Detected x86-64-v2 microarchitecture, which supports SSE2 but not AVX2." >&2
+  echo "This means most operations will be accelerated, but some may run sub-optimically =("
   echo "If possible, please switch to a CPU that supports AVX2."
   more_info
 else
-  echo "WARNING: Detected x86-64-v1 microarchitecture, which doesn't support SSE2 and AVX2 instructions." >&2
+  echo -e "${RED}WARNING: Detected x86-64-v1 microarchitecture, which doesn't support SSE2 and AVX2 instructions." >&2
   echo "This means many cryptographic and bioinformatic operations will run sub-optimally =("
   echo "If possible, please switch to a CPU that supports both SSE2 and AVX2"
   more_info
