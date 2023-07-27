@@ -54,7 +54,7 @@ rm sfkit/*.whl
 cd sfkit
 echo
 
-if ! command -v sfkit && ! echo "$PATH" | grep -q "/.local/bin" ; then
+if ! type sfkit &>/dev/null && ! echo "$PATH" | grep -q "/.local/bin" ; then
   echo Updating PATH...
   echo "export PATH=\"\$PATH:\$HOME/.local/bin\"" >> ~/.profile
   source ~/.profile
