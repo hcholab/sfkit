@@ -55,5 +55,13 @@ echo Installing sfkit...
 python -m pip install -U sfkit/*.whl
 rm sfkit/*.whl
 cd sfkit
+echo
+
+if ! command -v sfkit && ! echo "$PATH" | grep -q "/.local/bin" ; then
+  echo Updating PATH...
+  echo "export PATH=\"\$PATH:\$HOME/.local/bin\"" >> ~/.profile
+  source ~/.profile
+  echo
+fi
 
 echo Installation is complete.
