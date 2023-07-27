@@ -68,13 +68,10 @@ RUN cd code && \
 ### Build SFKit
 FROM dev AS sfkit
 
-# install static analysis tools
-RUN apk add --no-cache patchelf posix-libc-utils
-
-# install Python dependencies
+# install dev dependencies
 RUN pip install hatch
 COPY pyproject.toml .
-RUN pip install $(hatch dep show requirements --all)
+RUN pip install $(hatch dep show requirements -f dev)
 
 # copy sources
 COPY . .
@@ -85,29 +82,30 @@ RUN flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
 RUN flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
+# build and install sfkit wheel package as user for distribution
+USER nonroot
+RUN hatch build -t wheel
+RUN pip install -I dist/sfkit*.whl
+
 # run tests
 RUN python -m pytest
 
-# build static sfkit executable for runtime use
-RUN pip install .
-RUN pyinstaller pyinstaller.spec
-RUN staticx dist/cli dist/sfkit
-
 
 ### Copy distributables into a minimal hardened runtime image
-FROM cgr.dev/chainguard/bash
+FROM cgr.dev/chainguard/python
 
 WORKDIR /sfkit
 
-# for backwards compatibility
-RUN ln -s $(pwd) /app
-
-ENV PATH="$PATH:/sfkit:/sfkit/sfgwas" \
+ENV PATH="$PATH:/sfkit/sfgwas" \
     SFKIT_DIR="/sfkit/.sfkit"
 
-COPY --from=plink2      --chown=nonroot /build/plink2     ./
-COPY --from=secure-gwas --chown=nonroot /build            ./secure-gwas/
-COPY --from=sfgwas      --chown=nonroot /build            ./sfgwas/
-COPY --from=sfkit       --chown=nonroot /build/dist/sfkit ./
+COPY --from=cgr.dev/chainguard/bash     /bin /usr/bin   /bin/
+COPY --from=plink2      --chown=nonroot /build/plink2   ./
+COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
+COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
+
+COPY --from=sfkit /home/nonroot/.local/bin/sfkit /bin/
+COPY --from=sfkit /home/nonroot/.local/lib /usr/lib/
+COPY --from=sfkit /build/dist/sfkit*.whl ./
 
 ENTRYPOINT ["sfkit"]
