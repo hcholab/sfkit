@@ -54,7 +54,7 @@ jobs:
         tags: |
           # set latest tag for main branch
           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-          type=ref,event=branch
+          type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' }}
           type=ref,event=pr
           type=semver,pattern={{version}}
 
