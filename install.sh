@@ -65,3 +65,5 @@ if ! command -v sfkit && ! echo "$PATH" | grep -q "/.local/bin" ; then
 fi
 
 echo Installation is complete.
+sfkit -h
+exec $SHELL
