@@ -2,9 +2,6 @@
 #
 # Determines the micro-architecture of the current system
 # and downloads the appropriate release of sfkit.
-#
-# For more details, see
-# https://en.wikipedia.org/wiki/X86-64#Microarchitecture_levels
 
 set -euo pipefail
 
@@ -65,5 +62,6 @@ if ! command -v sfkit && ! echo "$PATH" | grep -q "/.local/bin" ; then
 fi
 
 echo Installation is complete.
+echo
 sfkit -h
 exec $SHELL
