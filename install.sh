@@ -47,7 +47,9 @@ else
 fi
 
 echo Downloading and unpacking sfkit...
-curl -sLo- "https://github.com/hcholab/sfkit/releases/latest/download/sfkit_linux_amd64${microarch}.tar.gz" | tar -xzf-
+url="https://github.com/hcholab/sfkit/releases/latest/download/sfkit_linux_amd64${microarch}.tar.gz"
+{ curl -sLo- "${url}" || wget -qO- "${url}" ; } | tar -xzf-
+echo
 
 echo Installing sfkit...
 python -m pip install -U sfkit/*.whl
