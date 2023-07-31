@@ -101,7 +101,7 @@ ENV PATH="$PATH:/sfkit/sfgwas" \
     SFKIT_DIR="/sfkit/.sfkit"
 
 COPY --from=cgr.dev/chainguard/bash     /bin /usr/bin   /bin/
-COPY --from=plink2      --chown=nonroot /build/plink2   ./
+COPY --from=plink2      --chown=nonroot /build/plink2   /bin/
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
 

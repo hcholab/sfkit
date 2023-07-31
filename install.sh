@@ -49,9 +49,10 @@ url="https://github.com/hcholab/sfkit/releases/latest/download/sfkit_linux_amd64
 echo
 
 echo Installing sfkit...
-python -m pip install -U sfkit/*.whl
-rm sfkit/*.whl
 cd sfkit
+python -m pip install -U ./sfkit*.whl
+rm ./sfkit*.whl
+mv plink2 ~/.local/bin/
 echo
 
 if ! type sfkit &>/dev/null && ! echo "$PATH" | grep -q "/.local/bin" ; then
