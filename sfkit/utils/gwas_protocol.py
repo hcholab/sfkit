@@ -92,7 +92,7 @@ def update_parameters(role: str) -> None:
     doc_ref_dict = get_doc_ref_dict()
 
     # shared parameters and advanced parameters
-    pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
+    pars = {**doc_ref_dict["parameters"], **doc_ref_dict["advanced_parameters"]}
 
     # individual parameters
     for i in range(1, len(doc_ref_dict["participants"])):

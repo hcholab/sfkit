@@ -241,7 +241,7 @@ def update_config_global(protocol: str = "gwas") -> None:
         condition_or_fail(data.get(col_name, 0) > 0, f"{col_name} must be greater than 0")
 
         # shared and advanced parameters
-        pars = doc_ref_dict["parameters"] | doc_ref_dict["advanced_parameters"]
+        pars = {**doc_ref_dict["parameters"], **doc_ref_dict["advanced_parameters"]}
         for key, value in pars.items():
             if key in data:
                 data[key] = to_float_int_or_bool(value["value"])
