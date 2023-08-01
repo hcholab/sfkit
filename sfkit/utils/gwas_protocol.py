@@ -123,7 +123,7 @@ def update_parameters(role: str) -> None:
         for j in range(i + 1, 3):
             pars[f"PORT_P{i}_P{j}"] = {"value": ports.split(",")[j]}
 
-    for line in fileinput.input(f"secure-gwas/par/test.par.{role}.txt", inplace=True):
+    for line in fileinput.input(f"{constants.EXECUTABLES_PREFIX}secure-gwas/par/test.par.{role}.txt", inplace=True):
         key = str(line).split(" ")[0]
         if key in pars:
             line = f"{key} " + str(pars[key]["value"]) + "\n"

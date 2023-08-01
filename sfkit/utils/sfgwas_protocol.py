@@ -154,7 +154,7 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
         use_existing_config(role, doc_ref_dict)
         return
 
-    config_file_path = f"sfgwas/config/{protocol}/configLocal.Party{role}.toml"
+    config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configLocal.Party{role}.toml"
 
     try:
         with open(config_file_path, "r") as f:
@@ -163,7 +163,9 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
     except FileNotFoundError:
         print(f"File {config_file_path} not found.")
         print("Creating it...")
-        shutil.copyfile(f"sfgwas/config/{protocol}/configLocal.Party2.toml", config_file_path)
+        shutil.copyfile(
+            f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configLocal.Party2.toml", config_file_path
+        )
         with open(config_file_path, "r") as f:
             data = tomlkit.parse(f.read())
 
@@ -204,7 +206,7 @@ def update_config_global(protocol: str = "gwas") -> None:
     """
     print("Updating configGlobal.toml")
     doc_ref_dict: dict = get_doc_ref_dict()
-    config_file_path = f"sfgwas/config/{protocol}/configGlobal.toml"
+    config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml"
     with open(config_file_path, "r") as f:
         data = tomlkit.parse(f.read())
 
@@ -253,7 +255,7 @@ def update_config_global_phase(phase: str, demo: bool, protocol: str = "gwas") -
     Update based on phase in configGlobal.toml
     :param phase: "1", "2", "3"
     """
-    config_file_path = f"sfgwas/config/{protocol}/configGlobal.toml"
+    config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml"
     with open(config_file_path, "r") as f:
         data = tomlkit.parse(f.read())
 
@@ -277,7 +279,7 @@ def update_sfgwas_go(protocol: str = "gwas") -> None:
     """
     Update sfgwas.go
     """
-    for line in fileinput.input("sfgwas/sfgwas.go", inplace=True):
+    for line in fileinput.input(f"{constants.EXECUTABLES_PREFIX}sfgwas/sfgwas.go", inplace=True):
         if "CONFIG_PATH = " in line:
             print(f'var CONFIG_PATH = "config/{protocol}"')
         else:
@@ -311,7 +313,10 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SF-GWAS") -> No
         if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
             # cannot use "go run" from run_example.sh in Docker, so reproducing that script in Python here
             protocol_command = (
-                " & ".join(f"(cd {constants.EXECUTABLES_PREFIX}sfgwas && PID={r} sfgwas | tee stdout_party{r}.txt)" for r in range(3))
+                " & ".join(
+                    f"(cd {constants.EXECUTABLES_PREFIX}sfgwas && PID={r} sfgwas | tee stdout_party{r}.txt)"
+                    for r in range(3)
+                )
                 + " & wait $(jobs -p)"
             )
     command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd {constants.EXECUTABLES_PREFIX}sfgwas && {protocol_command}"

@@ -34,13 +34,13 @@ def use_existing_config(role: str, doc_ref_dict: dict) -> None:
         _, data_path = get_file_paths()
 
         source = f"{data_path}/p{role}/for_sfgwas"
-        destination = "sfgwas/for_sfgwas"
+        destination = f"{constants.EXECUTABLES_PREFIX}sfgwas/for_sfgwas"
         move(source, destination)
 
     config = doc_ref_dict["description"].split(constants.BLOCKS_MODE)[1]
 
-    source = f"sfgwas/config/blocks/{config}"
-    destination = "sfgwas/config/gwas"
+    source = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/blocks/{config}"
+    destination = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/gwas"
     move(source, destination)
 
 
@@ -115,7 +115,7 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
         make_pca_plot(role)
 
     if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
-        copy_results_to_cloud_storage(role, results_path, f"sfgwas/out/party{role}")
+        copy_results_to_cloud_storage(role, results_path, f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}")
 
     relevant_paths = [
         f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}",
@@ -126,27 +126,27 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
 
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
     if protocol == "SF-GWAS" and send_results == "Yes":
-        with open(f"sfgwas/out/party{role}/new_assoc.txt", "r") as f:
+        with open(f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}/new_assoc.txt", "r") as f:
             website_send_file(f, "new_assoc.txt")
 
-        with open(f"sfgwas/out/party{role}/manhattan.png", "rb") as f:
+        with open(f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}/manhattan.png", "rb") as f:
             website_send_file(f, "manhattan.png")
     elif protocol == "PCA" and send_results == "Yes":
-        with open(f"sfgwas/cache/party{role}/Qpc.txt", "r") as f:
+        with open(f"{constants.EXECUTABLES_PREFIX}sfgwas/cache/party{role}/Qpc.txt", "r") as f:
             website_send_file(f, "Qpc.txt")
 
-        with open(f"sfgwas/out/party{role}/pca_plot.png", "rb") as f:
+        with open(f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}/pca_plot.png", "rb") as f:
             website_send_file(f, "pca_plot.png")
 
     update_firestore("update_firestore::status=Finished protocol!")
 
 
 def make_pca_plot(role: str) -> None:
-    pcs = np.loadtxt(f"sfgwas/cache/party{role}/Qpc.txt", delimiter=",")
+    pcs = np.loadtxt(f"{constants.EXECUTABLES_PREFIX}sfgwas/cache/party{role}/Qpc.txt", delimiter=",")
     plt.scatter(pcs[0], pcs[1])
     plt.xlabel("PC1")
     plt.ylabel("PC2")
-    plt.savefig(f"sfgwas/out/party{role}/pca_plot.png")
+    plt.savefig(f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}/pca_plot.png")
 
 
 def make_new_assoc_and_manhattan_plot(doc_ref_dict: dict, demo: bool, role: str) -> None:

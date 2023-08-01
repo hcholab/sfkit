@@ -34,7 +34,7 @@ def update_config_local(role: str) -> None:
     Update configLocal.Party{role}.toml
     :param role: 0, 1, 2, ...
     """
-    config_file_path = f"sfgwas/config/pca/configLocal.Party{role}.toml"
+    config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/pca/configLocal.Party{role}.toml"
 
     try:
         with open(config_file_path, "r") as f:
@@ -42,7 +42,7 @@ def update_config_local(role: str) -> None:
     except FileNotFoundError:
         print(f"File {config_file_path} not found.")
         print("Creating it...")
-        shutil.copyfile("sfgwas/config/pca/configLocal.Party2.toml", config_file_path)
+        shutil.copyfile(f"{constants.EXECUTABLES_PREFIX}sfgwas/config/pca/configLocal.Party2.toml", config_file_path)
         with open(config_file_path, "r") as f:
             data = tomlkit.parse(f.read())
 
