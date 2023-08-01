@@ -1,13 +1,15 @@
 Installation
 ============
 
-There are two primary ways to install the sfkit CLI - via Python's package manager, pip, or using a containerized Docker version. The ideal method for you will depend on your technical proficiency, requirements, and permissions on your machine.
+There are three primary ways to install the sfkit CLI - via Python's package manager, pip, via a `tar.gz` release download, or using a containerized Docker version. The ideal method for you will depend on your technical proficiency, requirements, and permissions on your machine.
 
 The first option, pip, allows for a simpler, more straightforward installation process. However, it necessitates runtime installation of some dependencies (golang, plink2, sfgwas, etc.). This might pose a challenge if you don't have the necessary permissions to install these on your machine.
 
-The second option is to use Docker. This is a slightly more technical process, as it involves using Docker commands. However, it has the significant advantage of bundling all the dependencies within the container, thus avoiding the need for their runtime installation.
+The second option is to download the `tar.gz` Release. This method is similar to the pip installation but utilizes a shell script to download and install sfkit directly from the latest GitHub release. It also has the significant advantage of bundling all the dependencies within the tar.gz, thus avoiding the need for their runtime installation.
 
-Both options require specific prerequisites, which we will outline in the following sections. Choose the one that best fits your use case and the resources available on your machine.
+The third option is to use Docker. 
+
+All options require specific prerequisites, which we will outline in the following sections. Choose the one that best fits your use case and the resources available on your machine.
 
 
 
@@ -20,9 +22,9 @@ pip
 
 This is necessary because the sfkit CLI uses the ``apt`` package manager to install dependencies. If you don't have one on hand, your options include 1. obtaining one via, e.g. Google Cloud VM, 2. using the docker installation option, or 3. using the `auto-configured <https://sfkit.org/instructions>`__ version of sfkit.
 
-* **Python 3.9 or later**
+* **Python3 and pip**
 
-You can install Python with the following command:
+You can install Python3 and pip with the following command:
 
 .. code-block:: console
 
@@ -34,6 +36,27 @@ You can install Python with the following command:
 .. code-block:: console
 
     $ pip install -U sfkit
+
+
+tar.gz Release
+--------------
+
+**Prerequisites**
+
+* **Python3 and pip**
+
+You can install Python3 and pip with the following command:
+
+.. code-block:: console
+
+    $ sudo apt-get install python3-pip -y
+
+**Installation**
+
+.. code-block:: console
+
+    $ bash <(curl -sL https://github.com/hcholab/sfkit/releases/latest/download/install.sh)
+
 
 docker
 ------

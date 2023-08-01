@@ -117,7 +117,11 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
     if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
         copy_results_to_cloud_storage(role, results_path, f"sfgwas/out/party{role}")
 
-    relevant_paths = [f"sfgwas/out/party{role}", f"sfgwas/cache/party{role}/Qpc.txt", f"sfgwas/stdout_party{role}.txt"]
+    relevant_paths = [
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}",
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/cache/party{role}/Qpc.txt",
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/stdout_party{role}.txt",
+    ]
     copy_to_out_folder(relevant_paths)
 
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
@@ -155,23 +159,26 @@ def make_new_assoc_and_manhattan_plot(doc_ref_dict: dict, demo: bool, role: str)
         )
     num_covs = int(doc_ref_dict["parameters"]["num_covs"]["value"])
 
-    snp_pos_path = f"sfgwas/example_data/party{role}/snp_pos.txt"
+    snp_pos_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/example_data/party{role}/snp_pos.txt"
     if not demo:
         with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
             f.readline()
             data_path = f.readline().rstrip()
-            snp_pos_path = f"{data_path}/snp_pos.txt"
+            snp_pos_path = f"{constants.EXECUTABLES_PREFIX}{data_path}/snp_pos.txt"
 
     postprocess_assoc(
-        f"sfgwas/out/party{role}/new_assoc.txt",
-        f"sfgwas/out/party{role}/assoc.txt",
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}/new_assoc.txt",
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}/assoc.txt",
         snp_pos_path,
-        f"sfgwas/cache/party{role}/gkeep.txt",
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/cache/party{role}/gkeep.txt",
         "",
         num_inds_total,
         num_covs,
     )
-    plot_assoc(f"sfgwas/out/party{role}/manhattan.png", f"sfgwas/out/party{role}/new_assoc.txt")
+    plot_assoc(
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}/manhattan.png",
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}/new_assoc.txt",
+    )
 
 
 def to_float_int_or_bool(string: str) -> Union[float, int, bool, str]:

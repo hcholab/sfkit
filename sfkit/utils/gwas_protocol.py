@@ -250,31 +250,34 @@ def process_output_files(role: str, demo: bool) -> None:
     num_covs = int(doc_ref_dict["parameters"]["NUM_COVS"]["value"])
 
     postprocess_assoc(
-        "secure-gwas/out/new_assoc.txt",
-        "secure-gwas/out/test_assoc.txt",
-        "secure-gwas/test_data/pos.txt",
-        "secure-gwas/out/test_gkeep1.txt",
-        "secure-gwas/out/test_gkeep2.txt",
+        f"{constants.EXECUTABLES_PREFIX}secure-gwas/out/new_assoc.txt",
+        f"{constants.EXECUTABLES_PREFIX}secure-gwas/out/test_assoc.txt",
+        f"{constants.EXECUTABLES_PREFIX}secure-gwas/test_data/pos.txt",
+        f"{constants.EXECUTABLES_PREFIX}secure-gwas/out/test_gkeep1.txt",
+        f"{constants.EXECUTABLES_PREFIX}secure-gwas/out/test_gkeep2.txt",
         num_inds_total,
         num_covs,
     )
-    plot_assoc("secure-gwas/out/manhattan.png", "secure-gwas/out/new_assoc.txt")
+    plot_assoc(
+        f"{constants.EXECUTABLES_PREFIX}secure-gwas/out/manhattan.png",
+        f"{constants.EXECUTABLES_PREFIX}secure-gwas/out/new_assoc.txt",
+    )
 
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
 
-    relevant_paths = ["secure-gwas/out"]
+    relevant_paths = [f"{constants.EXECUTABLES_PREFIX}secure-gwas/out"]
     copy_to_out_folder(relevant_paths)
 
     if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
-        copy_results_to_cloud_storage(role, results_path, "secure-gwas/out")
+        copy_results_to_cloud_storage(role, results_path, f"{constants.EXECUTABLES_PREFIX}secure-gwas/out")
 
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
     if send_results == "Yes":
-        with open("secure-gwas/out/new_assoc.txt", "r") as file:
+        with open(f"{constants.EXECUTABLES_PREFIX}secure-gwas/out/new_assoc.txt", "r") as file:
             website_send_file(file, "new_assoc.txt")
 
-        with open("secure-gwas/out/manhattan.png", "rb") as file:
+        with open(f"{constants.EXECUTABLES_PREFIX}secure-gwas/out/manhattan.png", "rb") as file:
             website_send_file(file, "manhattan.png")
 
     update_firestore("update_firestore::status=Finished protocol!")
