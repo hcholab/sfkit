@@ -1,4 +1,10 @@
 import os
+import shutil
+
+
+def is_installed(binary: str) -> bool:
+    return shutil.which(binary) is not None
+
 
 WEBSITE_URL = "https://sfkit.org"
 METADATA_VM_IDENTITY_URL = (
@@ -11,6 +17,7 @@ SFKIT_DIR = os.environ.get("SFKIT_DIR", os.path.join(os.path.expanduser("~"), ".
 AUTH_FILE = os.path.join(SFKIT_DIR, "auth.txt")
 AUTH_KEY = os.path.join(SFKIT_DIR, "auth_key.txt")
 IS_DOCKER = os.path.exists("/.dockerenv")
+IS_INSTALLED_VIA_SCRIPT = is_installed("sfgwas") and is_installed("plink2") and is_installed("GwasClient")
 SFKIT_PREFIX = "sfkit: "
 OUT_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "out")
 ENCRYPTED_DATA_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "encrypted_data")

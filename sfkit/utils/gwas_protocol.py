@@ -17,7 +17,7 @@ from sfkit.utils.helper_functions import (
 
 def run_gwas_protocol(role: str, demo: bool = False) -> None:
     print("\n\n Begin running GWAS protocol \n\n")
-    if not constants.IS_DOCKER:
+    if not (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         install_gwas_dependencies()
         install_gwas_repo()
         install_ntl_library()

@@ -1,39 +1,35 @@
 [project]
 name = "sfkit"
-version = "0.0.230"
+version = "0.0.231"
 authors = [{ name = "Simon Mendelsohn", email = "smendels@broadinstitute.org" }]
 description = "Some CLI Tools For The Secure Multi-party Genomic Analysis Website"
 readme = "README.md"
 requires-python = ">=3.9.2"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
 ]
 dependencies = [
-    'bs4',
-    'checksumdir',
-    'google-auth',
-    'google-cloud-storage',
-    'ipaddr',
-    'matplotlib',
-    'numpy',
-    'pandas',
-    'PyNaCl',
-    'qmplot',
-    'requests[socks]',
-    'scipy',
-    'setuptools',
-    'tomlkit',
-    'tqdm',
+  'bs4',
+  'checksumdir',
+  'google-auth',
+  'google-cloud-storage',
+  'ipaddr',
+  'matplotlib',
+  'numpy',
+  'pandas',
+  'PyNaCl',
+  'qmplot',
+  'requests[socks]',
+  'scipy',
+  'setuptools',
+  'tomlkit',
+  'tqdm',
 ]
 
 [project.optional-dependencies]
-dev = [
-  'black',
-  'flake8',
-  'pytest-mock',
-]
+dev = ['black', 'flake8', 'pytest-mock']
 doc = [
   'sphinx-argparse',
   'sphinx-copybutton',

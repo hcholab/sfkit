@@ -33,7 +33,7 @@ def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
     :param phase: "", "1", "2", "3"
     :param demo: True or False
     """
-    if not constants.IS_DOCKER:
+    if not (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         install_sfgwas()
     if not demo:
         generate_shared_keys(int(role))
@@ -41,7 +41,7 @@ def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
         update_config_local(role)
         update_config_global()
     update_config_global_phase(phase, demo)
-    if not constants.IS_DOCKER:
+    if not (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         build_sfgwas()
     start_sfgwas(role, demo)
 
@@ -304,18 +304,18 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SF-GWAS") -> No
     update_firestore("update_firestore::task=Initiating Protocol")
     print("Begin SF-GWAS protocol")
     protocol_command = f"export PID={role} && go run sfgwas.go | tee stdout_party{role}.txt"
-    if constants.IS_DOCKER:
+    if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
         protocol_command = f"cd sfgwas && PID={role} sfgwas | tee stdout_party{role}.txt"
     if demo:
         protocol_command = "bash run_example.sh"
-        if constants.IS_DOCKER:
+        if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
             # cannot use "go run" from run_example.sh in Docker, so reproducing that script in Python here
             protocol_command = (
                 " & ".join(f"(cd sfgwas && PID={r} sfgwas | tee stdout_party{r}.txt)" for r in range(3))
                 + " & wait $(jobs -p)"
             )
     command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && {protocol_command}"
-    if constants.IS_DOCKER:
+    if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
         command = f"export PYTHONUNBUFFERED=TRUE && {protocol_command}"
 
     run_sfgwas_with_task_updates(command, protocol, demo, role)
