@@ -305,16 +305,16 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SF-GWAS") -> No
     print("Begin SF-GWAS protocol")
     protocol_command = f"export PID={role} && go run sfgwas.go | tee stdout_party{role}.txt"
     if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
-        protocol_command = f"cd sfgwas && PID={role} sfgwas | tee stdout_party{role}.txt"
+        protocol_command = f"cd {constants.EXECUTABLES_PREFIX}sfgwas && PID={role} sfgwas | tee stdout_party{role}.txt"
     if demo:
         protocol_command = "bash run_example.sh"
         if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
             # cannot use "go run" from run_example.sh in Docker, so reproducing that script in Python here
             protocol_command = (
-                " & ".join(f"(cd sfgwas && PID={r} sfgwas | tee stdout_party{r}.txt)" for r in range(3))
+                " & ".join(f"(cd {constants.EXECUTABLES_PREFIX}sfgwas && PID={r} sfgwas | tee stdout_party{r}.txt)" for r in range(3))
                 + " & wait $(jobs -p)"
             )
-    command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && {protocol_command}"
+    command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd {constants.EXECUTABLES_PREFIX}sfgwas && {protocol_command}"
     if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
         command = f"export PYTHONUNBUFFERED=TRUE && {protocol_command}"
 

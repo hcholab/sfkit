@@ -50,16 +50,18 @@ echo
 
 echo Installing sfkit...
 cd sfkit
-python -m pip install -U ./sfkit*.whl
+python3 -m pip install -U ./sfkit*.whl
 rm ./sfkit*.whl
 mv plink2 ~/.local/bin/
-mv sfgwas ~/.local/bin/
-mv secure-gwas ~/.local/bin/
+mv sfgwas ~/.local/
+mv secure-gwas ~/.local/
 echo
 
 if ! type sfkit &>/dev/null && ! echo "$PATH" | grep -q "/.local/bin" ; then
   echo Updating PATH...
   echo "export PATH=\"\$PATH:\$HOME/.local/bin\"" >> ~/.profile
+  echo "export PATH=\"\$PATH:\$HOME/.local/sfgwas\"" >> ~/.profile
+  echo "export PATH=\"\$PATH:\$HOME/.local/secure-gwas/code/bin\"" >> ~/.profile
   source ~/.profile
   echo
 fi
