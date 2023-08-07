@@ -26,7 +26,6 @@ def test_run_sfgwas_protocol(mocker):
 def test_install_sfgwas(mocker):
     mocker.patch("sfkit.utils.sfgwas_protocol.run_command")
     mocker.patch("sfkit.utils.sfgwas_protocol.update_firestore")
-    mocker.patch("sfkit.utils.sfgwas_protocol.get_plink2_download_link", return_value="hi/hello")
     mocker.patch("sfkit.utils.sfgwas_protocol.os.path.isdir", return_value=True)
     mocker.patch("sfkit.utils.sfgwas_protocol.condition_or_fail")
 

@@ -18,7 +18,6 @@ from sfkit.utils import constants
 from sfkit.utils.helper_functions import condition_or_fail, run_command
 from sfkit.utils.sfgwas_helper_functions import (
     get_file_paths,
-    get_plink2_download_link,
     post_process_results,
     run_sfgwas_with_task_updates,
     to_float_int_or_bool,
@@ -53,7 +52,7 @@ def install_sfgwas() -> None:
     update_firestore("update_firestore::task=Installing dependencies")
     print("Begin installing dependencies")
 
-    plink2_download_link = get_plink2_download_link()
+    plink2_download_link = "https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_latest.zip"
     plink2_zip_file = plink2_download_link.split("/")[-1]
 
     run_command("sudo apt-get update -y")

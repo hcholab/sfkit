@@ -172,25 +172,3 @@ def test_to_float_int_or_bool():
     # Test conversion of special numeric values
     assert sfgwas_helper_functions.to_float_int_or_bool("inf") == float("inf")
     assert sfgwas_helper_functions.to_float_int_or_bool("-inf") == float("-inf")
-
-
-def test_get_plink2_download_link(monkeypatch: pytest.MonkeyPatch):
-    # Mock the response of the requests.get function
-    class MockResponse:
-        def __init__(self, content):
-            self.content = content
-
-    def mock_get(url):  # type: ignore
-        return MockResponse(b'<a href="https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20221024.zip">')
-
-    monkeypatch.setattr(requests, "get", mock_get)
-
-    link = sfgwas_helper_functions.get_plink2_download_link()
-    assert link == "https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20221024.zip"
-
-    def mock_get(url):
-        return MockResponse(b"blah")
-
-    monkeypatch.setattr(requests, "get", mock_get)
-
-    sfgwas_helper_functions.get_plink2_download_link()

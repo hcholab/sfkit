@@ -191,25 +191,3 @@ def to_float_int_or_bool(string: str) -> Union[float, int, bool, str]:
             return float(string)
         except ValueError:
             return string
-
-
-def get_plink2_download_link() -> str:
-    """
-    Scrapes the PLINK 2.0 website for the current Alpha download link for Plink2 for Linux AVX2 Intel.
-
-    Returns:
-        The download link for the current Alpha version of Plink2 for Linux AVX2 Intel.
-    """
-
-    url = "https://www.cog-genomics.org/plink/2.0/"
-
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
-
-    if link := soup.find(
-        "a",
-        href=re.compile(r"^https://s3.amazonaws.com/plink2-assets/.*plink2_linux_avx2_.*\.zip$"),
-    ):
-        return link.get("href")  # type: ignore
-    else:
-        return "https://s3.amazonaws.com/plink2-assets/alpha3/plink2_linux_avx2_20221024.zip"
