@@ -20,7 +20,7 @@ def test_website_get(mocker):
     res = api.website_get("web")
 
     assert res.status_code == 200
-    assert res.url == "https://sfkit.org/web"
+    assert res.url == "https://sfkit.org/api/web"
 
 
 def test_get_doc_ref_dict(mocker):

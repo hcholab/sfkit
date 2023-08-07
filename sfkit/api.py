@@ -7,7 +7,7 @@ from sfkit.utils import constants
 
 def website_send_file(file: IOBase, filename: str) -> bool:
     files = {"file": (filename, file)}
-    url = f"{constants.WEBSITE_URL}/upload_file"
+    url = f"{constants.SFKIT_API_URL}/upload_file"
     with open(constants.AUTH_KEY, "r") as f:
         auth_key = f.readline().rstrip()
 
@@ -21,7 +21,7 @@ def website_send_file(file: IOBase, filename: str) -> bool:
 
 
 def website_get(request_type: str, params: dict = dict()) -> requests.Response:
-    url = f"{constants.WEBSITE_URL}/{request_type}"
+    url = f"{constants.SFKIT_API_URL}/{request_type}"
 
     with open(constants.AUTH_KEY, "r") as f:
         auth_key = f.readline().rstrip()
