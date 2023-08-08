@@ -100,6 +100,8 @@ Running sfkit via docker is similar to running it directly from the command line
       -p 8060-8080:8060-8080 \
       ghcr.io/hcholab/sfkit <auth | networking | generate_keys | register_data | run_protocol>
 
+**For Apple Silicon users**: Add the ``--platform linux/amd64`` flag before the image name to pull and run the x86_64 container using Docker's emulation.
+
 Here's a breakdown of each of these arguments:
 
 * ``--rm``: Remove the container after it exits
