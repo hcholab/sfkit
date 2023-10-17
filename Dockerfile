@@ -14,6 +14,17 @@ RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
 RUN ln -s /usr/bin/python python3
 
 
+### Build sfkit-proxy
+FROM golang:1.21 AS sfkit-proxy
+
+WORKDIR /build
+
+# compile Go code
+RUN git clone --depth 1 https://github.com/hcholab/sfkit-proxy . && \
+    # use static compilation
+    CGO_ENABLED=0 go build -o proxy
+
+
 ### Use Python development base image
 FROM cgr.dev/chainguard/python:latest-dev AS dev
 
@@ -103,6 +114,7 @@ COPY --from=cgr.dev/chainguard/bash     /bin /usr/bin   /bin/
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
+COPY --from=sfkit-proxy --chown=nonroot /build/proxy    ./
 
 COPY --from=sfkit /home/nonroot/.local/bin/sfkit /bin/
 COPY --from=sfkit /home/nonroot/.local/lib /usr/lib/
