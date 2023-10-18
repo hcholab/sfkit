@@ -1,4 +1,5 @@
 # hadolint global ignore=DL3006,DL3013,DL3018,DL3059
+
 ### Build SF-GWAS
 FROM golang:1.18 AS sfgwas
 
@@ -55,7 +56,7 @@ RUN ARCH=$(grep -q avx2 /proc/cpuinfo && [ "${MARCH}" = "native" ] || [ "${MARCH
 FROM dev AS secure-gwas
 
 # install toolchain
-RUN apk add --no-cache clang-15 gmp-dev libsodium-dev libsodium-static openssl-dev perl
+RUN apk add --no-cache clang-16-dev gmp-dev libclang-cpp-16 libsodium-dev libsodium-static openssl-dev perl
 
 # download source
 RUN git clone --depth 1 https://github.com/hcholab/secure-gwas . && \
