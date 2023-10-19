@@ -17,10 +17,10 @@ def setup_networking(ports_str: str, ip_address: str = "") -> None:
 
     if not ip_address:
         if doc_ref_dict["setup_configuration"] == "website":
-            ip_address = socket.gethostbyname(socket.gethostname())
+            ip_address = socket.gethostbyname(socket.gethostname())  # internal ip address
             print("Using internal ip address:", ip_address)
         else:
-            ip_address = get("https://api.ipify.org").content.decode("utf-8")
+            ip_address = get("https://api.ipify.org").content.decode("utf-8")  # external ip address
             print("Using external ip address:", ip_address)
 
     print("Processing...")

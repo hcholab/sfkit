@@ -12,7 +12,7 @@ PyNaCl
 pytest
 pytest-mock
 qmplot
-requests[socks] # socks if we want to do anything with a proxy server (SOCKS5)
+requests[socks] # for proxy server (SOCKS5)
 scipy
 setuptools
 sphinx
@@ -22,4 +22,4 @@ sphinx-inline-tabs
 sphinx-copybutton
 tomlkit
 tqdm
-urllib3==1.26.15
+urllib3
