@@ -191,3 +191,19 @@ def to_float_int_or_bool(string: str) -> Union[float, int, bool, str]:
             return float(string)
         except ValueError:
             return string
+
+
+def boot_sfkit_proxy(role: str, protocol: str) -> None:
+    print("Booting up sfkit-proxy")
+    doc_ref_dict: dict = get_doc_ref_dict()
+    study_id: str = doc_ref_dict["study_id"]
+    config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml" 
+    with open(constants.AUTH_KEY, "r") as f:
+        auth_key = f.readline().rstrip()
+    api_url = os.getenv("SFKIT_API_URL").replace("https", "wss")
+    
+    command = f"sfkit-proxy -v -api {api_url} -study {study_id} -pid {role} -mpc {config_file_path} -auth-key {auth_key}"
+    print(f"Running command: {command}")
+    subprocess.run(command, shell=True)
+
+    print()

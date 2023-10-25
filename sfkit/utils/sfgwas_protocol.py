@@ -17,6 +17,7 @@ from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import condition_or_fail, run_command
 from sfkit.utils.sfgwas_helper_functions import (
+    boot_sfkit_proxy,
     get_file_paths,
     post_process_results,
     run_sfgwas_with_task_updates,
@@ -304,6 +305,10 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "SF-GWAS") -> No
     """
     update_firestore("update_firestore::task=Initiating Protocol")
     print("Begin SF-GWAS protocol")
+
+    if os.getenv('SFKIT_PROXY_ON', 'false').lower() == 'true':
+        boot_sfkit_proxy(role=role, protocol=protocol)
+
     protocol_command = f"export PID={role} && go run sfgwas.go | tee stdout_party{role}.txt"
     if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
         protocol_command = f"cd {constants.EXECUTABLES_PREFIX}sfgwas && PID={role} sfgwas | tee stdout_party{role}.txt"

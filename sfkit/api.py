@@ -20,7 +20,9 @@ def website_send_file(file: IOBase, filename: str) -> bool:
     return response.status_code == 200
 
 
-def website_get(request_type: str, params: dict = dict()) -> requests.Response:
+def website_get(request_type: str, params: dict = None) -> requests.Response:
+    if params is None:
+        params = {}
     url = f"{constants.SFKIT_API_URL}/{request_type}"
 
     with open(constants.AUTH_KEY, "r") as f:
