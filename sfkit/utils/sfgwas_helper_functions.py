@@ -52,9 +52,9 @@ def move(source: str, destination: str) -> None:
 
 def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool, role: str) -> None:
     env = os.environ.copy()
-    if protocol == "SF-GWAS":
+    if protocol == "gwas":
         env["PROTOCOL"] = "gwas"
-    elif protocol == "PCA":
+    elif protocol == "pca":
         env["PROTOCOL"] = "pca"
 
     process = subprocess.Popen(
@@ -83,7 +83,7 @@ def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool, role: 
             if constants.SFKIT_PREFIX in line:
                 update_firestore(f"update_firestore::task={line.split(constants.SFKIT_PREFIX)[1]}")
             elif "Output collectively decrypted and saved to" in line or (
-                protocol == "PCA" and f"Saved data to cache/party{role}/Qpc.txt" in line
+                protocol == "pca" and f"Saved data to cache/party{role}/Qpc.txt" in line
             ):
                 timeout = 30
 
@@ -109,9 +109,9 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
 
-    if protocol == "SF-GWAS":
+    if protocol == "gwas":
         make_new_assoc_and_manhattan_plot(doc_ref_dict, demo, role)
-    elif protocol == "PCA":
+    elif protocol == "pca":
         make_pca_plot(role)
 
     if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
@@ -125,13 +125,13 @@ def post_process_results(role: str, demo: bool, protocol: str) -> None:
     copy_to_out_folder(relevant_paths)
 
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
-    if protocol == "SF-GWAS" and send_results == "Yes":
+    if protocol == "gwas" and send_results == "Yes":
         with open(f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}/new_assoc.txt", "r") as f:
             website_send_file(f, "new_assoc.txt")
 
         with open(f"{constants.EXECUTABLES_PREFIX}sfgwas/out/party{role}/manhattan.png", "rb") as f:
             website_send_file(f, "manhattan.png")
-    elif protocol == "PCA" and send_results == "Yes":
+    elif protocol == "pca" and send_results == "Yes":
         with open(f"{constants.EXECUTABLES_PREFIX}sfgwas/cache/party{role}/Qpc.txt", "r") as f:
             website_send_file(f, "Qpc.txt")
 
@@ -200,7 +200,7 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
     config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml" 
     with open(constants.AUTH_KEY, "r") as f:
         auth_key = f.readline().rstrip()
-    api_url = os.getenv("SFKIT_API_URL").replace("https", "wss")
+    api_url = os.getenv("SFKIT_API_URL").replace("https", "wss") + "/ice"
     
     command = f"./sfkit-proxy -v -api {api_url} -study {study_id} -pid {role} -mpc {config_file_path} -auth-key {auth_key} | tee -a sfkit-proxy_output.txt &"
     print(f"Running command: {command}")

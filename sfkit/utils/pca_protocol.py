@@ -26,7 +26,7 @@ def run_pca_protocol(role: str, demo: bool = False) -> None:
         update_config_global(protocol="pca")
     if not (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         build_sfgwas()
-    start_sfgwas(role, demo, protocol="PCA")
+    start_sfgwas(role, demo, protocol="pca")
 
 
 def update_config_local(role: str) -> None:

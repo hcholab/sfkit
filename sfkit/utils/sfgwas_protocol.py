@@ -220,7 +220,8 @@ def update_config_global(protocol: str = "gwas") -> None:
 
         ports: list = doc_ref_dict["personal_parameters"][participant]["PORTS"]["value"].split(",")
         for j, port in enumerate(ports):
-            data.get("servers", {}).get(f"party{i}", {}).get("ports", {})[f"party{j}"] = port
+            if port != "null":
+                data.get("servers", {}).get(f"party{i}", {}).get("ports", {})[f"party{j}"] = port
 
     if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
         data["num_main_parties"] = len(doc_ref_dict["participants"]) - 1
@@ -297,7 +298,7 @@ def build_sfgwas() -> None:
     print("Finished building sfgwas code")
 
 
-def start_sfgwas(role: str, demo: bool = False, protocol: str = "SF-GWAS") -> None:
+def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
     """
     Start the actual sfgwas program
     :param role: 0, 1, 2, ...
