@@ -75,9 +75,10 @@ jobs:
     needs: [generate-tag]
     if: ${{ needs.generate-tag.outputs.tag != '' }}
     runs-on: ubuntu-latest
-    env:
-      IMAGE: ${{ env.GOOGLE_DOCKER_REPOSITORY }}/${{ env.GOOGLE_PROJECT }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}
     steps:
+      - name: Set image name
+        run: echo "IMAGE=$GOOGLE_DOCKER_REPOSITORY/$GOOGLE_PROJECT/$REPOSITORY_NAME/$IMAGE_NAME" >> $GITHUB_ENV
+
       - name: Assemble Docker tags
         uses: docker/metadata-action@v5
         id: meta
