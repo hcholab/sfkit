@@ -202,8 +202,8 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
         auth_key = f.readline().rstrip()
     api_url = os.getenv("SFKIT_API_URL").replace("https", "wss")
     
-    command = f"sfkit-proxy -v -api {api_url} -study {study_id} -pid {role} -mpc {config_file_path} -auth-key {auth_key}"
+    command = f"./sfkit-proxy -v -api {api_url} -study {study_id} -pid {role} -mpc {config_file_path} -auth-key {auth_key} | tee -a sfkit-proxy_output.txt &"
     print(f"Running command: {command}")
     subprocess.run(command, shell=True)
 
-    print()
+    print("sfkit-proxy is running")

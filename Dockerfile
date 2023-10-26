@@ -22,7 +22,9 @@ FROM golang:1.21 AS sfkit-proxy
 WORKDIR /build
 
 # compile Go code
-RUN git clone --depth 1 https://github.com/hcholab/sfkit-proxy . && \
+RUN git clone https://github.com/hcholab/sfkit-proxy . && \
+    # update commit when I change sfkit-proxy
+    git checkout 896e72329cf479fc21469228e96111498790633c && \ 
     # use static compilation
     CGO_ENABLED=0 go build -o proxy
 
