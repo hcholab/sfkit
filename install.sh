@@ -52,9 +52,9 @@ echo Installing sfkit...
 cd sfkit
 python3 -m pip install -U ./sfkit*.whl
 rm ./sfkit*.whl
-mv plink2 ~/.local/bin/
-mv sfgwas ~/.local/
-mv secure-gwas ~/.local/
+mkdir -p ~/.local/bin/ && mv plink2 ~/.local/bin/
+mkdir -p ~/.local/sfgwas && mv sfgwas ~/.local/
+mkdir -p ~/.local/secure-gwas && mv secure-gwas ~/.local/
 echo
 
 if ! type sfkit &>/dev/null && ! echo "$PATH" | grep -q "/.local/bin" ; then
