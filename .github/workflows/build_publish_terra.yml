@@ -101,6 +101,9 @@ jobs:
     needs: [meta]
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
 
     strategy:
       matrix:
@@ -172,6 +175,9 @@ jobs:
   push-multiarch:
     needs: [generate-tag, meta, build-and-push-digests]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
