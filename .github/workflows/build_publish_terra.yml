@@ -1,0 +1,213 @@
+# This workflow builds, lints, tests and pushes the Docker image into Terra Artifact Registry
+name: Build and Publish to Terra
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "py*"
+      - "requirements.txt"
+      - "setup.cfg"
+      - "sfkit/**"
+      - "tests/**"
+      - "Dockerfile"
+      - ".github/workflows/build_publish.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "py*"
+      - "requirements.txt"
+      - "setup.cfg"
+      - "sfkit/**"
+      - "tests/**"
+      - "Dockerfile"
+      - ".github/workflows/build_publish.yml"
+
+# Use multi-platform matrix job optimized for build speed. For more details, see:
+# https://github.com/docker/build-push-action/issues/846
+# https://github.com/TECH7Fox/asterisk-hass-addons/blob/main/.github/workflows/ci.yaml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Google project where artifacts are uploaded.
+  GOOGLE_PROJECT: dsp-artifact-registry
+  # Name of the app-specific Docker repository configured in GOOGLE_PROJECT.
+  REPOSITORY_NAME: sfkit
+  # Name of the image we'll be uploading into the Docker repository.
+  # This is often equal to the GitHub repository name, but it might also be the
+  # name of the Helm Chart if that's different.
+  IMAGE_NAME: ${{ github.event.repository.name }}
+  # This is the region-specific top-level Google-managed domain where our
+  # GOOGLE_PROJECT/REPOSITORY_NAME can be found.
+  GOOGLE_DOCKER_REPOSITORY: us-central1-docker.pkg.dev
+  # Workload Identity provider for Terra
+  WORKLOAD_IDENTITY_PROVIDER: projects/1038484894585/locations/global/workloadIdentityPools/github-wi-pool/providers/github-wi-provider
+  # Service Account used to push to the registry
+  REGISTRY_SERVICE_ACCOUNT: dsp-artifact-registry-push@dsp-artifact-registry.iam.gserviceaccount.com
+
+jobs:
+  generate-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.tag.outputs.new_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ (github.actor != 'dependabot[bot]' && secrets.BROADBOT_TOKEN) || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Generate Tag
+        uses: databiosphere/github-actions/actions/bumper@bumper-0.2.0
+        id: tag
+        env:
+          DEFAULT_BUMP: patch
+          RELEASE_BRANCHES: ${{ env.TARGET_BRANCH || github.event.repository.default_branch }}
+          WITH_V: true
+          GITHUB_TOKEN: ${{ (github.actor != 'dependabot[bot]' && secrets.BROADBOT_TOKEN) || secrets.GITHUB_TOKEN }}
+
+  meta:
+    needs: [generate-tag]
+    if: ${{ needs.generate-tag.outputs.tag != '' }}
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: ${{ env.GOOGLE_DOCKER_REPOSITORY }}/${{ env.GOOGLE_PROJECT }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}
+    steps:
+      - name: Assemble Docker tags
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          # server image for backwards compatibility with old build behavior
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ needs.generate-tag.outputs.tag }}
+            type=semver,pattern=v{{major}},value=${{ needs.generate-tag.outputs.tag }},enable={{is_default_branch}}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ needs.generate-tag.outputs.tag }},enable={{is_default_branch}}
+
+    outputs:
+      image: ${{ env.IMAGE }}
+      labels: ${{ steps.meta.outputs.labels }}
+      tags: ${{ steps.meta.outputs.tags }}
+
+  build-and-push-digests:
+    needs: [meta]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+
+    strategy:
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/amd64/v2
+          - linux/amd64/v3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Ensure that Dockerfile uses a blessed base runtime image
+      - name: Run Trivy vulnerability scanner
+        uses: broadinstitute/dsp-appsec-trivy-action@v1
+
+      # Improve Docker layer caching/reproducibility
+      - name: Reset timestamps
+        run: find . -exec touch -t 197001010000 {} +
+
+      # GCP Config
+      - name: auth to GCP
+        id: auth
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.REGISTRY_SERVICE_ACCOUNT }}
+      - name: Set up gcloud sdk
+        uses: google-github-actions/setup-gcloud@v0
+      - name: Explicitly auth Docker for Artifact Registry
+        run: gcloud auth configure-docker $GOOGLE_DOCKER_REPOSITORY --quiet
+
+      - name: Set build args
+        id: args
+        run: |
+          echo "march=$(echo '${{ matrix.platform }}' | sed 's|linux/amd64|x86-64|; s|/\(.*\)|-\1|')" >> "${GITHUB_OUTPUT}"
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v4
+        with:
+          platforms: ${{ matrix.platform }}
+          build-args: MARCH=${{ steps.args.outputs.march }}
+          outputs: type=image,name=${{ needs.meta.outputs.image }},push-by-digest=true,name-canonical=true
+          cache-from: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }}
+          cache-to: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }},mode=max
+          labels: ${{ needs.meta.outputs.labels }}
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest='${{ steps.build.outputs.digest }}'
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  push-multiarch:
+    needs: [generate-tag, meta, build-and-push-digests]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download digests
+        uses: actions/download-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # GCP Config
+      - name: auth to GCP
+        id: auth
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.REGISTRY_SERVICE_ACCOUNT }}
+      - name: Set up gcloud sdk
+        uses: google-github-actions/setup-gcloud@v0
+      - name: Explicitly auth Docker for Artifact Registry
+        run: gcloud auth configure-docker $GOOGLE_DOCKER_REPOSITORY --quiet
+
+      - name: Combine digests and push multiarch image
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(echo '-t' ${{ join(needs.meta.outputs.tags, ' -t ') }}) \
+            $(printf '${{ needs.meta.outputs.image }}@sha256:%s ' *)
+
+      # (Optional) Comment pushed image
+      - name: Comment pushed image
+        uses: actions/github-script@0.3.0
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.BROADBOT_TOKEN }}
+          script: |
+            const { issue: { number: issue_number }, repo: { owner, repo }  } = context;
+            github.issues.createComment({ issue_number, owner, repo, body: 'Pushed image: ${{ needs.meta.outputs.image }}:${{ needs.generate-tag.outputs.tag }}' });
