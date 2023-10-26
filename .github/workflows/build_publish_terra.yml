@@ -210,7 +210,8 @@ jobs:
       - name: Combine digests and push multiarch image
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create $(echo '-t' ${{ join(needs.meta.outputs.tags, ' -t ') }}) \
+          docker buildx imagetools create \
+            $(printf '-t ${{ needs.meta.outputs.tags }}' | tr '\n' '~' | sed 's/~/ -t /g') \
             $(printf '${{ needs.meta.outputs.image }}@sha256:%s ' *)
 
       # (Optional) Comment pushed image
