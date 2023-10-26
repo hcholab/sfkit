@@ -116,7 +116,7 @@ RUN python -m pytest
 
 
 ### Copy distributables into a minimal hardened runtime image
-FROM cgr.dev/chainguard/python
+FROM us.gcr.io/broad-dsp-gcr-public/base/python:distroless
 
 WORKDIR /sfkit
 
