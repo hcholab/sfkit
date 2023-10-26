@@ -8,6 +8,8 @@ on:
     paths:
       - "*.sh"
       - "py*"
+      - "requirements.txt"
+      - "setup.cfg"
       - "sfkit/**"
       - "tests/**"
       - "Dockerfile"
@@ -17,6 +19,8 @@ on:
     paths:
       - "*.sh"
       - "py*"
+      - "requirements.txt"
+      - "setup.cfg"
       - "sfkit/**"
       - "tests/**"
       - "Dockerfile"
