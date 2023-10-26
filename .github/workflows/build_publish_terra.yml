@@ -157,7 +157,7 @@ jobs:
           cache-from: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }}
           cache-to: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }},mode=max
           labels: ${{ needs.meta.outputs.labels }}
-          provenance: false
+          push: true
 
       - name: Export digest
         run: |
