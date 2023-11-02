@@ -24,7 +24,7 @@ WORKDIR /build
 # compile Go code
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
     # update commit when I change sfkit-proxy
-    git checkout 896e72329cf479fc21469228e96111498790633c && \ 
+    git checkout e74d84f6116f410b94ab61fda109d17feb94e2be && \ 
     # use static compilation
     CGO_ENABLED=0 go build -o proxy
 

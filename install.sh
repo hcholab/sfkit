@@ -62,6 +62,7 @@ if ! type sfkit &>/dev/null && ! echo "$PATH" | grep -q "/.local/bin" ; then
   echo "export PATH=\"\$PATH:\$HOME/.local/bin\"" >> ~/.profile
   echo "export PATH=\"\$PATH:\$HOME/.local/sfgwas\"" >> ~/.profile
   echo "export PATH=\"\$PATH:\$HOME/.local/secure-gwas/code/bin\"" >> ~/.profile
+  echo "export PATH=\"\$PATH:/sbin" >> ~/.profile
   source ~/.profile
   echo
 fi

@@ -216,11 +216,11 @@ def update_config_global(protocol: str = "gwas") -> None:
             data.get("servers", {})[f"party{i}"] = copy.deepcopy(data.get("servers", {})[f"party{i-1}"])
 
         ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
-        data.get("servers", {}).get(f"party{i}", {})["ipaddr"] = ip_addr
+        data.get("servers", {}).get(f"party{i}", {})["ipaddr"] = "127.0.0.1" if constants.SFKIT_PROXY_ON else ip_addr
 
         ports: list = doc_ref_dict["personal_parameters"][participant]["PORTS"]["value"].split(",")
         for j, port in enumerate(ports):
-            if port != "null":
+            if port != "null" and i != j:
                 data.get("servers", {}).get(f"party{i}", {}).get("ports", {})[f"party{j}"] = port
 
     if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
@@ -307,7 +307,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
     update_firestore("update_firestore::task=Initiating Protocol")
     print("Begin SF-GWAS protocol")
 
-    if os.getenv('SFKIT_PROXY_ON', 'false').lower() == 'true':
+    if constants.SFKIT_PROXY_ON:
         boot_sfkit_proxy(role=role, protocol=protocol)
 
     protocol_command = f"export PID={role} && go run sfgwas.go | tee stdout_party{role}.txt"

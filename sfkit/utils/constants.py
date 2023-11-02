@@ -22,3 +22,4 @@ EXECUTABLES_PREFIX = os.path.expanduser("~") + "/.local/" if IS_INSTALLED_VIA_SC
 SFKIT_PREFIX = "sfkit: "
 OUT_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "out")
 ENCRYPTED_DATA_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "encrypted_data")
+SFKIT_PROXY_ON: bool = os.getenv('SFKIT_PROXY_ON', 'false').lower() == 'true'
