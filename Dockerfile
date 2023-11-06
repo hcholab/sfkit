@@ -5,6 +5,10 @@ FROM golang:1.21 AS go
 
 WORKDIR /build
 
+# Use version arg to rebuild downstream images
+# (which are otherwise cached) on each new commit
+ARG VERSION
+
 
 ### Build SF-GWAS
 FROM go AS sfgwas

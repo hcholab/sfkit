@@ -136,7 +136,9 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         platforms: ${{ matrix.platform }}
-        build-args: MARCH=${{ steps.flags.outputs.march }}
+        build-args: |
+          MARCH=${{ steps.flags.outputs.march }}
+          VERSION=${{ github.sha }}
         labels: ${{ needs.prepare.outputs.meta-labels }}
         outputs: |
           type=image,name=${{ needs.prepare.outputs.image }},push-by-digest=true,name-canonical=true,push=${{ needs.prepare.outputs.push }}

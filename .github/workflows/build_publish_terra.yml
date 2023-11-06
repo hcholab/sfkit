@@ -154,7 +154,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           platforms: ${{ matrix.platform }}
-          build-args: MARCH=${{ steps.args.outputs.march }}
+          build-args: |
+            MARCH=${{ steps.args.outputs.march }}
+            VERSION=${{ github.sha }}
           outputs: type=image,name=${{ needs.meta.outputs.image }},push-by-digest=true,name-canonical=true
           cache-from: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }}
           cache-to: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }},mode=max
