@@ -1,9 +1,13 @@
 # hadolint global ignore=DL3006,DL3013,DL3018,DL3059
 
-### Build SF-GWAS
-FROM golang:1.18 AS sfgwas
+### Base Golang image
+FROM golang:1.21 AS go
 
 WORKDIR /build
+
+
+### Build SF-GWAS
+FROM go AS sfgwas
 
 # compile Go code
 RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
@@ -17,9 +21,7 @@ RUN ln -s /usr/bin/python python3
 
 
 ### Build sfkit-proxy
-FROM golang:1.21 AS sfkit-proxy
-
-WORKDIR /build
+FROM go AS sfkit-proxy
 
 # compile Go code
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
@@ -54,7 +56,7 @@ RUN ARCH=$(grep -q avx2 /proc/cpuinfo && [ "${MARCH}" = "native" ] || [ "${MARCH
     unzip plink2.zip
 
 
-### Bulid Secure-GWAS
+### Build Secure-GWAS
 FROM dev AS secure-gwas
 
 # install toolchain
