@@ -99,9 +99,9 @@ RUN COMP="$(which clang++)" && \
 FROM dev AS sfkit
 
 # install dev dependencies
-RUN pip install hatch
+RUN pip install poetry
 COPY pyproject.toml .
-RUN hatch dep show requirements -f dev | xargs pip install
+RUN poetry install --only dev
 
 # copy sources
 COPY . .
@@ -114,7 +114,7 @@ RUN flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --sta
 
 # build and install sfkit wheel package as user for distribution
 USER nonroot
-RUN hatch build -t wheel
+RUN poetry build -f wheel
 RUN pip install -I dist/sfkit*.whl
 
 # run tests
