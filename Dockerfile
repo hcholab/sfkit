@@ -29,10 +29,8 @@ FROM go AS sfkit-proxy
 
 # compile Go code
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
-    # update commit when I change sfkit-proxy
-    git checkout e74d84f6116f410b94ab61fda109d17feb94e2be && \ 
     # use static compilation
-    CGO_ENABLED=0 go build -o proxy
+    CGO_ENABLED=0 go build
 
 
 ### Use Python development base image
@@ -135,7 +133,7 @@ COPY --from=cgr.dev/chainguard/bash     /bin /usr/bin   /bin/
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
-COPY --from=sfkit-proxy --chown=nonroot /build/proxy    ./
+COPY --from=sfkit-proxy --chown=nonroot /build/*-proxy  ./
 
 COPY --from=sfkit /build/.venv/lib /usr/lib/
 COPY --from=sfkit /build/dist/sfkit*.whl ./
