@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
     paths:
+      - "poetry.*"
       - "py*"
       - "requirements.txt"
       - "setup.cfg"
@@ -15,6 +16,7 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - "poetry.*"
       - "py*"
       - "requirements.txt"
       - "setup.cfg"

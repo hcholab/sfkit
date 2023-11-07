@@ -98,27 +98,28 @@ RUN COMP="$(which clang++)" && \
 ### Build SFKit
 FROM dev AS sfkit
 
-# install dev dependencies
+# set up Poetry
 RUN pip install poetry
-COPY pyproject.toml .
-RUN poetry install --only dev
 
-# copy sources
+# copy sources and install dependencies as user
+USER nonroot
 COPY . .
+RUN poetry install --only main,dev
 
 # stop the build if there are Python syntax errors or undefined names
-RUN flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+RUN poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude .venv
 
 # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-RUN flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-# build and install sfkit wheel package as user for distribution
-USER nonroot
-RUN poetry build -f wheel
-RUN pip install -I dist/sfkit*.whl
+RUN poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude .venv
 
 # run tests
-RUN python -m pytest
+RUN poetry run pytest
+
+# build and install sfkit wheel package for distribution
+RUN poetry build -f wheel
+
+# keep only runtime dependencies
+RUN poetry install --only main --sync
 
 
 ### Copy distributables into a minimal hardened runtime image
@@ -126,7 +127,7 @@ FROM us.gcr.io/broad-dsp-gcr-public/base/python:distroless
 
 WORKDIR /sfkit
 
-ENV PATH="$PATH:/sfkit:/sfkit/sfgwas" \
+ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/home/nonroot/.local/bin" \
     SFKIT_DIR="/sfkit/.sfkit"
 
 # hadolint ignore=DL3022
@@ -136,8 +137,9 @@ COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
 COPY --from=sfkit-proxy --chown=nonroot /build/proxy    ./
 
-COPY --from=sfkit /home/nonroot/.local/bin/sfkit /bin/
-COPY --from=sfkit /home/nonroot/.local/lib /usr/lib/
+COPY --from=sfkit /build/.venv/lib /usr/lib/
 COPY --from=sfkit /build/dist/sfkit*.whl ./
+
+RUN python -m pip install --no-cache-dir --user ./*.whl
 
 ENTRYPOINT ["sfkit"]
