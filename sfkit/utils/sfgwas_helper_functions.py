@@ -1,5 +1,4 @@
 import os
-import re
 import select
 import shutil
 import subprocess
@@ -7,8 +6,7 @@ from typing import Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-import requests
-from bs4 import BeautifulSoup
+from matplotlib import atexit
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.utils import constants
@@ -200,10 +198,30 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
     config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml" 
     with open(constants.AUTH_KEY, "r") as f:
         auth_key = f.readline().rstrip()
-    api_url = os.getenv("SFKIT_API_URL").replace("https", "wss") + "/ice"
-    
-    command = f"./sfkit-proxy -v -api {api_url} -study {study_id} -pid {role} -mpc {config_file_path} -auth-key {auth_key} | tee -a sfkit-proxy_output.txt &"
+    api_url = os.getenv("SFKIT_API_URL", "").replace("https", "wss") + "/ice"
+
+    # do not use shell, as this may lead to security
+    # vulnerabilities and improper signal handling;
+    # additionally, Popen makes it run in the background,
+    # instead of waiting (indefinitely) on the proxy process to complete
+    command = [
+        "sfkit-proxy",
+        "-v",
+        "-api",
+        api_url,
+        "-study",
+        study_id,
+        "-pid",
+        role,
+        "-mpc",
+        config_file_path,
+        "-auth-key",
+        auth_key,
+    ]
     print(f"Running command: {command}")
-    subprocess.run(command, shell=True)
+    p = subprocess.Popen(command)
+
+    # send SIGTERM on skfit CLI exit
+    atexit.register(p.terminate)
 
     print("sfkit-proxy is running")
