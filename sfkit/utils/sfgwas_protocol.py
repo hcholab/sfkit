@@ -328,6 +328,9 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
     if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
         command = f"export PYTHONUNBUFFERED=TRUE && {protocol_command}"
 
+    if constants.SFKIT_PROXY_ON:
+        command = f"export ALL_PROXY=socks5://localhost:8000 && {command}"
+
     run_sfgwas_with_task_updates(command, protocol, demo, role)
     print(f"Finished {protocol} protocol")
 
