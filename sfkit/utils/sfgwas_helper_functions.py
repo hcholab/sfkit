@@ -2,6 +2,7 @@ import os
 import select
 import shutil
 import subprocess
+from time import sleep
 from typing import Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -223,5 +224,10 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
 
     # send SIGTERM on skfit CLI exit
     atexit.register(p.terminate)
+
+    # 1 sec delay before we start the MPC protocol,
+    # such that sfkit-proxy has time to start SOCKS listener;
+    # in practice, this happens much quicker within ~100ms
+    sleep(1)
 
     print("sfkit-proxy is running")
