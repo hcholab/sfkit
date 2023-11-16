@@ -9,7 +9,7 @@ from sfkit.utils.helper_functions import authenticate_user
 
 
 def run_protocol(
-    phase: str = "", demo: bool = False, send_results: str = "", results_path: str = "", retry: bool = False
+    phase: str = "", demo: bool = False, send_results: str = "", results_path: str = "", retry: bool = False, skip_cp0: bool = False
 ) -> None:
     authenticate_user()
 
@@ -46,7 +46,7 @@ def run_protocol(
             doc_ref_dict = get_doc_ref_dict()
             statuses = doc_ref_dict["status"]
 
-        if not demo and role == "1":
+        if not demo and role == "1" and not skip_cp0:
             create_cp0()
 
         if phase:

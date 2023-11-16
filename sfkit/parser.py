@@ -38,6 +38,7 @@ def get_parser() -> argparse.ArgumentParser:
     #     "--phase",
     #     help="Phase of the protocol to run (e.g. '1' for QC, 2 for PCA, 3 for Association Statistics)",
     # )
+    runprotocol.add_argument("--skip_cp0", help="Skip the creation of cp0 for party 1", action="store_true")
     runprotocol.add_argument("--demo", help="Run the demo protocol", action="store_true")
     runprotocol.add_argument(
         "--visualize_results", help="Visualize the results in the UI (``Yes`` or ``No``) (default is ``No``)"

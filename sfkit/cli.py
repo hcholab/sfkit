@@ -28,6 +28,7 @@ def main() -> None:
         visualize_results: str = args.visualize_results or ""
         results_path: str = args.results_path or ""
         retry: bool = args.retry or False
-        run_protocol(phase, demo, visualize_results, results_path, retry)
+        skip_cp0: bool = args.skip_cp0 or False
+        run_protocol(phase, demo, visualize_results, results_path, retry, skip_cp0)
     else:
         parser.print_help()
