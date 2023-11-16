@@ -45,3 +45,4 @@ class MockArgs:
     visualize_results: str = ""
     results_path: str = ""
     retry: bool = False
+    skip_cp0: bool = False
