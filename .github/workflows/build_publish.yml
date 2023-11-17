@@ -140,7 +140,7 @@ jobs:
         platforms: ${{ matrix.platform }}
         build-args: |
           MARCH=${{ steps.flags.outputs.march }}
-          VERSION=${{ github.sha }}
+          VERSION=${{ github.sha }}-${{ github.run_attempt }}
         labels: ${{ needs.prepare.outputs.meta-labels }}
         outputs: |
           type=image,name=${{ needs.prepare.outputs.image }},push-by-digest=true,name-canonical=true,push=${{ needs.prepare.outputs.push }}

@@ -158,7 +158,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           build-args: |
             MARCH=${{ steps.args.outputs.march }}
-            VERSION=${{ github.sha }}
+            VERSION=${{ github.sha }}-${{ github.run_attempt }}
           outputs: type=image,name=${{ needs.meta.outputs.image }},push-by-digest=true,name-canonical=true
           cache-from: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }}
           cache-to: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }},mode=max
