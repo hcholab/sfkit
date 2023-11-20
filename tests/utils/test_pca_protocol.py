@@ -7,6 +7,7 @@ def test_run_pca_protocol(mocker):
     mocker.patch("sfkit.utils.pca_protocol.update_config_local")
     mocker.patch("sfkit.utils.pca_protocol.update_config_global")
     mocker.patch("sfkit.utils.pca_protocol.build_sfgwas")
+    mocker.patch("sfkit.utils.pca_protocol.sync_with_other_vms")
     mocker.patch("sfkit.utils.pca_protocol.start_sfgwas")
 
     pca_protocol.run_pca_protocol("1")
