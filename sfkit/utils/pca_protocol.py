@@ -12,6 +12,7 @@ from sfkit.utils.sfgwas_protocol import (
     generate_shared_keys,
     install_sfgwas,
     start_sfgwas,
+    sync_with_other_vms,
     update_config_global,
 )
 
@@ -26,6 +27,7 @@ def run_pca_protocol(role: str, demo: bool = False) -> None:
         update_config_global(protocol="pca")
     if not (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         build_sfgwas()
+    sync_with_other_vms(role)
     start_sfgwas(role, demo, protocol="pca")
 
 

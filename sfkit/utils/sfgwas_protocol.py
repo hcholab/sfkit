@@ -298,6 +298,21 @@ def build_sfgwas() -> None:
     print("Finished building sfgwas code")
 
 
+def sync_with_other_vms(role: str) -> None:
+    update_firestore("update_firestore::status=syncing up")
+    update_firestore("update_firestore::task=Syncing up machines")
+    print("Begin syncing up")
+    # wait until all participants are ready
+    while True:
+        doc_ref_dict: dict = get_doc_ref_dict()
+        statuses = doc_ref_dict["status"].values()
+        if all(status == "syncing up" for status in statuses):
+            break
+        print("Waiting for all participants to sync up...")
+        time.sleep(5)
+    time.sleep(15 * int(role))
+    print("Finished syncing up")
+
 def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
     """
     Start the actual sfgwas program
