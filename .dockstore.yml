@@ -3,7 +3,7 @@ workflows:
   - subclass: WDL
     primaryDescriptorPath: /workflow.wdl
     authors:
-      - orcid: 0009-0006-6451-8062
+      - orcid: 0009-0006-6451-8062 # Denis Loginov
       - name: Simon Mendelsohn
         email: smendels@broadinstitute.org
-      - orcid: 0000-0002-2713-0150
+      - orcid: 0000-0002-2713-0150 # Hyunghoon Cho
