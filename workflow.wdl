@@ -21,7 +21,7 @@ task cli {
 
   command <<<
       echo "Study ID: ~{study_id}, PID: ~{pid}"
-      sysctl -a
+      grep -rH . /proc/sys/net/core
   >>>
 
   output {
