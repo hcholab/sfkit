@@ -27,9 +27,7 @@ task cli {
 
   command <<<
       echo "Study ID: ~{study_id}, PID: ~{pid}"
-      set -v -eu
-
-      echo TEST
+      set -xeu
 
       export PYTHONUNBUFFERED=TRUE
       export SKFIT_PROXY_ON=true
