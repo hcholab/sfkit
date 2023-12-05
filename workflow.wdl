@@ -28,8 +28,9 @@ task cli {
   command <<<
       echo "Study ID: ~{study_id}, PID: ~{pid}"
       grep -rH . /proc/sys/net/core
+
+      set -x
       pwd
-      set +v
 
       export PYTHONUNBUFFERED=TRUE
       export SKFIT_PROXY_ON=true
