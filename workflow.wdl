@@ -46,7 +46,11 @@ task cli {
     String out = read_string(stdout())
   }
 
+  Int cpu = 2
+
   runtime {
     docker: "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
+    cpu: cpu
+    memory: "~{cpu * 2} GB"
   }
 }
