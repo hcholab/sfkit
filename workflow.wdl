@@ -29,6 +29,8 @@ task cli {
       echo "Study ID: ~{study_id}, PID: ~{pid}"
       set -v -eu
 
+      echo TEST
+
       export PYTHONUNBUFFERED=TRUE
       export SKFIT_PROXY_ON=true
       export SFKIT_API_URL="~{api_url}"
