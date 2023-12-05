@@ -29,7 +29,7 @@ task cli {
       echo "Study ID: ~{study_id}, PID: ~{pid}"
       grep -rH . /proc/sys/net/core
 
-      set -xeuo pipefail
+      set -euv
       pwd
 
       export PYTHONUNBUFFERED=TRUE
