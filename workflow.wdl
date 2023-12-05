@@ -27,18 +27,19 @@ task cli {
 
   command <<<
       echo "Study ID: ~{study_id}, PID: ~{pid}"
-      grep -rH . /proc/sys/net/core
-
       set -euv
-      pwd
 
       export PYTHONUNBUFFERED=TRUE
       export SKFIT_PROXY_ON=true
       export SFKIT_API_URL="~{api_url}"
+      cd /sfkit
 
       sfkit auth
       sfkit networking --ports "~{sep=',' ports}"
       sfkit generate_keys
+
+      # NOTE: we can't set sysctl in WDL environment, so just leave it alone;
+      # also, the data disk is mounted at /cromwell_root, in case it's needed.
       sfkit run_protocol
   >>>
 
