@@ -66,8 +66,7 @@ def encrypt_mpcgwas(role: str, study_type: str) -> None:
 
 
 def validate_sfgwas(
-    doc_ref_dict: dict, username: str, data_path: str, geno_binary_file_prefix: str
-) -> Tuple[str, str]:
+    doc_ref_dict: dict, username: str, data_path: str, geno_binary_file_prefix: str) -> Tuple[str, str]:
     geno_binary_file_prefix = validate_geno_binary_file_prefix(geno_binary_file_prefix)
     data_path = validate_data_path(data_path)
 

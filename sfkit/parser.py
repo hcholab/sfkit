@@ -38,6 +38,7 @@ def get_parser() -> argparse.ArgumentParser:
     #     "--phase",
     #     help="Phase of the protocol to run (e.g. '1' for QC, 2 for PCA, 3 for Association Statistics)",
     # )
+    runprotocol.add_argument("--client_server", help="Run in client-server mode", action="store_true")
     runprotocol.add_argument("--skip_cp0", help="Skip the creation of cp0 for party 1", action="store_true")
     runprotocol.add_argument("--demo", help="Run the demo protocol", action="store_true")
     runprotocol.add_argument(
@@ -50,3 +51,4 @@ def get_parser() -> argparse.ArgumentParser:
     runprotocol.add_argument("--retry", help="Retry the protocol", action="store_true")
 
     return parser
+

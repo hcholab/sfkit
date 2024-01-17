@@ -4,6 +4,7 @@ from sfkit.encryption.generate_personal_keys import generate_personal_keys
 from sfkit.parser import get_parser
 from sfkit.protocol.register_data import register_data
 from sfkit.protocol.run_protocol import run_protocol
+from sfkit.utils.client_server import start_server
 
 
 def main() -> None:
@@ -29,6 +30,9 @@ def main() -> None:
         results_path: str = args.results_path or ""
         retry: bool = args.retry or False
         skip_cp0: bool = args.skip_cp0 or False
-        run_protocol(phase, demo, visualize_results, results_path, retry, skip_cp0)
+        client_server: bool = args.client_server or False
+        run_protocol(phase, demo, visualize_results, results_path, retry, skip_cp0, client_server)
+    elif args.command == "start_server":
+        start_server()
     else:
         parser.print_help()

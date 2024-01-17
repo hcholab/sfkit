@@ -1,6 +1,7 @@
 import time
 
 from sfkit.api import get_doc_ref_dict, update_firestore
+from sfkit.utils.client_server import send_command_to_server
 from sfkit.utils.gwas_protocol import run_gwas_protocol
 from sfkit.utils.pca_protocol import run_pca_protocol
 from sfkit.utils.sfgwas_protocol import run_sfgwas_protocol
@@ -9,9 +10,13 @@ from sfkit.utils.helper_functions import authenticate_user
 
 
 def run_protocol(
-    phase: str = "", demo: bool = False, send_results: str = "", results_path: str = "", retry: bool = False, skip_cp0: bool = False
+    phase: str = "", demo: bool = False, send_results: str = "", results_path: str = "", retry: bool = False, skip_cp0: bool = False, client_server: bool = False
 ) -> None:
     authenticate_user()
+
+    if client_server:
+        send_command_to_server('run_protocol', phase, demo, send_results, results_path, retry, skip_cp0)
+        return 
 
     if phase and phase not in ["1", "2", "3"]:
         raise ValueError("phase must be 1, 2, or 3")
