@@ -20,18 +20,20 @@ def website_send_file(file: IOBase, filename: str) -> bool:
     return response.status_code == 200
 
 
-def website_get(request_type: str, params: dict = None) -> requests.Response:
+def website_get(request_type: str, params: dict = None, headers: dict = None) -> requests.Response:
     if params is None:
         params = {}
     url = f"{constants.SFKIT_API_URL}/{request_type}"
 
-    with open(constants.AUTH_KEY, "r") as f:
-        auth_key = f.readline().rstrip()
+    if headers is None:
+        with open(constants.AUTH_KEY, "r") as f:
+            auth_key = f.readline().rstrip()
 
-    headers = {
-        "Authorization": f"{auth_key}",
-        "content-type": "application/json",
-    }
+        headers = {
+            "Authorization": f"{auth_key}",
+            "content-type": "application/json",
+        }
+
     return requests.get(url, headers=headers, params=params)
 
 
@@ -39,6 +41,9 @@ def get_doc_ref_dict() -> dict:
     response = website_get("get_doc_ref_dict")
     return response.json()
 
+def get_study_options(headers: dict) -> dict:
+    response = website_get("get_study_options", headers=headers)
+    return response.json()
 
 def get_username() -> str:
     response = website_get("get_username")
