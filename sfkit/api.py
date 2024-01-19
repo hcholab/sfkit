@@ -55,7 +55,7 @@ def get_doc_ref_dict() -> dict:
     return response.json()
 
 def get_study_options() -> dict:
-    response = website_get("get_study_options")
+    response = requests.get(f"{constants.SFKIT_API_URL}/get_study_options", headers=get_service_account_headers())
     return response.json()
 
 def get_username() -> str:
@@ -75,7 +75,6 @@ def create_cp0() -> bool:
 
 
 def get_service_account_headers():
-    print("Trying to authenticate with Google Cloud Platform...")
     creds, _ = google.auth.default()
     creds = creds.with_scopes(["openid", "email", "profile"])
     creds.refresh(GAuthRequest())
