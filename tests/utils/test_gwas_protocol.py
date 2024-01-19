@@ -20,7 +20,6 @@ def test_run_gwas_protocol(mocker: Callable[..., Generator[MockerFixture, None, 
     mocker.patch("sfkit.utils.gwas_protocol.start_datasharing")
     mocker.patch("sfkit.utils.gwas_protocol.start_gwas")
     mocker.patch("sfkit.utils.gwas_protocol.open")
-    mocker.patch("sfkit.utils.gwas_protocol.os.path.join", return_value="path")
 
     gwas_protocol.run_gwas_protocol("1")
     gwas_protocol.run_gwas_protocol("1", demo=True)

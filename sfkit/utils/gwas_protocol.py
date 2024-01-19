@@ -1,11 +1,11 @@
 import fileinput
 import multiprocessing
-import os
 import time
 
 from google.cloud import storage
-from sfkit.utils import constants
+
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
+from sfkit.utils import constants
 from sfkit.utils.helper_functions import (
     copy_results_to_cloud_storage,
     copy_to_out_folder,

@@ -122,7 +122,7 @@ def generate_shared_keys(role: int) -> None:
             continue
         other_public_key_str: str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
         while not other_public_key_str:
-            if other_username == "Broad":
+            if i == 0:  # Broad/cp0
                 print("Waiting for the Broad (CP0) to set up...")
             else:
                 print(f"No public key found for {other_username}.  Waiting...")
@@ -136,7 +136,8 @@ def generate_shared_keys(role: int) -> None:
         with open(shared_key_path, "wb") as f:
             f.write(shared_key)
 
-    random.seed(doc_ref_dict["personal_parameters"]["Broad"]["PUBLIC_KEY"]["value"])
+    cp0: str = doc_ref_dict["participants"][0]
+    random.seed(doc_ref_dict["personal_parameters"][cp0]["PUBLIC_KEY"]["value"])
     global_shared_key = random.getrandbits(256).to_bytes(32, "big")
     with open(os.path.join(constants.SFKIT_DIR, "shared_key_global.bin"), "wb") as f:
         f.write(global_shared_key)
@@ -312,6 +313,7 @@ def sync_with_other_vms(role: str) -> None:
         time.sleep(5)
     time.sleep(15 * int(role))
     print("Finished syncing up")
+
 
 def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
     """
