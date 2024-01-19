@@ -216,9 +216,9 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
         role,
         "-mpc",
         config_file_path,
-        "-auth-key",
-        auth_key,
     ]
+    if not auth_key.startswith("study_id:"):
+        command.extend(["-auth-key", auth_key])
     print(f"Running command: {command}")
     p = subprocess.Popen(command)
 

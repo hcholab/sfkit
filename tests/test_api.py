@@ -8,6 +8,7 @@ from sfkit import api
 def test_website_send_file(mocker):
     mocker.patch("sfkit.api.requests.post", mock_get_post)
     mocker.patch("sfkit.api.open")
+    mocker.patch("sfkit.api.get_service_account_headers", return_value={})
 
     res = api.website_send_file(StringIO("web"), "msg")
     assert res == True
@@ -16,6 +17,7 @@ def test_website_send_file(mocker):
 def test_website_get(mocker):
     mocker.patch("sfkit.api.requests.get", mock_get_post)
     mocker.patch("sfkit.api.open")
+    mocker.patch("sfkit.api.get_service_account_headers", return_value={})
 
     res = api.website_get("web")
 
