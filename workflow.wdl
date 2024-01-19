@@ -6,7 +6,7 @@ workflow sfkit {
     Int num_threads = 2
     Int num_parties = 2
     String api_url = "https://sfkit.dsde.broadinstitute.org/api"
-    Directory data
+    Directory? data
   }
 
   call cli {
