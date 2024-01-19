@@ -36,6 +36,7 @@ def mock_get_parser():
 
 class MockArgs:
     command: str = "auth"
+    study_id: str = ""
     ports: str = ""
     ip_address: str = ""
     geno_binary_file_prefix: str = ""

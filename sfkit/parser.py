@@ -6,7 +6,11 @@ def get_parser() -> argparse.ArgumentParser:
         description="Run workflow with sfkit.  Start with ``sfkit auth`` to authenticate."
     )
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.add_parser("auth", help="Authenticate with the CLI")
+    auth = subparsers.add_parser("auth", help="Authenticate with the CLI")
+    auth.add_argument(
+        "--study_id",
+        help="Study ID to authenticate with (for usage on Terra).  If not provided, you will be prompted to select from a list of available studies.",
+    )
     networking = subparsers.add_parser(
         "networking", help="Set up the networking, including your IP address and any relevant ports"
     )

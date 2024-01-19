@@ -7,6 +7,7 @@ def is_installed(binary: str) -> bool:
 
 
 SFKIT_API_URL = os.environ.get("SFKIT_API_URL", "https://sfkit.org/api")
+TERRA_DEV_API_URL = "https://sfkit.dsde-dev.broadinstitute.org/api"
 METADATA_VM_IDENTITY_URL = (
     "http://metadata.google.internal/computeMetadata/v1/"
     "instance/service-accounts/default/identity?"

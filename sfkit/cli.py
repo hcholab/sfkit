@@ -11,7 +11,8 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "auth":
-        auth()
+        study_id: str = args.study_id or ""
+        auth(study_id)
     elif args.command == "networking":
         ports = args.ports or ""
         ip_address = args.ip_address or ""

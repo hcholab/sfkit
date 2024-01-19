@@ -18,17 +18,17 @@ def test_auth(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     mocker.patch("sfkit.auth.auth.os.makedirs")
     mocker.patch("sfkit.auth.auth.os.remove")
 
-    auth.auth()
+    auth.auth("")
 
     mocker.patch("sfkit.auth.auth.get_doc_ref_dict", side_effect=Exception)
-    auth.auth()
+    auth.auth("")
 
     mocker.patch("sfkit.auth.auth.open", side_effect=FileNotFoundError)
     with pytest.raises(SystemExit) as pytest_wrapped_e:
-        auth.auth()
+        auth.auth("")
 
     mocker.patch("sfkit.auth.auth.open", mock_broken_open)
-    auth.auth()
+    auth.auth("")
 
 
 def mock_open(path, mode):
