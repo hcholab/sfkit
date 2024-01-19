@@ -79,7 +79,7 @@ def get_service_account_headers():
     creds, _ = google.auth.default()
     creds = creds.with_scopes(["openid", "email", "profile"])
     creds.refresh(GAuthRequest())
-    if not os.environ.get("SFKIT_API_URL"):
+    if not os.environ.get("SFKIT_API_URL") and constants.SFKIT_API_URL != constants.TERRA_DEV_API_URL:
         print(f"Inferring Terra Dev environment. Using {constants.TERRA_DEV_API_URL} as API URL.")
         constants.SFKIT_API_URL = constants.TERRA_DEV_API_URL
     return {
