@@ -1,5 +1,5 @@
 from io import IOBase
-import os
+from typing import Union
 
 import google.auth
 import requests
@@ -9,6 +9,7 @@ from sfkit.utils import constants
 
 AUTH_HEADER = "Authorization"
 BEARER_PREFIX = "Bearer "
+
 
 def website_send_file(file: IOBase, filename: str) -> bool:
     params = {}
@@ -31,14 +32,14 @@ def website_send_file(file: IOBase, filename: str) -> bool:
     return response.status_code == 200
 
 
-def website_get(request_type: str, params: dict = None) -> requests.Response:
+def website_get(request_type: str, params: Union[dict, None] = None) -> requests.Response:
     if params is None:
         params = {}
     url = f"{constants.SFKIT_API_URL}/{request_type}"
 
     with open(constants.AUTH_KEY, "r") as f:
         auth_key = f.readline().rstrip()
-    
+
     if auth_key.startswith("study_id:"):
         params["study_id"] = auth_key.split(":")[1]
         headers = get_service_account_headers()
@@ -55,9 +56,11 @@ def get_doc_ref_dict() -> dict:
     response = website_get("get_doc_ref_dict")
     return response.json()
 
+
 def get_study_options() -> dict:
     response = requests.get(f"{constants.SFKIT_API_URL}/get_study_options", headers=get_service_account_headers())
     return response.json()
+
 
 def get_username() -> str:
     response = website_get("get_username")
@@ -77,11 +80,10 @@ def create_cp0() -> bool:
 
 def get_service_account_headers():
     creds, _ = google.auth.default()
-    creds = creds.with_scopes(["openid", "email", "profile"])
+    creds = creds.with_scopes(["openid", "email", "profile"])  # type: ignore
     creds.refresh(GAuthRequest())
-    if not os.environ.get("SFKIT_API_URL") and constants.SFKIT_API_URL != constants.TERRA_DEV_API_URL:
-        print(f"Inferring Terra Dev environment. Using {constants.TERRA_DEV_API_URL} as API URL.")
-        constants.SFKIT_API_URL = constants.TERRA_DEV_API_URL
+    if not creds.token:
+        raise ValueError("No token found")
     return {
         AUTH_HEADER: BEARER_PREFIX + creds.token,
     }

@@ -7,7 +7,7 @@ def is_installed(binary: str) -> bool:
 
 
 SFKIT_API_URL = os.environ.get("SFKIT_API_URL", "https://sfkit.org/api")
-TERRA_DEV_API_URL = "https://sfkit.dsde-dev.broadinstitute.org/api"
+print(f"SFKIT_API_URL: {SFKIT_API_URL}")
 METADATA_VM_IDENTITY_URL = (
     "http://metadata.google.internal/computeMetadata/v1/"
     "instance/service-accounts/default/identity?"
@@ -23,4 +23,4 @@ EXECUTABLES_PREFIX = os.path.expanduser("~") + "/.local/" if IS_INSTALLED_VIA_SC
 SFKIT_PREFIX = "sfkit: "
 OUT_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "out")
 ENCRYPTED_DATA_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "encrypted_data")
-SFKIT_PROXY_ON: bool = os.getenv('SFKIT_PROXY_ON', 'false').lower() == 'true'
+SFKIT_PROXY_ON: bool = os.getenv("SFKIT_PROXY_ON", "false").lower() == "true"
