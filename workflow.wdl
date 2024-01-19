@@ -14,7 +14,8 @@ workflow sfkit {
       study_id = study_id,
       num_threads = num_threads,
       num_parties = num_parties,
-      api_url = api_url
+      api_url = api_url,
+      data = data,
   }
 }
 
@@ -24,6 +25,7 @@ task cli {
     Int num_threads
     Int num_parties
     String api_url
+    Directory? data
   }
 
   command <<<
@@ -42,8 +44,11 @@ task cli {
       sfkit networking --ports "$(<ports.txt)"
       sfkit generate_keys
 
-      # NOTE: we can't set sysctl in WDL environment, so just leave it alone;
-      # also, the data disk is mounted at /cromwell_root, in case it's needed.
+      if [ -n "~{data}" ]; then
+        sfkit register_data --data_path "~{data}"
+      fi
+
+      # NOTE: we can't set sysctl in WDL environment, so just leave it alone
       sfkit run_protocol
   >>>
 
