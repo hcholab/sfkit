@@ -1,18 +1,19 @@
-version 1.0
+version development
 
 workflow sfkit {
   input {
     String study_id
-    Int pid = 0
-    Array[Int]+ ports = [8020, 8040]
-    String api_url = "https://sfkit.dsde-dev.broadinstitute.org/api"
+    Int num_threads = 2
+    Int num_parties = 2
+    String api_url = "https://sfkit.dsde.broadinstitute.org/api"
+    Directory data
   }
 
   call cli {
     input:
       study_id = study_id,
-      pid = pid,
-      ports = ports,
+      num_threads = num_threads,
+      num_parties = num_parties,
       api_url = api_url
   }
 }
@@ -20,13 +21,12 @@ workflow sfkit {
 task cli {
   input {
     String study_id
-    Int pid
-    Array[Int]+ ports
+    Int num_threads
+    Int num_parties
     String api_url
   }
 
   command <<<
-      echo "Study ID: ~{study_id}, PID: ~{pid}"
       set -xeu
 
       export PYTHONUNBUFFERED=TRUE
@@ -34,8 +34,12 @@ task cli {
       export SFKIT_API_URL="~{api_url}"
       cd /sfkit
 
-      sfkit auth
-      sfkit networking --ports "~{sep=',' ports}"
+      python >ports.txt <<CODE
+      print(','.join([str(8100 + ~{num_threads} * p) for p in range(~{num_parties})]))
+      CODE
+
+      sfkit auth --study_id "~{study_id}"
+      sfkit networking --ports "$(<ports.txt)"
       sfkit generate_keys
 
       # NOTE: we can't set sysctl in WDL environment, so just leave it alone;
@@ -47,11 +51,9 @@ task cli {
     String out = read_string(stdout())
   }
 
-  Int cpu = 2
-
   runtime {
     docker: "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
-    cpu: cpu
-    memory: "~{cpu * 8} GB"
+    cpu: num_threads
+    memory: "~{num_threads * 8} GB"
   }
 }
