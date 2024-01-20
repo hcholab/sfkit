@@ -24,7 +24,7 @@ def website_send_file(file: IOBase, filename: str) -> bool:
     else:
         headers = {
             "Authorization": f"{auth_key}",
-            "content-type": "application/json",
+            # Note: NO content-type header set here
         }
 
     response = requests.post(url, files=files, headers=headers, params=params)
