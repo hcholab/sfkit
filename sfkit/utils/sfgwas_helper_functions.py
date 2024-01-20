@@ -1,3 +1,4 @@
+import atexit
 import os
 import select
 import shutil
@@ -7,7 +8,6 @@ from typing import Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import atexit
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.utils import constants
