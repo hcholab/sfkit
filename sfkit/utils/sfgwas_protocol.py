@@ -43,6 +43,7 @@ def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False) -> None:
     update_config_global_phase(phase, demo)
     if not (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         build_sfgwas()
+    sync_with_other_vms(role, demo)
     start_sfgwas(role, demo)
 
 
@@ -299,11 +300,15 @@ def build_sfgwas() -> None:
     print("Finished building sfgwas code")
 
 
-def sync_with_other_vms(role: str) -> None:
+def sync_with_other_vms(role: str, demo: bool) -> None:
     update_firestore("update_firestore::status=syncing up")
     update_firestore("update_firestore::task=Syncing up machines")
     print("Begin syncing up")
-    # wait until all participants are ready
+
+    if demo:
+        print("Skipping sync for demo")
+        return
+
     while True:
         doc_ref_dict: dict = get_doc_ref_dict()
         statuses = doc_ref_dict["status"].values()

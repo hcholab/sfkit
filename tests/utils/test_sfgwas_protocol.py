@@ -11,6 +11,7 @@ def test_run_sfgwas_protocol(mocker):
     mocker.patch("sfkit.utils.sfgwas_protocol.update_config_global_phase")
     mocker.patch("sfkit.utils.sfgwas_protocol.update_sfgwas_go")
     mocker.patch("sfkit.utils.sfgwas_protocol.build_sfgwas")
+    mocker.patch("sfkit.utils.sfgwas_protocol.sync_with_other_vms")
     mocker.patch("sfkit.utils.sfgwas_protocol.start_sfgwas")
 
     sfgwas_protocol.run_sfgwas_protocol("1", demo=True)
