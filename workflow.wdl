@@ -45,7 +45,7 @@ task cli {
   >>>
 
   runtime {
-    docker: "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
+    docker: "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit:v0.0.46-59ff010"
     cpu: num_threads
     memory: "~{num_threads * 8} GB"
   }
