@@ -4,7 +4,6 @@ workflow sfkit {
   input {
     String study_id
     Int num_threads = 2
-    Int num_parties = 2
     String api_url = "https://sfkit.dsde.broadinstitute.org/api"
     Directory? data
   }
@@ -13,7 +12,6 @@ workflow sfkit {
     input:
       study_id = study_id,
       num_threads = num_threads,
-      num_parties = num_parties,
       api_url = api_url,
       data = data,
   }
@@ -23,7 +21,6 @@ task cli {
   input {
     String study_id
     Int num_threads
-    Int num_parties
     String api_url
     Directory? data
   }
