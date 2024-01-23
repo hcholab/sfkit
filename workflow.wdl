@@ -48,6 +48,11 @@ task cli {
         sfkit register_data --data_path "~{data}"
       fi
 
+      python <<CODE
+      import os
+      print(os.environ)
+      CODE
+
       sfkit run_protocol
   >>>
 
