@@ -196,7 +196,7 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
     print("Booting up sfkit-proxy")
     doc_ref_dict: dict = get_doc_ref_dict()
     study_id: str = doc_ref_dict["study_id"]
-    config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml" 
+    config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml"
     with open(constants.AUTH_KEY, "r") as f:
         auth_key = f.readline().rstrip()
     api_url = os.getenv("SFKIT_API_URL", "").replace("https", "wss") + "/ice"
@@ -222,7 +222,7 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
     print(f"Running command: {command}")
     p = subprocess.Popen(command)
 
-    # send SIGTERM on skfit CLI exit
+    # send SIGTERM on sfkit CLI exit
     atexit.register(p.terminate)
 
     # 1 sec delay before we start the MPC protocol,
