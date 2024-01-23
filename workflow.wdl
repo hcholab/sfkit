@@ -4,7 +4,7 @@ workflow sfkit {
   input {
     String study_id
     Directory? data
-    Int num_threads = 2
+    Int num_cores = 2
     String api_url = "https://sfkit.dsde.broadinstitute.org/api"
     String docker = "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
   }
@@ -13,7 +13,7 @@ workflow sfkit {
     input:
       study_id = study_id,
       data = data,
-      num_threads = num_threads,
+      num_cores = num_cores,
       api_url = api_url,
       docker = docker,
   }
@@ -23,7 +23,7 @@ task cli {
   input {
     String study_id
     Directory? data
-    Int num_threads
+    Int num_cores
     String api_url
     String docker
   }
@@ -49,8 +49,8 @@ task cli {
 
   runtime {
     docker: docker
-    cpu: num_threads
-    memory: "~{num_threads * 8} GB"
+    cpu: num_cores
+    memory: "~{num_cores * 8} GB"
   }
 
   output {
