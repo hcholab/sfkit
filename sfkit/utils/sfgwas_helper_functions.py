@@ -222,7 +222,7 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
     print(f"Running command: {command}")
     p = subprocess.Popen(command)
 
-    # send SIGTERM on skfit CLI exit
+    # send SIGTERM on sfkit CLI exit
     atexit.register(p.terminate)
 
     # 1 sec delay before we start the MPC protocol,

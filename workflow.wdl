@@ -1,57 +1,59 @@
-version 1.0
+version development
 
 workflow sfkit {
   input {
     String study_id
-    Int pid = 0
-    Array[Int]+ ports = [8020, 8040]
-    String api_url = "https://sfkit.dsde-dev.broadinstitute.org/api"
+    Directory? data
+    Int num_cores = 2
+    String api_url = "https://sfkit.dsde.broadinstitute.org/api"
+    String docker = "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
   }
 
   call cli {
     input:
       study_id = study_id,
-      pid = pid,
-      ports = ports,
-      api_url = api_url
+      data = data,
+      num_cores = num_cores,
+      api_url = api_url,
+      docker = docker,
   }
 }
 
 task cli {
   input {
     String study_id
-    Int pid
-    Array[Int]+ ports
+    Directory? data
+    Int num_cores
     String api_url
+    String docker
   }
 
   command <<<
-      echo "Study ID: ~{study_id}, PID: ~{pid}"
       set -xeu
 
       export PYTHONUNBUFFERED=TRUE
-      export SKFIT_PROXY_ON=true
+      export SFKIT_PROXY_ON=true
       export SFKIT_API_URL="~{api_url}"
       cd /sfkit
 
-      sfkit auth
-      sfkit networking --ports "~{sep=',' ports}"
+      sfkit auth --study_id "~{study_id}"
+      sfkit networking
       sfkit generate_keys
 
-      # NOTE: we can't set sysctl in WDL environment, so just leave it alone;
-      # also, the data disk is mounted at /cromwell_root, in case it's needed.
+      if [ -n "~{data}" ]; then
+        sfkit register_data --data_path "~{data}"
+      fi
+
       sfkit run_protocol
   >>>
 
-  output {
-    String out = read_string(stdout())
+  runtime {
+    docker: docker
+    cpu: num_cores
+    memory: "~{num_cores * 8} GB"
   }
 
-  Int cpu = 2
-
-  runtime {
-    docker: "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
-    cpu: cpu
-    memory: "~{cpu * 8} GB"
+  output {
+    String out = read_string(stdout())
   }
 }

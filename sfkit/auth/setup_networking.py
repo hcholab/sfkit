@@ -5,6 +5,9 @@ from requests import get
 from sfkit.api import get_doc_ref_dict, get_username, update_firestore
 from sfkit.utils.helper_functions import authenticate_user
 
+MAX_PARTICIPANTS = 10
+MAX_THREADS = 100
+
 
 def setup_networking(ports_str: str, ip_address: str = "") -> None:
     print("Setting up networking...")
@@ -26,9 +29,6 @@ def setup_networking(ports_str: str, ip_address: str = "") -> None:
     print("Processing...")
     update_firestore(f"update_firestore::IP_ADDRESS={ip_address}")
 
-    username: str = get_username()
-    role: str = str(doc_ref_dict["participants"].index(username))
-
     if ports_str:
         [validate_port(port) for port in ports_str.split(",")]
         # pad ports_str with nulls if necessary
@@ -40,10 +40,11 @@ def setup_networking(ports_str: str, ip_address: str = "") -> None:
             ports_str = ",".join(ports_str.split(",")[: len(doc_ref_dict["participants"])])
         ports_str = "null," * pad_length + ports_str
     else:
-        ports = ["null" for _ in range(len(doc_ref_dict["participants"]))]
-        for r in range(int(role) + 1, len(doc_ref_dict["participants"])):  # for each other participant
-            ports[r] = validate_port(input(f"Enter port you would like to use to conenct with participant #{r}: "))
-        ports_str = ",".join(ports)
+        # auto-calculate port assignment
+        role = str(doc_ref_dict["participants"].index(get_username()))
+        base = 8000 + MAX_PARTICIPANTS * MAX_THREADS * int(role)
+        ports = [base + MAX_THREADS * r for r in range(len(doc_ref_dict["participants"]))]
+        ports_str = ",".join([str(p) for p in ports])
 
     update_firestore(f"update_firestore::PORTS={ports_str}")
     print("Successfully communicated networking information!")
