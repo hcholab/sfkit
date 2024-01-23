@@ -6,6 +6,7 @@ workflow sfkit {
     Directory? data
     Int num_threads = 2
     String api_url = "https://sfkit.dsde.broadinstitute.org/api"
+    String docker = "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
   }
 
   call cli {
@@ -14,6 +15,7 @@ workflow sfkit {
       data = data,
       num_threads = num_threads,
       api_url = api_url,
+      docker = docker,
   }
 }
 
@@ -23,6 +25,7 @@ task cli {
     Directory? data
     Int num_threads
     String api_url
+    String docker
   }
 
   command <<<
@@ -45,7 +48,7 @@ task cli {
   >>>
 
   runtime {
-    docker: "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit:v0.0.46-59ff010"
+    docker: docker
     cpu: num_threads
     memory: "~{num_threads * 8} GB"
   }
