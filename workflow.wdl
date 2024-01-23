@@ -48,17 +48,16 @@ task cli {
         sfkit register_data --data_path "~{data}"
       fi
 
-      # NOTE: we can't set sysctl in WDL environment, so just leave it alone
       sfkit run_protocol
   >>>
-
-  output {
-    String out = read_string(stdout())
-  }
 
   runtime {
     docker: "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
     cpu: num_threads
     memory: "~{num_threads * 8} GB"
+  }
+
+  output {
+    String out = read_string(stdout())
   }
 }
