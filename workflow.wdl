@@ -32,7 +32,7 @@ task cli {
       set -xeu
 
       export PYTHONUNBUFFERED=TRUE
-      export SKFIT_PROXY_ON=true
+      export SFKIT_PROXY_ON=true
       export SFKIT_API_URL="~{api_url}"
       cd /sfkit
 
@@ -47,11 +47,6 @@ task cli {
       if [ -n "~{data}" ]; then
         sfkit register_data --data_path "~{data}"
       fi
-
-      python <<CODE
-      import os
-      print(os.environ)
-      CODE
 
       sfkit run_protocol
   >>>
