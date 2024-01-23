@@ -36,12 +36,8 @@ task cli {
       export SFKIT_API_URL="~{api_url}"
       cd /sfkit
 
-      python >ports.txt <<CODE
-      print(','.join([str(8100 + ~{num_threads} * p) for p in range(~{num_parties})]))
-      CODE
-
       sfkit auth --study_id "~{study_id}"
-      sfkit networking --ports "$(<ports.txt)"
+      sfkit networking
       sfkit generate_keys
 
       if [ -n "~{data}" ]; then
