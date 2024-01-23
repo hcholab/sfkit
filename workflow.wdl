@@ -3,26 +3,26 @@ version development
 workflow sfkit {
   input {
     String study_id
+    Directory? data
     Int num_threads = 2
     String api_url = "https://sfkit.dsde.broadinstitute.org/api"
-    Directory? data
   }
 
   call cli {
     input:
       study_id = study_id,
+      data = data,
       num_threads = num_threads,
       api_url = api_url,
-      data = data,
   }
 }
 
 task cli {
   input {
     String study_id
+    Directory? data
     Int num_threads
     String api_url
-    Directory? data
   }
 
   command <<<
