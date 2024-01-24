@@ -79,7 +79,7 @@ def test_validate_sfgwas(mocker: Callable[..., Generator[MockerFixture, None, No
     register_data.validate_sfgwas(mock_doc_ref_dict, "a@a.com", "demo", "geno_binary_file_prefix")
 
     mock_doc_ref_dict_copy = copy.deepcopy(mock_doc_ref_dict)
-    mock_doc_ref_dict_copy["personal_parameters"]["a@a.com"]["NUM_INDS"]["value"] = ""
+    mock_doc_ref_dict_copy["personal_parameters"]["a@a.com"]["NUM_INDS"]["value"] = 5
     register_data.validate_sfgwas(mock_doc_ref_dict_copy, "a@a.com", "data_path", "geno_binary_file_prefix")
 
 
