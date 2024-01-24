@@ -57,7 +57,7 @@ mkdir -p ~/.local/sfgwas && mv sfgwas ~/.local/
 mkdir -p ~/.local/secure-gwas && mv secure-gwas ~/.local/
 echo
 
-if ! type sfkit &>/dev/null && ! echo "$PATH" | grep -q "/.local/bin" ; then
+if ! type sfkit &>/dev/null || ! echo "$PATH" | grep -q "/.local/bin" ; then
   echo Updating PATH...
   echo "export PATH=\"\$PATH:\$HOME/.local/bin\"" >> ~/.profile
   echo "export PATH=\"\$PATH:\$HOME/.local/sfgwas\"" >> ~/.profile

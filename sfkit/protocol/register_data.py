@@ -74,18 +74,22 @@ def validate_sfgwas(
     if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
         using_demo()
 
-    num_inds: int = validate_sfgwas_data(geno_binary_file_prefix, data_path)
     num_inds_value = doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]
+    num_snps_value = doc_ref_dict["parameters"]["num_snps"]["value"]
+
     if num_inds_value == "":
         condition_or_fail(False, "NUM_INDS is not set. Please set it and try again.")
-    else:
-        condition_or_fail(
-            num_inds == int(num_inds_value),
-            "NUM_INDS does not match the number of individuals in the data.",
-        )
+    if num_snps_value == "":
+        condition_or_fail(False, "num_snps is not set. Please set it and try again.")
+
+    num_inds: int = validate_sfgwas_data(geno_binary_file_prefix, data_path)
+    condition_or_fail(
+        num_inds == int(num_inds_value),
+        "NUM_INDS does not match the number of individuals in the data.",
+    )
     num_snps: int = num_rows(os.path.join(data_path, "snp_ids.txt"))
     condition_or_fail(
-        num_snps == int(doc_ref_dict["parameters"]["num_snps"]["value"]),
+        num_snps == int(num_snps_value),
         "num_snps does not match the number of SNPs in the data.",
     )
     print(f"Your data has {num_inds} individuals and {num_snps} SNPs.")
@@ -99,13 +103,21 @@ def validate_mpcgwas(doc_ref_dict: dict, username: str, data_path: str, role: st
     if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
         using_demo()
 
+    num_inds_value = doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]
+    num_covs_value = doc_ref_dict["parameters"]["NUM_COVS"]["value"]
+
+    if num_inds_value == "":
+        condition_or_fail(False, "NUM_INDS is not set. Please set it and try again.")
+    if num_covs_value == "":
+        condition_or_fail(False, "NUM_COVS is not set. Please set it and try again.")
+
     num_inds, num_covs = validate_mpcgwas_data(data_path)
     condition_or_fail(
-        num_inds == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
+        num_inds == int(num_inds_value),
         "NUM_INDS does not match the number of individuals in the data.",
     )
     condition_or_fail(
-        num_covs == int(doc_ref_dict["parameters"]["NUM_COVS"]["value"]),
+        num_covs == int(num_covs_value),
         "NUM_COVS does not match the number of covariates in the data.",
     )
 
@@ -123,14 +135,22 @@ def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> str:
     if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
         using_demo()
 
+    num_inds_value = doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]
+    number_of_cols_value = doc_ref_dict["parameters"]["num_columns"]["value"]
+
+    if num_inds_value == "":
+        condition_or_fail(False, "NUM_INDS is not set. Please set it and try again.")
+    if number_of_cols_value == "":
+        condition_or_fail(False, "num_columns is not set. Please set it and try again.")
+
     number_of_rows: int = num_rows(os.path.join(data_path, "data.txt"))
     condition_or_fail(
-        number_of_rows == int(doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]),
+        number_of_rows == int(num_inds_value),
         "NUM_INDS does not match the number of rows in the data.",
     )
     number_of_cols: int = num_cols(os.path.join(data_path, "data.txt"))
     condition_or_fail(
-        number_of_cols == int(doc_ref_dict["parameters"]["num_columns"]["value"]),
+        number_of_cols == int(number_of_cols_value),
         "num_columns does not match the number of columns in the data.",
     )
     print(f"Your data has {number_of_rows} rows and {number_of_cols} columns.")
