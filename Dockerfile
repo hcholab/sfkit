@@ -52,7 +52,7 @@ RUN apk add --no-cache curl
 ### Download static Plink2 executable according to the platform
 FROM dev AS plink2
 
-ARG MARCH=native 
+ARG MARCH=native
 RUN ARCH=$(grep -q avx2 /proc/cpuinfo && [ "${MARCH}" = "native" ] || [ "${MARCH}" = "x86-64-v3" ] && echo "avx2" || echo "x86_64") && \
     curl -so plink2.zip "https://s3.amazonaws.com/plink2-assets/plink2_linux_${ARCH}_latest.zip" && \
     unzip plink2.zip
