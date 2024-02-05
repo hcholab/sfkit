@@ -28,7 +28,7 @@ RUN ln -s /usr/bin/python python3
 FROM go AS sfkit-proxy
 
 # compile Go code
-RUN git clone https://github.com/hcholab/sfkit-proxy . && \
+RUN git clone --depth 1 https://github.com/hcholab/sfkit-proxy . && \
     # use static compilation
     CGO_ENABLED=0 go build
 
