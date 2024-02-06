@@ -5,7 +5,7 @@ import shutil
 import subprocess
 from time import sleep
 from typing import Tuple, Union
-from urllib.parse import urljoin, urlparse, urlunsplit
+from urllib.parse import urlparse, urlunsplit
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -200,7 +200,7 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
 
     url = urlparse(constants.SFKIT_API_URL)
     scheme = "wss" if url.scheme == "https" else "ws"
-    url_path = urljoin(url.path, 'ice')
+    url_path = os.path.join(url.path, "ice")
     api_url = urlunsplit((scheme, str(url.netloc), url_path, "", ""))
 
     # do not use shell, as this may lead to security
