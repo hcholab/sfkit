@@ -5,19 +5,17 @@ import shutil
 import subprocess
 from time import sleep
 from typing import Tuple, Union
+from urllib.parse import urljoin, urlparse, urlunsplit
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.utils import constants
-from sfkit.utils.helper_functions import (
-    condition_or_fail,
-    copy_results_to_cloud_storage,
-    copy_to_out_folder,
-    plot_assoc,
-    postprocess_assoc,
-)
+from sfkit.utils.helper_functions import (condition_or_fail,
+                                          copy_results_to_cloud_storage,
+                                          copy_to_out_folder, plot_assoc,
+                                          postprocess_assoc)
 
 
 def get_file_paths() -> Tuple[str, str]:
@@ -199,7 +197,11 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
     config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml"
     with open(constants.AUTH_KEY, "r") as f:
         auth_key = f.readline().rstrip()
-    api_url = os.getenv("SFKIT_API_URL", "").replace("https", "wss") + "/ice"
+
+    url = urlparse(constants.SFKIT_API_URL)
+    scheme = "wss" if url.scheme == "https" else "ws"
+    url_path = urljoin(url.path, 'ice')
+    api_url = urlunsplit((scheme, str(url.netloc), url_path, "", ""))
 
     # do not use shell, as this may lead to security
     # vulnerabilities and improper signal handling;
