@@ -200,8 +200,7 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
 
     url = urlparse(constants.SFKIT_API_URL)
     scheme = "wss" if url.scheme == "https" else "ws"
-    url_path = os.path.join(url.path, "ice")
-    api_url = urlunsplit((scheme, str(url.netloc), url_path, "", ""))
+    api_url = urlunsplit((scheme, str(url.netloc), os.path.join(url.path, "ice"), "", ""))
 
     # do not use shell, as this may lead to security
     # vulnerabilities and improper signal handling;
