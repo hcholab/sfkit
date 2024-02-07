@@ -1,6 +1,5 @@
 # hadolint global ignore=DL3006,DL3013,DL3018,DL3059
 
-### Base Golang image
 FROM golang:1.21 AS go
 
 WORKDIR /build
@@ -10,10 +9,8 @@ WORKDIR /build
 ARG VERSION
 
 
-### Build SF-GWAS
 FROM go AS sfgwas
 
-# compile Go code
 RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
     # use static compilation
     CGO_ENABLED=0 go build && \
@@ -21,6 +18,13 @@ RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
     rm -rf .git
 
 # create missing python3 alias needed by shell scripts
+RUN ln -s /usr/bin/python python3
+
+
+FROM go as sfrelate
+RUN git clone --depth 1 https://github.com/froelich/sf-relate . && \
+    CGO_ENABLED=0 go build && \
+    rm -rf .git
 RUN ln -s /usr/bin/python python3
 
 
@@ -125,7 +129,7 @@ FROM us.gcr.io/broad-dsp-gcr-public/base/python:distroless
 
 WORKDIR /sfkit
 
-ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/home/nonroot/.local/bin" \
+ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sfrelate:/home/nonroot/.local/bin" \
     SFKIT_DIR="/sfkit/.sfkit"
 
 # hadolint ignore=DL3022
@@ -133,6 +137,7 @@ COPY --from=cgr.dev/chainguard/bash     /bin /usr/bin   /bin/
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
+COPY --from=sfrelate    --chown=nonroot /build          ./sfrelate/
 COPY --from=sfkit-proxy --chown=nonroot /build/*-proxy  ./
 
 COPY --from=sfkit /build/.venv/lib /usr/lib/

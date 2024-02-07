@@ -7,6 +7,13 @@ from sfkit.protocol.run_protocol import run_protocol
 
 
 def main() -> None:
+    # TODO: remove
+    import sys
+    from sfkit.utils.sfrelate_protocol import start_sfrelate
+
+    if len(sys.argv) == 2 and sys.argv[1] == "sf-relate":
+        start_sfrelate("1", True)
+
     parser = get_parser()
     args = parser.parse_args()
 

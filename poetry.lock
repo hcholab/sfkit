@@ -791,6 +791,17 @@ MarkupSafe = ">=2.0"
 i18n = ["Babel (>=2.7)"]
 
 [[package]]
+name = "joblib"
+version = "1.3.2"
+description = "Lightweight pipelining with Python functions"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "joblib-1.3.2-py3-none-any.whl", hash = "sha256:ef4331c65f239985f3f2220ecc87db222f08fd22097a3dd5698f693875f8cbb9"},
+    {file = "joblib-1.3.2.tar.gz", hash = "sha256:92f865e621e17784e7955080b6d042489e3b8e294949cc44c6eac304f59772b1"},
+]
+
+[[package]]
 name = "kiwisolver"
 version = "1.4.5"
 description = "A fast implementation of the Cassowary constraint solver"
@@ -1172,6 +1183,25 @@ python-versions = ">=3.7"
 files = [
     {file = "pathspec-0.11.2-py3-none-any.whl", hash = "sha256:1d6ed233af05e679efb96b1851550ea95bbb64b7c490b0f5aa52996c11e92a20"},
     {file = "pathspec-0.11.2.tar.gz", hash = "sha256:e0d8d0ac2f12da61956eb2306b69f9469b42f4deb0f3cb6ed47b9cce9996ced3"},
+]
+
+[[package]]
+name = "pgenlib"
+version = "0.90.1"
+description = "Python wrapper for pgenlib's basic reader and writer."
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "Pgenlib-0.90.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0c5823a8f3bb558c2d60243eb19ca6220cc2d5c759fc50139e5c09b179353b68"},
+    {file = "Pgenlib-0.90.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:758b3927228029bb10758a28a8ded86a71844da973d6196b44913c4765cdf23d"},
+    {file = "Pgenlib-0.90.1-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:72427c7e92993859be40e7ad326a5d86025d2218c0109ac3b3fa1620fd37bec2"},
+    {file = "Pgenlib-0.90.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:85fb2bd56d12a338ec3605149c3f0782b04c861588ad7e4afb41f3ff13f90c00"},
+    {file = "Pgenlib-0.90.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8283d5b6cb1196dc859f7c489b36d3cd2673174a19e507fa52a869ef25333127"},
+    {file = "Pgenlib-0.90.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:89d5baf59cb19f1f53ae1ec48fb33775e3bd84c0c4ed3d8582a6b45051f26e1a"},
+    {file = "Pgenlib-0.90.1-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f06160710bfbf69655bb30ba8231e1329d4903f0a71f5dcb52df9d04c2f94282"},
+    {file = "Pgenlib-0.90.1-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:af42bb7fc0812a562e3c17218019650174d4bd3598f0a031b2604ea534c2e361"},
+    {file = "Pgenlib-0.90.1-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:72072417b51b9dc0189594c0b705968898b22e43f8a81e9e2a2e4ad19df9ba50"},
+    {file = "Pgenlib-0.90.1.tar.gz", hash = "sha256:069db673c1cc5baffcb9b20c2e6e26cc9fdaadd0095f55a188b41502d0511cb9"},
 ]
 
 [[package]]
@@ -1964,4 +1994,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "4873febd3f83db7a110eeb9cd7e21b20ed7e4a56d874d5bd67139f719c0e85e2"
+content-hash = "7165b09293725e5c0df74960f80e9dec0b84aad29316d425a57f6d3e77947d2d"
