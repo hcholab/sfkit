@@ -38,6 +38,7 @@ def run_protocol(
     ):
         statuses[username] = "ready to begin protocol"
         update_firestore("update_firestore::status=ready to begin protocol")
+
     if statuses[username] == "ready to begin protocol":
         while not demo and other_participant_not_ready(list(statuses.values())):
             print("Other participant(s) not yet ready.  Waiting... (press CTRL-C to cancel)")
