@@ -230,6 +230,6 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
     # 1 sec delay before we start the MPC protocol,
     # such that sfkit-proxy has time to start SOCKS listener;
     # in practice, this happens much quicker within ~100ms
-    sleep(1)
+    sleep(30)
 
     print("sfkit-proxy is running")
