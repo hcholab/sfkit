@@ -161,10 +161,10 @@ def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> str:
 
 
 def validate_sfrelate(doc_ref_dict: dict, username: str, data_path: str, role: str) -> str:
-    data_path = validate_data_path(data_path)
-
     if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
         using_demo()
+
+    data_path = validate_data_path(data_path)
 
     # TODO: validate the data for SF-RELATE
     return data_path

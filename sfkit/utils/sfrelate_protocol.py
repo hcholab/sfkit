@@ -7,7 +7,7 @@ from sfkit.utils import constants
 def run_sfrelate_protocol(role: str, demo: bool) -> None:
     # install for pip version?
     # TODO: if not demo, update config files
-    sync_with_other_vms(role, demo)
+    # sync_with_other_vms(role, demo)
     start_sfrelate(role, demo)
 
 
@@ -21,23 +21,30 @@ def start_sfrelate(role: str, demo: bool) -> None:
         # boot_sfkit_proxy(role=role, )
 
     # TODO: run the actual protocol
-    protocol_commands = [
-        "bash 0_prepare_1KG.sh",
-        "bash 1_hashing.sh",
-        "bash 2_sketch.sh",
-        "bash 3_run_MHE.sh",
-        "bash 4_verify_output.sh",
-    ]
-    for protocol_command in protocol_commands:
-        command = f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}sf-relate && {protocol_command}"
-        print(f"Running command: {command}")
-        subprocess.run(command, shell=True, executable="/bin/bash")
-        print(f"Finished command: {command}")
+    if demo:
+        protocol_commands = [
+            "cd notebooks && python3 step0a_sample_hash_randomness.py -out trial -maf trial/maf -pos trial/pos -gmap trial/gmap -enclen 80 -N 204928 -k 8 -seglen 8 -steplen 4 -l 4",
+            "cd notebooks && python3 step0b_sample_SNPs.py -M 145181 -s 0.7 -out trial/sketched",
+            "cd notebooks && python3 step1_hashing.py -n 1601 -param trial -out trial/party1/table -hap trial/party1/haps -L 3",
+            "cd notebooks && python3 step1_hashing.py -n 1601 -param trial -out trial/party2/table -hap trial/party2/haps -L 3",
+            "make party1 -j2 & make party2",
+        ]
+        messages = ["Step 0: Sampling Shared Parameters", "", "Step 1: Hashing", "", "Step 2: MHE"]
+        for i, protocol_command in enumerate(protocol_commands):
+            command = (
+                f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}sf-relate && {protocol_command}"
+            )
+            print(f"Running command: {command}")
+            if messages[i]:
+                update_firestore(f"update_firestore::task={messages[i]}")
+            subprocess.run(command, shell=True, executable="/bin/bash")
+            print(f"Finished command: {command}")
 
     print("Finished SF-Relate Protocol")
+    update_firestore("update_firestore::status=Finished protocol!")
 
-    if role == "0":
-        update_firestore("update_firestore::status=Finished protocol!")
-        return
+    # if role == "0":
+    #     # update_firestore("update_firestore::status=Finished protocol!")
+    #     return
 
     # TODO: send results and/or graphs back to the website

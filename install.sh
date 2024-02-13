@@ -54,6 +54,7 @@ python3 -m pip install -U ./sfkit*.whl
 rm ./sfkit*.whl
 mkdir -p ~/.local/bin/ && mv plink2 ~/.local/bin/ && mv sfkit-proxy ~/.local/bin/
 mkdir -p ~/.local/sfgwas && mv sfgwas ~/.local/
+mkdir -p ~/.local/sf-relate && mv sf-relate ~/.local/
 mkdir -p ~/.local/secure-gwas && mv secure-gwas ~/.local/
 echo
 
@@ -61,6 +62,7 @@ if ! type sfkit &>/dev/null || ! echo "$PATH" | grep -q "/.local/bin" ; then
   echo Updating PATH...
   echo "export PATH=\"\$PATH:\$HOME/.local/bin\"" >> ~/.profile || { echo "Failed to update .local/bin"; exit 1; }
   echo "export PATH=\"\$PATH:\$HOME/.local/sfgwas\"" >> ~/.profile || { echo "Failed to update .local/sfgwas"; exit 1; }
+  echo "export PATH=\"\$PATH:\$HOME/.local/sf-relate\"" >> ~/.profile || { echo "Failed to update .local/sf-relate"; exit 1; }
   echo "export PATH=\"\$PATH:\$HOME/.local/secure-gwas/code/bin\"" >> ~/.profile || { echo "Failed to update .local/secure-gwas"; exit 1; }
   echo "export PATH=\"\$PATH:/sbin\"" >> ~/.profile || { echo "Failed to update /sbin"; exit 1; }
   source ~/.profile
