@@ -17,7 +17,7 @@ RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
 RUN ln -s /usr/bin/python python3
 
 
-FROM go as sfrelate
+FROM go as sf-relate
 RUN git clone https://github.com/froelich/sf-relate . && \
     git checkout sf-kit && \
     go get relativeMatch && \
@@ -101,7 +101,7 @@ FROM us.gcr.io/broad-dsp-gcr-public/base/python:distroless
 
 WORKDIR /sfkit
 
-ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sfrelate:/home/nonroot/.local/bin" \
+ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/home/nonroot/.local/bin" \
     SFKIT_DIR="/sfkit/.sfkit"
 
 # hadolint ignore=DL3022
@@ -109,7 +109,7 @@ COPY --from=cgr.dev/chainguard/bash     /bin /usr/bin   /bin/
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
-COPY --from=sfrelate    --chown=nonroot /build          ./sfrelate/
+COPY --from=sf-relate    --chown=nonroot /build          ./sf-relate/
 COPY --from=sfkit-proxy --chown=nonroot /build/*-proxy  ./
 
 COPY --from=sfkit /build/.venv/lib /usr/lib/
