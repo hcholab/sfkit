@@ -113,7 +113,7 @@ def test_build_sfgwas(mocker):
 
 def test_start_sfgwas(mocker):
     mocker.patch("sfkit.utils.sfgwas_protocol.update_firestore")
-    mocker.patch("sfkit.utils.sfgwas_protocol.run_sfgwas_with_task_updates")
+    mocker.patch("sfkit.utils.sfgwas_protocol.run_sfprotocol_with_task_updates")
     mocker.patch("sfkit.utils.sfgwas_protocol.post_process_results")
 
     sfgwas_protocol.start_sfgwas("0")

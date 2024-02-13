@@ -48,7 +48,7 @@ def test_move(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     sfgwas_helper_functions.move(source, destination)
 
 
-def test_run_sfgwas_with_task_updates(mocker: Callable[..., Generator[MockerFixture, None, None]]) -> None:
+def test_run_sfprotocol_with_task_updates(mocker: Callable[..., Generator[MockerFixture, None, None]]) -> None:
     mocker.patch("sfkit.utils.sfgwas_helper_functions.condition_or_fail")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.update_firestore")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.check_for_failure")
