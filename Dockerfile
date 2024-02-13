@@ -42,7 +42,7 @@ USER root
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 ENV PIP_NO_CACHE_DIR=1
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl wget make
 
 
 FROM dev AS plink2

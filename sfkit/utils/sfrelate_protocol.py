@@ -58,8 +58,14 @@ def start_sfrelate(role: str, demo: bool) -> None:
             print(f"Running command: {command}")
             if messages[i]:
                 update_firestore(f"update_firestore::task={messages[i]}")
-            subprocess.run(command, shell=True, executable="/bin/bash")
-            print(f"Finished command: {command}")
+            try:
+                subprocess.run(command, shell=True, executable="/bin/bash")
+                print(f"Finished command: {command}")
+            except Exception as e:
+                print(f"Failed command: {command}")
+                print(e)
+                update_firestore(f"update_firestore::status=Failed command: {command}")
+                return
 
     print("Finished SF-Relate Protocol")
     update_firestore("update_firestore::status=Finished protocol!")
