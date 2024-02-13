@@ -18,7 +18,7 @@ RUN ln -s /usr/bin/python python3
 
 
 FROM go as sfrelate
-RUN git clone --depth 1 https://github.com/froelich/sf-relate . && \
+RUN git clone https://github.com/froelich/sf-relate . && \
     git checkout sf-kit && \
     go get relativeMatch && \
     go build && \
