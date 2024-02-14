@@ -12,6 +12,7 @@ def run_sfrelate_protocol(role: str, demo: bool) -> None:
         install_sfrelate()
     # TODO: if not demo, update config files
     # sync_with_other_vms(role, demo)
+    update_XYZ_local()  # TODO: should eventually just update sf-relate repo directly
     update_test_param()
     update_config_global()
     start_sfrelate(role, demo)
@@ -55,6 +56,16 @@ def install_sfrelate() -> None:
         run_command("cd sf-relate && go build")
 
     print("Finished installing dependencies")
+
+
+def update_XYZ_local() -> None:
+    for L in "XYZ":
+        file_path = f"{constants.EXECUTABLES_PREFIX}sf-relate/{L}_local.sh"
+        with open(file_path, "r") as file:
+            filedata = file.read()
+        filedata = filedata.replace("| tee /dev/tty ", "")
+        with open(file_path, "w") as file:
+            file.write(filedata)
 
 
 def update_test_param() -> None:
