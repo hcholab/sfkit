@@ -59,7 +59,9 @@ def start_sfrelate(role: str, demo: bool) -> None:
             if messages[i]:
                 update_firestore(f"update_firestore::task={messages[i]}")
             try:
-                subprocess.run(command, shell=True, executable="/bin/bash")
+                res = subprocess.run(command, shell=True, executable="/bin/bash")
+                if res.returncode != 0:
+                    raise Exception(res.stderr)  # sourcery skip: raise-specific-error
                 print(f"Finished command: {command}")
             except Exception as e:
                 print(f"Failed command: {command}")

@@ -105,6 +105,8 @@ ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/home/nonroot/.local/bin" 
     SFKIT_DIR="/sfkit/.sfkit"
 
 # hadolint ignore=DL3022
+COPY --from=dev /usr/bin/wget /usr/bin/wget
+COPY --from=dev /usr/bin/make /usr/bin/make
 COPY --from=cgr.dev/chainguard/bash     /bin /usr/bin   /bin/
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
