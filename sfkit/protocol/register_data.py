@@ -32,6 +32,8 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
             data_path = validate_mpcgwas(doc_ref_dict, username, data_path, role)
         elif study_type == "PCA":
             data_path = validate_pca(doc_ref_dict, username, data_path)
+        elif study_type == "SF-RELATE":
+            data_path = validate_sfrelate(doc_ref_dict, username, data_path, role)
         else:
             raise ValueError(f"Unknown study type: {study_type}")
 
@@ -155,6 +157,16 @@ def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> str:
     )
     print(f"Your data has {number_of_rows} rows and {number_of_cols} columns.")
 
+    return data_path
+
+
+def validate_sfrelate(doc_ref_dict: dict, username: str, data_path: str, role: str) -> str:
+    if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
+        using_demo()
+
+    data_path = validate_data_path(data_path)
+
+    # TODO: validate the data for SF-RELATE
     return data_path
 
 

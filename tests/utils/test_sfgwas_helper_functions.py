@@ -48,14 +48,14 @@ def test_move(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     sfgwas_helper_functions.move(source, destination)
 
 
-def test_run_sfgwas_with_task_updates(mocker: Callable[..., Generator[MockerFixture, None, None]]) -> None:
+def test_run_sfprotocol_with_task_updates(mocker: Callable[..., Generator[MockerFixture, None, None]]) -> None:
     mocker.patch("sfkit.utils.sfgwas_helper_functions.condition_or_fail")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.update_firestore")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.check_for_failure")
 
-    sfgwas_helper_functions.run_sfgwas_with_task_updates("true", "SF-GWAS", False, "1")
-    sfgwas_helper_functions.run_sfgwas_with_task_updates('echo "sfkit: hi"', "PCA", False, "1")
-    sfgwas_helper_functions.run_sfgwas_with_task_updates(
+    sfgwas_helper_functions.run_sfprotocol_with_task_updates("true", "SF-GWAS", False, "1")
+    sfgwas_helper_functions.run_sfprotocol_with_task_updates('echo "sfkit: hi"', "PCA", False, "1")
+    sfgwas_helper_functions.run_sfprotocol_with_task_updates(
         'echo "Output collectively decrypted and saved to"', "", False, "1"
     )
 
@@ -68,10 +68,10 @@ def test_run_sfgwas_with_task_updates(mocker: Callable[..., Generator[MockerFixt
         ),
     )
 
-    sfgwas_helper_functions.run_sfgwas_with_task_updates(
+    sfgwas_helper_functions.run_sfprotocol_with_task_updates(
         'echo "Output collectively decrypted and saved to"; echo "hi"', "", False, "1"
     )
-    sfgwas_helper_functions.run_sfgwas_with_task_updates('echo "hi"', "", False, "1")
+    sfgwas_helper_functions.run_sfprotocol_with_task_updates('echo "hi"', "", False, "1")
 
 
 def test_check_for_failure(mocker: Callable[..., Generator[MockerFixture, None, None]]):
