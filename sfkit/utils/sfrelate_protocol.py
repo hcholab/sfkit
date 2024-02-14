@@ -104,7 +104,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             "cd notebooks && python3 step1_hashing.py -n 1601 -param trial -out trial/party1/table -hap trial/party1/haps -L 3",
             "cd notebooks && python3 step1_hashing.py -n 1601 -param trial -out trial/party2/table -hap trial/party2/haps -L 3",
             "make party1 -j2 &",
-            "make party2",
+            "sleep 3 && make party2 &",
         ]
         messages = ["Getting Data", "Step 0: Sampling Shared Parameters", "", "Step 1: Hashing", "", "Step 2: MHE", ""]
         for i, protocol_command in enumerate(protocol_commands):
