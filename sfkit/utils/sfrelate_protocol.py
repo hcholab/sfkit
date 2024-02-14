@@ -1,16 +1,57 @@
+import os
 import subprocess
 from sfkit.api import update_firestore
+from sfkit.utils.helper_functions import condition_or_fail, run_command
 from sfkit.utils.sfgwas_protocol import sync_with_other_vms
 from sfkit.utils import constants
 
 
 def run_sfrelate_protocol(role: str, demo: bool) -> None:
     # install for pip version?
+    if not (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
+        install_sfrelate()
     # TODO: if not demo, update config files
     # sync_with_other_vms(role, demo)
     update_test_param()
     update_config_global()
     start_sfrelate(role, demo)
+
+
+def install_sfrelate() -> None:
+    update_firestore("update_firestore::task=Installing dependencies")
+    print("Begin installing dependencies")
+
+    run_command("sudo apt-get update && sudo apt-get upgrade -y")
+    run_command("sudo apt-get install git wget unzip python3 python3-pip python3-venv -y")
+    run_command("ulimit -n 1000000")
+
+    if os.path.isdir("/usr/local/go"):
+        print("go already installed")
+    else:
+        print("Installing go")
+        max_retries = 3
+        retries = 0
+        while retries < max_retries:
+            run_command("rm -f https://golang.org/dl/go1.22.0.linux-amd64.tar.gz")
+            run_command("wget -nc https://golang.org/dl/go1.22.0.linux-amd64.tar.gz")
+            run_command("sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz")
+            if os.path.isdir("/usr/local/go"):
+                break
+            retries += 1
+        if not os.path.isdir("/usr/local/go"):
+            condition_or_fail(False, "go failed to install")
+        print("go successfully installed")
+
+    if os.path.isdir("sf-relate"):
+        print("sf-relate already installed")
+    else:
+        print("Installing sf-relate")
+        run_command("git clone https://github.com/froelich/sf-relate.git")
+        run_command("cd sf-relate && git checkout sf-kit")
+        run_command("go get relativeMatch")
+        run_command("go build")
+
+    print("Finished installing dependencies")
 
 
 def update_test_param() -> None:
