@@ -34,7 +34,7 @@ def install_sfrelate() -> None:
         while retries < max_retries:
             run_command("rm -f https://golang.org/dl/go1.22.0.linux-amd64.tar.gz")
             run_command("wget -nc https://golang.org/dl/go1.22.0.linux-amd64.tar.gz")
-            run_command("sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz")
+            run_command("sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz")
             if os.path.isdir("/usr/local/go"):
                 break
             retries += 1

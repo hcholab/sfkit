@@ -49,7 +49,7 @@ def auth(study_id: str) -> None:
                 print("auth_key.txt not found.  Please download the auth_key.txt file from the sfkit website.")
                 exit(1)
         else:
-            study_options = get_study_options()["options"]
+            study_options = get_study_options().get("options")
             if not study_options:
                 print(
                     "Cannot find study. Please join a user-configured study or download an auth_key.txt from an existing study."
