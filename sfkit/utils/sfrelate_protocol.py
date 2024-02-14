@@ -48,8 +48,8 @@ def install_sfrelate() -> None:
         print("Installing sf-relate")
         run_command("git clone https://github.com/froelich/sf-relate.git")
         run_command("cd sf-relate && git checkout sf-kit")
-        run_command("go get relativeMatch")
-        run_command("go build")
+        run_command("cd sf-relate && go get relativeMatch")
+        run_command("cd sf-relate && go build")
 
     print("Finished installing dependencies")
 
