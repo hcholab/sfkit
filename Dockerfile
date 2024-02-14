@@ -101,12 +101,16 @@ FROM us.gcr.io/broad-dsp-gcr-public/base/python:distroless
 
 WORKDIR /sfkit
 
-ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/home/nonroot/.local/bin" \
-    SFKIT_DIR="/sfkit/.sfkit"
+ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/home/nonroot/.local/bin:/usr/local/go/bin:/tmp/go/bin" \
+    SFKIT_DIR="/sfkit/.sfkit" \
+    GOPATH="/tmp/go" \
+    GOROOT="/usr/local/go" \
+    GOPROXY="https://proxy.golang.org" 
 
 # hadolint ignore=DL3022
 COPY --from=dev /usr/bin/wget /usr/bin/wget
 COPY --from=dev /usr/bin/make /usr/bin/make
+COPY --from=go /usr/local/go/bin/go /usr/local/go/bin/go
 COPY --from=cgr.dev/chainguard/bash     /bin /usr/bin   /bin/
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
