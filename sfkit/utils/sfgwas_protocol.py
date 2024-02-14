@@ -20,7 +20,7 @@ from sfkit.utils.sfgwas_helper_functions import (
     boot_sfkit_proxy,
     get_file_paths,
     post_process_results,
-    run_sfgwas_with_task_updates,
+    run_sfprotocol_with_task_updates,
     to_float_int_or_bool,
     use_existing_config,
 )
@@ -353,7 +353,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
     if constants.SFKIT_PROXY_ON:
         command = f"export ALL_PROXY=socks5://localhost:8000 && {command}"
 
-    run_sfgwas_with_task_updates(command, protocol, demo, role)
+    run_sfprotocol_with_task_updates(command, protocol, demo, role)
     print(f"Finished {protocol} protocol")
 
     if role == "0":

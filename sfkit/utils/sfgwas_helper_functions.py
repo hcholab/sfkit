@@ -47,7 +47,7 @@ def move(source: str, destination: str) -> None:
     shutil.move(source, destination)
 
 
-def run_sfgwas_with_task_updates(command: str, protocol: str, demo: bool, role: str) -> None:
+def run_sfprotocol_with_task_updates(command: str, protocol: str, demo: bool, role: str) -> None:
     env = os.environ.copy()
     if protocol == "gwas":
         env["PROTOCOL"] = "gwas"

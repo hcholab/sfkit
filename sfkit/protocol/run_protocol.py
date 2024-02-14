@@ -6,10 +6,16 @@ from sfkit.utils.pca_protocol import run_pca_protocol
 from sfkit.utils.sfgwas_protocol import run_sfgwas_protocol
 from sfkit.api import create_cp0, get_username
 from sfkit.utils.helper_functions import authenticate_user
+from sfkit.utils.sfrelate_protocol import run_sfrelate_protocol
 
 
 def run_protocol(
-    phase: str = "", demo: bool = False, send_results: str = "", results_path: str = "", retry: bool = False, skip_cp0: bool = False
+    phase: str = "",
+    demo: bool = False,
+    send_results: str = "",
+    results_path: str = "",
+    retry: bool = False,
+    skip_cp0: bool = False,
 ) -> None:
     authenticate_user()
 
@@ -61,6 +67,8 @@ def run_protocol(
             run_sfgwas_protocol(role, phase, demo)
         elif study_type == "PCA":
             run_pca_protocol(role, demo)
+        elif study_type == "SF-RELATE":
+            run_sfrelate_protocol(role, demo)
         else:
             raise ValueError(f"Unknown study type: {study_type}")
     else:
