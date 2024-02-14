@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sfkit"
-version = "0.0.239"
+version = "0.0.240"
 authors = ["Simon Mendelsohn <smendels@broadinstitute.org>"]
 description = "Some CLI Tools For The Secure Multi-party Genomic Analysis Website"
 readme = "README.md"
