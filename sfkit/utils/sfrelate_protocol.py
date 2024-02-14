@@ -40,6 +40,8 @@ def install_sfrelate() -> None:
             retries += 1
         if not os.path.isdir("/usr/local/go"):
             condition_or_fail(False, "go failed to install")
+        os.environ["PATH"] += f"{os.pathsep}/usr/local/go/bin"
+        run_command("go version")
         print("go successfully installed")
 
     if os.path.isdir("sf-relate"):
