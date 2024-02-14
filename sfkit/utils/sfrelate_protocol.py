@@ -41,6 +41,7 @@ def install_sfrelate() -> None:
         if not os.path.isdir("/usr/local/go"):
             condition_or_fail(False, "go failed to install")
         os.environ["PATH"] += f"{os.pathsep}/usr/local/go/bin"
+        run_command("export GOCACHE=~/.cache/go-build")
         run_command("go version")
         print("go successfully installed")
 
