@@ -6,7 +6,7 @@ def is_installed(binary: str) -> bool:
     return shutil.which(binary) is not None
 
 
-SFKIT_API_URL = os.environ.get("SFKIT_API_URL", "https://sfkit.org/api")
+SFKIT_API_URL = os.environ.get("SFKIT_API_URL", "https://sfkit-website-bhj5a4wkqa-uc.a.run.app/api")
 print(f"SFKIT_API_URL: {SFKIT_API_URL}")
 METADATA_VM_IDENTITY_URL = (
     "http://metadata.google.internal/computeMetadata/v1/"
