@@ -234,8 +234,8 @@ def start_gwas(role: str, demo: bool) -> None:
 
     if role != "0":
         process_output_files(role, demo)
-    else:
-        update_firestore("update_firestore::status=Finished protocol!")
+
+    update_firestore("update_firestore::status=Finished protocol!")
 
 
 def process_output_files(role: str, demo: bool) -> None:
@@ -279,5 +279,3 @@ def process_output_files(role: str, demo: bool) -> None:
 
         with open(f"{constants.EXECUTABLES_PREFIX}secure-gwas/out/manhattan.png", "rb") as file:
             website_send_file(file, "manhattan.png")
-
-    update_firestore("update_firestore::status=Finished protocol!")

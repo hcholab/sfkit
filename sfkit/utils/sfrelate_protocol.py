@@ -1,9 +1,15 @@
 import os
 import subprocess
-from sfkit.api import update_firestore
-from sfkit.utils.helper_functions import condition_or_fail, run_command
-from sfkit.utils.sfgwas_protocol import sync_with_other_vms
+
+from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.utils import constants
+from sfkit.utils.helper_functions import (
+    condition_or_fail,
+    copy_results_to_cloud_storage,
+    copy_to_out_folder,
+    run_command,
+)
+from sfkit.utils.sfgwas_protocol import sync_with_other_vms
 
 
 def run_sfrelate_protocol(role: str, demo: bool) -> None:
@@ -126,10 +132,27 @@ def start_sfrelate(role: str, demo: bool) -> None:
                 return
 
     print("Finished SF-Relate Protocol")
+
+    if role != "0":
+        process_output_files(role)
+
     update_firestore("update_firestore::status=Finished protocol!")
 
-    # if role == "0":
-    #     # update_firestore("update_firestore::status=Finished protocol!")
-    #     return
 
-    # TODO: send results and/or graphs back to the website
+def process_output_files(role: str) -> None:
+    print("Processing output files")
+    doc_ref_dict: dict = get_doc_ref_dict()
+    user_id: str = doc_ref_dict["participants"][int(role)]
+
+    out_path = f"{constants.EXECUTABLES_PREFIX}sf-relate/out/demo"
+    copy_to_out_folder([out_path])
+
+    if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
+        copy_results_to_cloud_storage(role, results_path, out_path)
+
+    send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
+    if send_results == "Yes":
+        with open(f"{out_path}/0_0_party{role}.csv", "rb") as file:
+            website_send_file(file, f"0_0_party{role}.csv")
+
+    print("Finished processing output files")
