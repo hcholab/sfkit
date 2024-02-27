@@ -232,5 +232,4 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
     # in practice, this happens much quicker within ~100ms
     sleep(1)
 
-
     print("sfkit-proxy is running")
