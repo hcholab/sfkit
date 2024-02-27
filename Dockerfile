@@ -27,10 +27,8 @@ RUN ln -s /usr/bin/python python3
 
 
 FROM go AS sfkit-proxy
-
-# compile Go code
-RUN git clone --depth 1 https://github.com/hcholab/sfkit-proxy . && \
-    # use static compilation
+RUN git clone https://github.com/hcholab/sfkit-proxy . && \
+    git checkout a422951 && \
     CGO_ENABLED=0 go build
 
 
@@ -108,7 +106,7 @@ ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/home/nonroot/.local/bin:/
     SFKIT_DIR="/sfkit/.sfkit" \
     GOPATH="/tmp/go" \
     GOROOT="/usr/local/go" \
-    GOPROXY="https://proxy.golang.org" 
+    GOPROXY="https://proxy.golang.org"
 
 # hadolint ignore=DL3022
 COPY --from=dev /usr/bin/wget /usr/bin/wget
