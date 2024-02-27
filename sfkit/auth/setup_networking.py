@@ -42,7 +42,7 @@ def setup_networking(ports_str: str, ip_address: str = "") -> None:
     else:
         # auto-calculate port assignment
         role = str(doc_ref_dict["participants"].index(get_username()))
-        base = 8000 + MAX_PARTICIPANTS * MAX_THREADS * int(role)
+        base = 8100 + MAX_PARTICIPANTS * MAX_THREADS * int(role)
         ports = [base + MAX_THREADS * r for r in range(len(doc_ref_dict["participants"]))]
         ports_str = ",".join([str(p) for p in ports])
 
