@@ -4,7 +4,7 @@ workflow sfkit {
   input {
     String study_id
     Directory? data
-    Int num_cores = 2
+    Int num_cores = if data then 16 else 2
     String api_url = "https://sfkit.dsde.broadinstitute.org/api"
     String docker = "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
   }
