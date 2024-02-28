@@ -28,7 +28,7 @@ RUN ln -s /usr/bin/python python3
 
 FROM go AS sfkit-proxy
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
-    git checkout ef7f15f && \
+    git checkout b5d16b9 && \
     CGO_ENABLED=0 go build
 
 
