@@ -21,7 +21,7 @@ matplotlib = "^3.8.1"
 numpy = "^1.26.1"
 pandas = "^2.1.2"
 PyNaCl = "^1.5.0"
-pystun3 = "^0.1.0"
+pystun3 = "^1.0.0"
 qmplot = "^0.3.2"
 requests = {extras = ["socks"], version = "^2.31.0"}
 setuptools = "^68.2.2"
