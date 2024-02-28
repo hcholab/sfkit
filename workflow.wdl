@@ -9,6 +9,8 @@ workflow sfkit {
     String docker = "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
   }
 
+  call stun
+
   call cli {
     input:
       study_id = study_id,
@@ -16,6 +18,19 @@ workflow sfkit {
       num_cores = num_cores,
       api_url = api_url,
       docker = docker,
+  }
+}
+
+task stun {
+  command <<<
+    pip install pystun3
+
+    pystun3 -d &
+    sleep 10
+  >>>
+
+  runtime {
+    docker: "python"
   }
 }
 
