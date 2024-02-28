@@ -1445,18 +1445,6 @@ files = [
 ]
 
 [[package]]
-name = "pystun3"
-version = "1.0.0"
-description = "A Python STUN client for getting NAT type and external IP (RFC 3489)"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pystun3-1.0.0-py2-none-any.whl", hash = "sha256:df9c4c4a5b27f520472c6a7547ca24ac39148b0fc5f6f500275161258e250019"},
-    {file = "pystun3-1.0.0-py3-none-any.whl", hash = "sha256:f080e739880cda781fa588a945b4d5bed0858e2ceab40143a08973ec674f9e72"},
-    {file = "pystun3-1.0.0.tar.gz", hash = "sha256:abafa1d957741df4bcc4cd2298a423db5831fec2600a62719210ea115dddc8f9"},
-]
-
-[[package]]
 name = "pytest"
 version = "7.4.3"
 description = "pytest: simple powerful testing with Python"
@@ -1987,4 +1975,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "43bf724043ad9b007a6d18b8e930e789bc53b67c456360802b41504fef668277"
+content-hash = "b1c7400a6fb0ef23e9fb712cb9025af5c1eec4eeeb00718f282e79442a87fd87"

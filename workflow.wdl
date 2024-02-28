@@ -36,8 +36,6 @@ task cli {
       export SFKIT_API_URL="~{api_url}"
       cd /sfkit
 
-      pystun3 -d &
-
       sfkit auth --study_id "~{study_id}"
       sfkit networking
       sfkit generate_keys
