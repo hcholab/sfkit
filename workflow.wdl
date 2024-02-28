@@ -23,7 +23,7 @@ workflow sfkit {
 
 task stun {
   command <<<
-    pip install pystun3
+    pip install -U pystun3
 
     pystun3 -d &
     sleep 10
