@@ -65,7 +65,7 @@ task cli {
   runtime {
     docker: docker
     cpu: num_cores
-    memory: "~{num_cores * 8} GiB"
+    memory: "~{num_cores * 8 - 0.5} GB"
   }
 
   output {
