@@ -28,8 +28,6 @@ task cli {
     String docker
   }
 
-  Float mem_gb = num_cores * 8 * 1000.0 / 1024
-
   command <<<
       set -xeu
 
@@ -52,7 +50,8 @@ task cli {
   runtime {
     docker: docker
     cpu: num_cores
-    memory: "~{mem_gb} GB"
+    cpuPlatform: "Intel Ice Lake"
+    memory: "~{num_cores * 8} GB"
   }
 
   output {
