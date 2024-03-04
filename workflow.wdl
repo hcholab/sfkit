@@ -35,6 +35,7 @@ task cli {
       export SFKIT_PROXY_ON=true
       export SFKIT_API_URL="~{api_url}"
       cd /sfkit
+      df -h
 
       sfkit auth --study_id "~{study_id}"
       sfkit networking
