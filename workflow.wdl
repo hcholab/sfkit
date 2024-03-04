@@ -52,7 +52,9 @@ task cli {
     cpu: num_cores
     cpuPlatform: "Intel Ice Lake"
     memory: "~{num_cores * 8} GB"
-    disks: "local-disk 250 SSD"
+
+    # TODO: allow specifying sfgwas cache directory inside /cromwell_root
+    bootDiskSizeGb: 100
   }
 
   output {
