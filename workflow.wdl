@@ -52,6 +52,7 @@ task cli {
     cpu: num_cores
     cpuPlatform: "Intel Ice Lake"
     memory: "~{num_cores * 8} GB"
+    disks: "local-disk 250 SSD"
   }
 
   output {
