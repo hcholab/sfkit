@@ -31,8 +31,6 @@ task cli {
   command <<<
       set -xeu
 
-      export PYTHONUNBUFFERED=TRUE
-      export SFKIT_PROXY_ON=true
       export SFKIT_API_URL="~{api_url}"
       cd /sfkit
       df -h

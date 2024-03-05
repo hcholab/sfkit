@@ -103,7 +103,9 @@ FROM us.gcr.io/broad-dsp-gcr-public/base/python:distroless
 WORKDIR /sfkit
 
 ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/home/nonroot/.local/bin:/usr/local/go/bin:/tmp/go/bin" \
+    PYTHONUNBUFFERED=TRUE \
     SFKIT_DIR="/sfkit/.sfkit" \
+    SFKIT_PROXY_ON=TRUE \
     GOPATH="/tmp/go" \
     GOROOT="/usr/local/go" \
     GOPROXY="https://proxy.golang.org"
