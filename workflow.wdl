@@ -4,7 +4,7 @@ workflow sfkit {
   input {
     String study_id
     Directory? data
-    Int num_cores = if defined(data) then 16 else 2
+    Int num_cores = 16 # TODO: test with smaller CP0
     String api_url = "https://sfkit.dsde.broadinstitute.org/api"
     String docker = "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
   }
@@ -31,8 +31,6 @@ task cli {
   command <<<
       set -xeu
 
-      export PYTHONUNBUFFERED=TRUE
-      export SFKIT_PROXY_ON=true
       export SFKIT_API_URL="~{api_url}"
       cd /sfkit
 
@@ -50,7 +48,11 @@ task cli {
   runtime {
     docker: docker
     cpu: num_cores
+    cpuPlatform: "Intel Ice Lake"
     memory: "~{num_cores * 8} GB"
+
+    # TODO: allow specifying sfgwas cache directory inside /cromwell_root
+    bootDiskSizeGb: 100
   }
 
   output {

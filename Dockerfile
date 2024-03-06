@@ -28,7 +28,7 @@ RUN ln -s /usr/bin/python python3
 
 FROM go AS sfkit-proxy
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
-    git checkout a422951 && \
+    git checkout 22b24d1 && \
     CGO_ENABLED=0 go build
 
 
@@ -103,7 +103,9 @@ FROM us.gcr.io/broad-dsp-gcr-public/base/python:distroless
 WORKDIR /sfkit
 
 ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/home/nonroot/.local/bin:/usr/local/go/bin:/tmp/go/bin" \
+    PYTHONUNBUFFERED=TRUE \
     SFKIT_DIR="/sfkit/.sfkit" \
+    SFKIT_PROXY_ON=TRUE \
     GOPATH="/tmp/go" \
     GOROOT="/usr/local/go" \
     GOPROXY="https://proxy.golang.org"
