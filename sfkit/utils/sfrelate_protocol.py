@@ -59,7 +59,7 @@ def install_sfrelate() -> None:
         run_command("git clone https://github.com/froelich/sf-relate.git")
         run_command("cd sf-relate && git checkout sf-kit")
         run_command("cd sf-relate && go get relativeMatch")
-        run_command("cd sf-relate && go build")
+        run_command("cd sf-relate && go build && go test -c -o goParty")
 
     print("Finished installing dependencies")
 
@@ -104,15 +104,13 @@ def start_sfrelate(role: str, demo: bool) -> None:
     # TODO: run the actual protocol
     if demo:
         protocol_commands = [
-            "cd notebooks && wget https://storage.googleapis.com/sfkit_1000_genomes/trial.tar.gz && tar -xvf trial.tar.gz",
-            "cd notebooks && python3 step0a_sample_hash_randomness.py -out trial -maf trial/maf -pos trial/pos -gmap trial/gmap -enclen 80 -N 204928 -k 8 -seglen 8 -steplen 4 -l 4",
-            "cd notebooks && python3 step0b_sample_SNPs.py -M 145181 -s 0.7 -out trial/sketched",
-            "cd notebooks && python3 step1_hashing.py -n 1601 -param trial -out trial/party1/table -hap trial/party1/haps -L 3",
-            "cd notebooks && python3 step1_hashing.py -n 1601 -param trial -out trial/party2/table -hap trial/party2/haps -L 3",
+            "cd notebooks && wget https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz && tar -xvf demo.tar.gz",
+            "python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo",
+            "python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo",
             "make party1 -j2 &",
             "sleep 3 && make party2",
         ]
-        messages = ["Getting Data", "Step 0: Sampling Shared Parameters", "", "Step 1: Hashing", "", "Step 2: MHE", ""]
+        messages = ["Getting Data", "party 1 data processing", "party 2 data processing", "Step 2: MHE", ""]
         for i, protocol_command in enumerate(protocol_commands):
             command = (
                 f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}sf-relate && {protocol_command}"
