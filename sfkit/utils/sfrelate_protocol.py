@@ -159,7 +159,12 @@ def start_sfrelate(role: str, demo: bool) -> None:
             ("python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo", "party 2 data processing")
         ]
     if demo:
-        command = "PID=1 ./goParty > config/demo/logs/X/test.txt & PID=0 ./goParty > config/demo/logs/Z/test.txt & PID=2 ./goParty > config/demo/logs/Y/test.txt & wait $(jobs -p)"
+        command = (
+            f"(cd {constants.EXECUTABLES_PREFIX}sf-relate && PID=1 ./goParty > config/demo/logs/X/test.txt) & "
+            f"(cd {constants.EXECUTABLES_PREFIX}sf-relate && PID=0 ./goParty > config/demo/logs/Z/test.txt) & "
+            f"(cd {constants.EXECUTABLES_PREFIX}sf-relate && PID=2 ./goParty > config/demo/logs/Y/test.txt) & "
+            "wait $(jobs -p)"
+        )
         protocol_steps += [(command, "MHE - All Parties")]
     else:
         if role == "0":
