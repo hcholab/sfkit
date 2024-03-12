@@ -139,6 +139,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
         # TODO: modify boot_sfkit_proxy, and possibly the proxy itself to be compatible with SF-Relate
         # boot_sfkit_proxy(role=role, )
 
+    os.environ["FOLDER"] = "config/demo/"
     protocol_steps = []
     if demo:
         protocol_steps += [
