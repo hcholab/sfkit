@@ -157,13 +157,13 @@ def start_sfrelate(role: str, demo: bool) -> None:
             ("python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo", "party 2 data processing")
         ]
     background_execution = " &" if demo else ""
-    if demo or role == "0":
-        protocol_steps += [
-            (f"PID=0 ./goParty > config/demo/logs/Z/test.txt{background_execution}", "MHE - Party 0"),
-        ]
     if demo or role == "1":
         protocol_steps += [
             (f"sleep 1 && PID=1 ./goParty > config/demo/logs/X/test.txt{background_execution}", "MHE - Party 1"),
+        ]
+    if demo or role == "0":
+        protocol_steps += [
+            (f"PID=0 ./goParty > config/demo/logs/Z/test.txt{background_execution}", "MHE - Party 0"),
         ]
     if demo or role == "2":
         protocol_steps += [
