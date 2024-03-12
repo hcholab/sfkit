@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+import tomlkit
+
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import (
@@ -9,19 +11,20 @@ from sfkit.utils.helper_functions import (
     copy_to_out_folder,
     run_command,
 )
-from sfkit.utils.sfgwas_protocol import sync_with_other_vms
+from sfkit.utils.sfgwas_helper_functions import to_float_int_or_bool
+from sfkit.utils.sfgwas_protocol import generate_shared_keys, sync_with_other_vms
 
 
 def run_sfrelate_protocol(role: str, demo: bool) -> None:
-    # install for pip version?
     if not (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         install_sfrelate()
-    # TODO: if not demo, update config files
-    # sync_with_other_vms(role, demo)
-    update_XYZ_local()  # TODO: should eventually just update sf-relate repo directly
-    update_test_param()
-    update_config_global()
+    if not demo:
+        generate_shared_keys(int(role))
+    print("Begin updating config files")
+    update_config_local(role, demo)
+    update_config_global(demo)
     make_missing_folders()
+    sync_with_other_vms(role, demo)
     start_sfrelate(role, demo)
 
 
@@ -65,32 +68,60 @@ def install_sfrelate() -> None:
     print("Finished installing dependencies")
 
 
-def update_XYZ_local() -> None:
-    for L in "XYZ":
-        file_path = f"{constants.EXECUTABLES_PREFIX}sf-relate/{L}_local.sh"
+def update_config_local(role: str, demo) -> None:
+    config_file_path = f"{constants.EXECUTABLES_PREFIX}sf-relate/config/demo/configLocal.Party{role}.toml"
+
+    with open(config_file_path, "r") as file:
+        filedata = file.read()
+
+    filedata = filedata.replace("export PARA=1", "export PARA=10")
+
+    if role != "0" and not demo:
+        with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
+            data_path = f.readline().rstrip()
+        if data_path:
+            filedata = filedata.replace("notebooks/data/demo", data_path)
+
+    with open(config_file_path, "w") as file:
+        file.write(filedata)
+
+
+def update_config_global(demo) -> None:
+    print("Updating configGlobal.toml")
+    doc_ref_dict: dict = get_doc_ref_dict()
+    file_path = f"{constants.EXECUTABLES_PREFIX}sf-relate/config/demo/configGlobal.toml"
+
+    if demo:
         with open(file_path, "r") as file:
             filedata = file.read()
-        filedata = filedata.replace("| tee /dev/tty ", "")
+            filedata = filedata.replace("5110", "3110")
         with open(file_path, "w") as file:
             file.write(filedata)
+        return
 
-
-def update_test_param() -> None:
-    file_path = f"{constants.EXECUTABLES_PREFIX}sf-relate/test_param.sh"
     with open(file_path, "r") as file:
-        filedata = file.read()
-    filedata = filedata.replace("export PARA=1", "export PARA=10")
-    with open(file_path, "w") as file:
-        file.write(filedata)
+        data = tomlkit.parse(file.read())
 
+    # Update the ip addresses and ports
+    for i, participant in enumerate(doc_ref_dict["participants"]):
+        ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
+        data.get("servers", {}).get(f"party{i}", {})["ipaddr"] = "127.0.0.1" if constants.SFKIT_PROXY_ON else ip_addr
 
-def update_config_global() -> None:
-    file_path = f"{constants.EXECUTABLES_PREFIX}sf-relate/config/demo/configGlobal.toml"
-    with open(file_path, "r") as file:
-        filedata = file.read()
-    filedata = filedata.replace("5110", "3110")
+        ports: list = doc_ref_dict["personal_parameters"][participant]["PORTS"]["value"].split(",")
+        for j, port in enumerate(ports):
+            if port != "null" and i != j:
+                data.get("servers", {}).get(f"party{i}", {}).get("ports", {})[f"party{j}"] = port
+
+    data["shared_keys_path"] = constants.SFKIT_DIR
+
+    # shared and advanced parameters
+    pars = {**doc_ref_dict["parameters"], **doc_ref_dict["advanced_parameters"]}
+    for key, value in pars.items():
+        if key in data:
+            data[key] = to_float_int_or_bool(value["value"])
+
     with open(file_path, "w") as file:
-        file.write(filedata)
+        file.write(tomlkit.dumps(data))
 
 
 def make_missing_folders() -> None:
@@ -108,34 +139,59 @@ def start_sfrelate(role: str, demo: bool) -> None:
         # TODO: modify boot_sfkit_proxy, and possibly the proxy itself to be compatible with SF-Relate
         # boot_sfkit_proxy(role=role, )
 
-    # TODO: run the actual protocol
+    protocol_steps = []
     if demo:
-        protocol_commands = [
-            "cd notebooks/data && wget https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz && tar -xvf demo.tar.gz",
-            "python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo",
-            "python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo",
-            "bash X_local.sh &",
-            "sleep 1 && bash Y_local.sh &",
-            "sleep 1 && bash Z_local.sh",
-        ]
-        messages = ["Getting Data", "party 1 data processing", "party 2 data processing", "Step 2: MHE", "", ""]
-        for i, protocol_command in enumerate(protocol_commands):
-            command = (
-                f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}sf-relate && {protocol_command}"
+        protocol_steps += [
+            (
+                "cd notebooks/data && wget https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz && tar -xvf demo.tar.gz",
+                "Getting Data",
             )
-            print(f"Running command: {command}")
-            if messages[i]:
-                update_firestore(f"update_firestore::task={messages[i]}")
-            try:
-                res = subprocess.run(command, shell=True, executable="/bin/bash")
-                if res.returncode != 0:
-                    raise Exception(res.stderr)  # sourcery skip: raise-specific-error
-                print(f"Finished command: {command}")
-            except Exception as e:
-                print(f"Failed command: {command}")
-                print(e)
-                update_firestore(f"update_firestore::status=Failed command: {command}")
-                return
+        ]
+    if demo or role == "1":
+        protocol_steps += [
+            ("python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo", "party 1 data processing")
+        ]
+    if demo or role == "2":
+        protocol_steps += [
+            ("python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo", "party 2 data processing")
+        ]
+    background_execution = " &" if demo else ""
+    if demo or role == "0":
+        protocol_steps += [
+            (f"PID=0 ./goParty > config/demo/logs/Z/test.txt{background_execution}", "MHE - Party 0"),
+        ]
+    if demo or role == "1":
+        protocol_steps += [
+            (f"sleep 1 && PID=1 ./goParty > config/demo/logs/X/test.txt{background_execution}", "MHE - Party 1"),
+        ]
+    if demo or role == "2":
+        protocol_steps += [
+            ("sleep 1 && PID=2 ./goParty > config/demo/logs/Y/test.txt", "MHE - Party 2"),
+        ]
+    if demo or role == "1":
+        protocol_steps += [
+            ("python3 notebooks/step3_post_process.py -PARTY 1 -FOLDER config/demo/", "Post Processing - Party 1"),
+        ]
+    if demo or role == "2":
+        protocol_steps += [
+            ("python3 notebooks/step3_post_process.py -PARTY 2 -FOLDER config/demo/", "Post Processing - Party 2"),
+        ]
+
+    for command, message in protocol_steps:
+        full_command = f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}sf-relate && {command}"
+        print(f"Running command: {full_command}")
+        if message:
+            update_firestore(f"update_firestore::task={message}")
+        try:
+            res = subprocess.run(full_command, shell=True, executable="/bin/bash")
+            if res.returncode != 0:
+                raise Exception(res.stderr)  # sourcery skip: raise-specific-error
+            print(f"Finished command: {full_command}")
+        except Exception as e:
+            print(f"Failed command: {full_command}")
+            print(e)
+            update_firestore(f"update_firestore::status=Failed command: {full_command}")
+            return
 
     print("Finished SF-Relate Protocol")
 
