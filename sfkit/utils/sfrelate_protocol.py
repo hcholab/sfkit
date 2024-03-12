@@ -74,8 +74,6 @@ def update_config_local(role: str, demo) -> None:
     with open(config_file_path, "r") as file:
         filedata = file.read()
 
-    filedata = filedata.replace("PARA = 1", "PARA = 10")
-
     if role != "0" and not demo:
         with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
             data_path = f.readline().rstrip()
@@ -94,6 +92,7 @@ def update_config_global(demo) -> None:
     if demo:
         with open(file_path, "r") as file:
             filedata = file.read()
+            filedata = filedata.replace("PARA = 1", "PARA = 10")
             filedata = filedata.replace("5110", "3110")
         with open(file_path, "w") as file:
             file.write(filedata)
@@ -101,6 +100,8 @@ def update_config_global(demo) -> None:
 
     with open(file_path, "r") as file:
         data = tomlkit.parse(file.read())
+
+    data["PARA"] = 10
 
     # Update the ip addresses and ports
     for i, participant in enumerate(doc_ref_dict["participants"]):
@@ -157,19 +158,22 @@ def start_sfrelate(role: str, demo: bool) -> None:
         protocol_steps += [
             ("python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo", "party 2 data processing")
         ]
-    background_execution = " &" if demo else ""
-    if demo or role == "1":
-        protocol_steps += [
-            (f"sleep 1 && PID=1 ./goParty > config/demo/logs/X/test.txt{background_execution}", "MHE - Party 1"),
-        ]
-    if demo or role == "0":
-        protocol_steps += [
-            (f"sleep 1 && PID=0 ./goParty > config/demo/logs/Z/test.txt{background_execution}", "MHE - Party 0"),
-        ]
-    if demo or role == "2":
-        protocol_steps += [
-            ("sleep 1 && PID=2 ./goParty > config/demo/logs/Y/test.txt", "MHE - Party 2"),
-        ]
+    if demo:
+        command = "PID=1 ./goParty > config/demo/logs/X/test.txt & PID=0 ./goParty > config/demo/logs/Z/test.txt & PID=2 ./goParty > config/demo/logs/Y/test.txt & wait $(jobs -p)"
+        protocol_steps += [(command, "MHE - All Parties")]
+    else:
+        if role == "0":
+            protocol_steps += [
+                ("sleep 1 && PID=0 ./goParty > config/demo/logs/Z/test.txt", "MHE - Party 0"),
+            ]
+        if role == "1":
+            protocol_steps += [
+                ("sleep 1 && PID=1 ./goParty > config/demo/logs/X/test.txt", "MHE - Party 1"),
+            ]
+        if role == "2":
+            protocol_steps += [
+                ("sleep 1 && PID=2 ./goParty > config/demo/logs/Y/test.txt", "MHE - Party 2"),
+            ]
     if demo or role == "1":
         protocol_steps += [
             ("python3 notebooks/step3_post_process.py -PARTY 1 -FOLDER config/demo/", "Post Processing - Party 1"),
