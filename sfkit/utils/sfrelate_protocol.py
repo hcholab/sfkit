@@ -74,7 +74,7 @@ def update_config_local(role: str, demo) -> None:
     with open(config_file_path, "r") as file:
         filedata = file.read()
 
-    filedata = filedata.replace("export PARA=1", "export PARA=10")
+    filedata = filedata.replace("PARA = 1", "PARA = 10")
 
     if role != "0" and not demo:
         with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
@@ -139,6 +139,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
         # TODO: modify boot_sfkit_proxy, and possibly the proxy itself to be compatible with SF-Relate
         # boot_sfkit_proxy(role=role, )
 
+    os.environ["t"] = "demo"
     os.environ["FOLDER"] = "config/demo/"
     protocol_steps = []
     if demo:
@@ -163,7 +164,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
         ]
     if demo or role == "0":
         protocol_steps += [
-            (f"PID=0 ./goParty > config/demo/logs/Z/test.txt{background_execution}", "MHE - Party 0"),
+            (f"sleep 1 && PID=0 ./goParty > config/demo/logs/Z/test.txt{background_execution}", "MHE - Party 0"),
         ]
     if demo or role == "2":
         protocol_steps += [
