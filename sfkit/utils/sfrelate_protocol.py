@@ -160,7 +160,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
         ]
     if demo:
         command = (
-            f"(cd {constants.EXECUTABLES_PREFIX}sf-relate && PID=1 ./goParty > config/demo/logs/X/test.txt) & "
+            f"(PID=1 ./goParty > config/demo/logs/X/test.txt) & "
             f"(cd {constants.EXECUTABLES_PREFIX}sf-relate && PID=0 ./goParty > config/demo/logs/Z/test.txt) & "
             f"(cd {constants.EXECUTABLES_PREFIX}sf-relate && PID=2 ./goParty > config/demo/logs/Y/test.txt) & "
             "wait $(jobs -p)"
