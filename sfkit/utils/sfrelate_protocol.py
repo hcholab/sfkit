@@ -21,6 +21,7 @@ def run_sfrelate_protocol(role: str, demo: bool) -> None:
     update_XYZ_local()  # TODO: should eventually just update sf-relate repo directly
     update_test_param()
     update_config_global()
+    make_missing_folders()
     start_sfrelate(role, demo)
 
 
@@ -92,6 +93,12 @@ def update_config_global() -> None:
         file.write(filedata)
 
 
+def make_missing_folders() -> None:
+    for L in "XYZ":
+        os.makedirs(f"{constants.EXECUTABLES_PREFIX}sf-relate/config/demo/logs/{L}", exist_ok=True)
+    os.makedirs(f"{constants.EXECUTABLES_PREFIX}sf-relate/config/demo/out/raw", exist_ok=True)
+
+
 def start_sfrelate(role: str, demo: bool) -> None:
     update_firestore("update_firestore::task=Initiating Protocol")
     print("Beginning SF-Relate Protocol")
@@ -104,13 +111,14 @@ def start_sfrelate(role: str, demo: bool) -> None:
     # TODO: run the actual protocol
     if demo:
         protocol_commands = [
-            "cd notebooks && wget https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz && tar -xvf demo.tar.gz",
+            "cd notebooks/data && wget https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz && tar -xvf demo.tar.gz",
             "python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo",
             "python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo",
-            "make party1 -j2 &",
-            "sleep 3 && make party2",
+            "bash X_local.sh &",
+            "sleep 1 && bash Y_local.sh &",
+            "sleep 1 && bash Z_local.sh",
         ]
-        messages = ["Getting Data", "party 1 data processing", "party 2 data processing", "Step 2: MHE", ""]
+        messages = ["Getting Data", "party 1 data processing", "party 2 data processing", "Step 2: MHE", "", ""]
         for i, protocol_command in enumerate(protocol_commands):
             command = (
                 f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}sf-relate && {protocol_command}"
