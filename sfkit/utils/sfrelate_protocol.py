@@ -1,6 +1,7 @@
 import os
 import shlex
 import subprocess
+import sys
 import threading
 from typing import List
 import traceback
@@ -249,6 +250,16 @@ def start_sfrelate(role: str, demo: bool) -> None:
     update_firestore("update_firestore::status=Finished protocol!")
 
 
+def handle_output(stream, write_to_file=None, print_stderr=False):
+    for line in stream:
+        if write_to_file:
+            write_to_file.write(line)
+        if print_stderr:
+            print(f"E: {line}", end="", file=sys.stderr)
+        else:
+            print(line, end="")
+
+
 def run_protocol_command(
     command,
     message: str = "",
@@ -270,18 +281,23 @@ def run_protocol_command(
         env=process_env,
         cwd=cwd,
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stderr=subprocess.PIPE,
         text=True,
         bufsize=1,
     ) as proc:
-        if output_file:
-            with open(f"{cwd}/{output_file}", "w") as file:
-                for line in proc.stdout:  # type: ignore
-                    print(line, end="")
-                    file.write(line)
-        else:
-            for line in proc.stdout:  # type: ignore
-                print(line, end="")
+        file = open(f"{cwd}/{output_file}", "w") if output_file else None
+
+        stdout_thread = threading.Thread(target=handle_output, args=(proc.stdout, file))
+        stderr_thread = threading.Thread(target=handle_output, args=(proc.stderr, file, True))
+
+        stdout_thread.start()
+        stderr_thread.start()
+
+        stdout_thread.join()
+        stderr_thread.join()
+
+        if file:
+            file.close()
 
         proc.wait()
         if proc.returncode != 0:
