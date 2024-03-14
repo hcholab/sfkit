@@ -1,7 +1,9 @@
 import os
 import shlex
 import subprocess
+import threading
 from typing import List
+import traceback
 
 import tomlkit
 
@@ -166,42 +168,64 @@ def start_sfrelate(role: str, demo: bool) -> None:
         )
 
     # run protocol
-    processes = []
-    if demo or role == "1":
-        processes.append(
-            run_protocol_command(
-                "./goParty",
-                output_file="config/demo/logs/X/test.txt",
-                message="MHE - Party 1",
-                env_vars=env_vars | {"PID": "1"},
-                wait=False,
-            )
-        )
-    if demo or role == "0":
-        processes.append(
-            run_protocol_command(
-                "./goParty",
-                output_file="config/demo/logs/Z/test.txt",
-                message="MHE - Party 0",
-                env_vars=env_vars | {"PID": "0"},
-                wait=False,
-            )
-        )
-    if demo or role == "2":
-        processes.append(
-            run_protocol_command(
-                "./goParty",
-                output_file="config/demo/logs/Y/test.txt",
-                message="MHE - Party 2",
-                env_vars=env_vars | {"PID": "2"},
-                wait=False,
-            )
-        )
+    threads: List[threading.Thread] = []
+    exceptions: List[Exception] = []  # Shared structure for exceptions
 
-    for process in processes:
-        process.wait()
-        if process.returncode != 0:
-            raise subprocess.CalledProcessError(process.returncode, process.args)
+    def thread_target(command, **kwargs):
+        try:
+            run_protocol_command(command, **kwargs)
+        except Exception as e:
+            exceptions.append((e, traceback.format_exc()))  # type: ignore
+
+    if demo or role == "1":
+        threads.append(
+            threading.Thread(
+                target=thread_target,
+                kwargs={
+                    "command": "./goParty",
+                    "output_file": "config/demo/logs/X/test.txt",
+                    "message": "MHE - Party 1",
+                    "env_vars": env_vars | {"PID": "1"},
+                },
+            )
+        )
+        threads[-1].start()
+    if demo or role == "0":
+        threads.append(
+            threading.Thread(
+                target=thread_target,
+                kwargs={
+                    "command": "./goParty",
+                    "output_file": "config/demo/logs/Z/test.txt",
+                    "message": "MHE - Party 0",
+                    "env_vars": env_vars | {"PID": "0"},
+                },
+            )
+        )
+        threads[-1].start()
+    if demo or role == "2":
+        threads.append(
+            threading.Thread(
+                target=thread_target,
+                kwargs={
+                    "command": "./goParty",
+                    "output_file": "config/demo/logs/Y/test.txt",
+                    "message": "MHE - Party 2",
+                    "env_vars": env_vars | {"PID": "2"},
+                },
+            )
+        )
+        threads[-1].start()
+
+    for thread in threads:
+        thread.join()
+
+    # Check for exceptions
+    if exceptions:
+        for exc, tb in exceptions:  # type: ignore
+            print(f"Error: {exc} with traceback {tb}")
+        # Optionally, raise an exception or handle it as needed
+        raise RuntimeError("One or more threads failed.")
 
     # post process
     if demo or role == "1":
@@ -226,52 +250,42 @@ def start_sfrelate(role: str, demo: bool) -> None:
 
 
 def run_protocol_command(
-    command: str,
+    command,
     message: str = "",
     env_vars=None,
     output_file: str = "",
-    wait=True,
     cwd=f"{constants.EXECUTABLES_PREFIX}sf-relate",
 ):
     if not env_vars:
         env_vars = {}
 
-    full_env = os.environ.copy()
-    full_env |= env_vars
-
-    print(f"Running command: {command}")
     if message:
         update_firestore(f"update_firestore::task={message}")
 
-    try:
+    process_env = os.environ.copy()
+    process_env.update(env_vars)
+
+    with subprocess.Popen(
+        shlex.split(command),
+        env=process_env,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    ) as proc:
         if output_file:
-            output_file = f"{cwd}/{output_file}"
-            with open(output_file, "w", buffering=1) as output:
-                process = subprocess.Popen(
-                    shlex.split(command), stdout=output, stderr=subprocess.STDOUT, env=full_env, cwd=cwd
-                )
+            with open(f"{cwd}/{output_file}", "w") as file:
+                for line in proc.stdout:  # type: ignore
+                    print(line, end="")
+                    file.write(line)
         else:
-            process = subprocess.Popen(
-                shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=full_env, cwd=cwd, text=True
-            )
-            if not wait:
-                return process
-            stdout, stderr = process.communicate()
-            if process.returncode != 0:
-                print(f"Command failed with return code {process.returncode}")
-                print(f"stdout: {stdout}")
-                print(f"stderr: {stderr}")
-                update_firestore(f"update_firestore::status=Failed command: {command}")
-                raise subprocess.CalledProcessError(process.returncode, command, output=stdout, stderr=stderr)
-            else:
-                print("Command succeeded.")
-                print(f"stdout: {stdout}")
-                print(f"stderr: {stderr}")
-    except Exception as e:
-        print(f"Failed to execute command: {command}")
-        print(e)
-        update_firestore(f"update_firestore::status=Failed command: {command}")
-        exit(1)
+            for line in proc.stdout:  # type: ignore
+                print(line, end="")
+
+        proc.wait()
+        if proc.returncode != 0:
+            raise subprocess.CalledProcessError(proc.returncode, command)
 
 
 def process_output_files(role: str) -> None:
