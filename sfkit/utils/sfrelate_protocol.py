@@ -1,5 +1,6 @@
 import os
 import subprocess
+from typing import List
 
 import tomlkit
 
@@ -43,7 +44,7 @@ def install_sfrelate() -> None:
         max_retries = 3
         retries = 0
         while retries < max_retries:
-            run_command("rm -f https://golang.org/dl/go1.22.0.linux-amd64.tar.gz")
+            run_command("rm -f go1.22.0.linux-amd64.tar.gz")
             run_command("wget -nc https://golang.org/dl/go1.22.0.linux-amd64.tar.gz")
             run_command("sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz")
             if os.path.isdir("/usr/local/go"):
@@ -142,67 +143,45 @@ def start_sfrelate(role: str, demo: bool) -> None:
 
     os.environ["t"] = "demo"
     os.environ["FOLDER"] = "config/demo/"
-    protocol_steps = []
-    if demo:
-        protocol_steps += [
-            (
-                "cd notebooks/data && wget https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz && tar -xvf demo.tar.gz",
-                "Getting Data",
-            )
-        ]
-    if demo or role == "1":
-        protocol_steps += [
-            ("python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo", "party 1 data processing")
-        ]
-    if demo or role == "2":
-        protocol_steps += [
-            ("python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo", "party 2 data processing")
-        ]
-    if demo:
-        command = (
-            f"(PID=1 ./goParty > config/demo/logs/X/test.txt) & "
-            f"(cd {constants.EXECUTABLES_PREFIX}sf-relate && PID=0 ./goParty > config/demo/logs/Z/test.txt) & "
-            f"(cd {constants.EXECUTABLES_PREFIX}sf-relate && PID=2 ./goParty > config/demo/logs/Y/test.txt) & "
-            "wait $(jobs -p)"
-        )
-        protocol_steps += [(command, "MHE - All Parties")]
-    else:
-        if role == "0":
-            protocol_steps += [
-                ("sleep 1 && PID=0 ./goParty > config/demo/logs/Z/test.txt", "MHE - Party 0"),
-            ]
-        if role == "1":
-            protocol_steps += [
-                ("sleep 1 && PID=1 ./goParty > config/demo/logs/X/test.txt", "MHE - Party 1"),
-            ]
-        if role == "2":
-            protocol_steps += [
-                ("sleep 1 && PID=2 ./goParty > config/demo/logs/Y/test.txt", "MHE - Party 2"),
-            ]
-    if demo or role == "1":
-        protocol_steps += [
-            ("python3 notebooks/step3_post_process.py -PARTY 1 -FOLDER config/demo/", "Post Processing - Party 1"),
-        ]
-    if demo or role == "2":
-        protocol_steps += [
-            ("python3 notebooks/step3_post_process.py -PARTY 2 -FOLDER config/demo/", "Post Processing - Party 2"),
-        ]
 
-    for command, message in protocol_steps:
-        full_command = f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}sf-relate && {command}"
-        print(f"Running command: {full_command}")
-        if message:
-            update_firestore(f"update_firestore::task={message}")
-        try:
-            res = subprocess.run(full_command, shell=True, executable="/bin/bash")
-            if res.returncode != 0:
-                raise Exception(res.stderr)  # sourcery skip: raise-specific-error
-            print(f"Finished command: {full_command}")
-        except Exception as e:
-            print(f"Failed command: {full_command}")
-            print(e)
-            update_firestore(f"update_firestore::status=Failed command: {full_command}")
-            return
+    # get demo data
+    if demo:
+        run_protocol_command(
+            "cd notebooks/data && wget https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz && tar -xvf demo.tar.gz",
+            "Getting Data",
+        )
+
+    # preprocess data
+    if demo or role == "1":
+        run_protocol_command(
+            "python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo", "party 1 data processing"
+        )
+    if demo or role == "2":
+        run_protocol_command(
+            "python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo", "party 2 data processing"
+        )
+
+    # run protocol
+    processes: List[subprocess.Popen] = []
+    if demo or role == "1":
+        processes.append(run_protocol_command("PID=1 ./goParty | tee config/demo/logs/X/test.txt", "MHE - Party 1"))
+    if demo or role == "0":
+        processes.append(run_protocol_command("PID=0 ./goParty | tee config/demo/logs/Z/test.txt", "MHE - Party 0"))
+    if demo or role == "2":
+        processes.append(run_protocol_command("PID=2 ./goParty | tee config/demo/logs/Y/test.txt", "MHE - Party 2"))
+
+    for process in processes:
+        process.wait()
+
+    # post process
+    if demo or role == "1":
+        run_protocol_command(
+            "python3 notebooks/step3_post_process.py -PARTY 1 -FOLDER config/demo/", "Post Processing - Party 1"
+        )
+    if demo or role == "2":
+        run_protocol_command(
+            "python3 notebooks/step3_post_process.py -PARTY 2 -FOLDER config/demo/", "Post Processing - Party 2"
+        )
 
     print("Finished SF-Relate Protocol")
 
@@ -210,6 +189,26 @@ def start_sfrelate(role: str, demo: bool) -> None:
         process_output_files(role)
 
     update_firestore("update_firestore::status=Finished protocol!")
+
+
+def run_protocol_command(command: str, message: str) -> subprocess.Popen:
+    print(f"Running command: {command}")
+    if message:
+        update_firestore(f"update_firestore::task={message}")
+    try:
+        return subprocess.Popen(
+            command,
+            shell=True,
+            executable="/bin/bash",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+    except Exception as e:
+        print(f"Failed command: {command}")
+        print(e)
+        update_firestore(f"update_firestore::status=Failed command: {command}")
+        exit(1)
 
 
 def process_output_files(role: str) -> None:
