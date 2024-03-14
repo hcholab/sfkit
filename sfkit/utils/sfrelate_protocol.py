@@ -166,7 +166,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
         )
 
     # run protocol
-    processes: List[subprocess.Popen] = []
+    processes = []
     if demo or role == "1":
         processes.append(
             run_protocol_command(
@@ -232,41 +232,45 @@ def run_protocol_command(
     output_file: str = "",
     wait=True,
     cwd=f"{constants.EXECUTABLES_PREFIX}sf-relate",
-) -> subprocess.Popen:
+):
     if not env_vars:
         env_vars = {}
-    env = os.environ | env_vars
 
-    if output_file:
-        # buffering set to 1 to enable line buffering
-        output = open(output_file, "w", buffering=1)
-    else:
-        output = subprocess.PIPE
+    full_env = os.environ.copy()
+    full_env |= env_vars
 
     print(f"Running command: {command}")
     if message:
         update_firestore(f"update_firestore::task={message}")
+
     try:
-        res = subprocess.Popen(
-            shlex.split(command),
-            stdout=output,
-            stderr=subprocess.STDOUT,
-            env=env,
-            cwd=cwd,
-        )
-        if wait:
-            res.wait()
-            if res.returncode != 0:
-                raise subprocess.CalledProcessError(res.returncode, command)
-        return res
+        if output_file:
+            with open(output_file, "w", buffering=1) as output:
+                process = subprocess.Popen(
+                    shlex.split(command), stdout=output, stderr=subprocess.STDOUT, env=full_env, cwd=cwd
+                )
+        else:
+            process = subprocess.Popen(
+                shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=full_env, cwd=cwd, text=True
+            )
+            if not wait:
+                return process
+            stdout, stderr = process.communicate()
+            if process.returncode != 0:
+                print(f"Command failed with return code {process.returncode}")
+                print(f"stdout: {stdout}")
+                print(f"stderr: {stderr}")
+                update_firestore(f"update_firestore::status=Failed command: {command}")
+                raise subprocess.CalledProcessError(process.returncode, command, output=stdout, stderr=stderr)
+            else:
+                print("Command succeeded.")
+                print(f"stdout: {stdout}")
+                print(f"stderr: {stderr}")
     except Exception as e:
-        print(f"Failed command: {command}")
+        print(f"Failed to execute command: {command}")
         print(e)
         update_firestore(f"update_firestore::status=Failed command: {command}")
         exit(1)
-    finally:
-        if output_file:
-            output.close()  # type: ignore
 
 
 def process_output_files(role: str) -> None:
