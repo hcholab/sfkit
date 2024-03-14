@@ -3,6 +3,7 @@ import shlex
 import subprocess
 import sys
 import threading
+import time
 from typing import List
 import traceback
 
@@ -192,6 +193,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
         )
         threads[-1].start()
     if demo or role == "0":
+        time.sleep(1)
         threads.append(
             threading.Thread(
                 target=thread_target,
@@ -254,8 +256,9 @@ def handle_output(stream, write_to_file=None, print_stderr=False):
     for line in stream:
         if write_to_file:
             write_to_file.write(line)
+            write_to_file.flush()
         if print_stderr:
-            print(f"E: {line}", end="", file=sys.stderr)
+            print(f"ERROR: {line}", end="", file=sys.stderr)
         else:
             print(line, end="")
 
@@ -275,6 +278,8 @@ def run_protocol_command(
 
     process_env = os.environ.copy()
     process_env.update(env_vars)
+
+    print(f"Running command: {command} from {cwd}")
 
     with subprocess.Popen(
         shlex.split(command),
