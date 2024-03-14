@@ -1,4 +1,5 @@
 import os
+import shlex
 import subprocess
 from typing import List
 
@@ -141,47 +142,79 @@ def start_sfrelate(role: str, demo: bool) -> None:
         # TODO: modify boot_sfkit_proxy, and possibly the proxy itself to be compatible with SF-Relate
         # boot_sfkit_proxy(role=role, )
 
-    os.environ["t"] = "demo"
-    os.environ["FOLDER"] = "config/demo/"
-    os.environ["PYTHONUNBUFFERED"] = "TRUE"
+    env_vars = {
+        "t": "demo",
+        "FOLDER": "config/demo/",
+        "PYTHONUNBUFFERED": "TRUE",
+    }
 
-    # get demo data
     if demo:
-        run_protocol_command(
-            "cd notebooks/data && wget https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz && tar -xvf demo.tar.gz",
-            "Getting Data",
-        )
+        download_and_extract_data()
 
     # preprocess data
     if demo or role == "1":
         run_protocol_command(
-            "python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo", "party 1 data processing"
+            "python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo",
+            message="party 1 data processing",
+            env_vars=env_vars,
         )
     if demo or role == "2":
         run_protocol_command(
-            "python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo", "party 2 data processing"
+            "python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo",
+            message="party 2 data processing",
+            env_vars=env_vars,
         )
 
     # run protocol
     processes: List[subprocess.Popen] = []
     if demo or role == "1":
-        processes.append(run_protocol_command("PID=1 ./goParty | tee config/demo/logs/X/test.txt", "MHE - Party 1"))
+        processes.append(
+            run_protocol_command(
+                "./goParty",
+                output_file="config/demo/logs/X/test.txt",
+                message="MHE - Party 1",
+                env_vars=env_vars | {"PID": "1"},
+                wait=False,
+            )
+        )
     if demo or role == "0":
-        processes.append(run_protocol_command("PID=0 ./goParty | tee config/demo/logs/Z/test.txt", "MHE - Party 0"))
+        processes.append(
+            run_protocol_command(
+                "./goParty",
+                output_file="config/demo/logs/Z/test.txt",
+                message="MHE - Party 0",
+                env_vars=env_vars | {"PID": "0"},
+                wait=False,
+            )
+        )
     if demo or role == "2":
-        processes.append(run_protocol_command("PID=2 ./goParty | tee config/demo/logs/Y/test.txt", "MHE - Party 2"))
+        processes.append(
+            run_protocol_command(
+                "./goParty",
+                output_file="config/demo/logs/Y/test.txt",
+                message="MHE - Party 2",
+                env_vars=env_vars | {"PID": "2"},
+                wait=False,
+            )
+        )
 
     for process in processes:
         process.wait()
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, process.args)
 
     # post process
     if demo or role == "1":
         run_protocol_command(
-            "python3 notebooks/step3_post_process.py -PARTY 1 -FOLDER config/demo/", "Post Processing - Party 1"
+            "python3 notebooks/step3_post_process.py -PARTY 1 -FOLDER config/demo/",
+            message="Post Processing - Party 1",
+            env_vars=env_vars,
         )
     if demo or role == "2":
         run_protocol_command(
-            "python3 notebooks/step3_post_process.py -PARTY 2 -FOLDER config/demo/", "Post Processing - Party 2"
+            "python3 notebooks/step3_post_process.py -PARTY 2 -FOLDER config/demo/",
+            message="Post Processing - Party 2",
+            env_vars=env_vars,
         )
 
     print("Finished SF-Relate Protocol")
@@ -192,26 +225,48 @@ def start_sfrelate(role: str, demo: bool) -> None:
     update_firestore("update_firestore::status=Finished protocol!")
 
 
-def run_protocol_command(command: str, message: str) -> subprocess.Popen:
-    command_prefix = f"cd {constants.EXECUTABLES_PREFIX}sf-relate"
-    command = f"{command_prefix} && {command}"
+def run_protocol_command(
+    command: str,
+    message: str = "",
+    env_vars=None,
+    output_file: str = "",
+    wait=True,
+    cwd=f"{constants.EXECUTABLES_PREFIX}sf-relate",
+) -> subprocess.Popen:
+    if not env_vars:
+        env_vars = {}
+    env = os.environ | env_vars
+
+    if output_file:
+        # buffering set to 1 to enable line buffering
+        output = open(output_file, "w", buffering=1)
+    else:
+        output = subprocess.PIPE
+
     print(f"Running command: {command}")
     if message:
         update_firestore(f"update_firestore::task={message}")
     try:
-        return subprocess.Popen(
-            command,
-            shell=True,
-            executable="/bin/bash",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
+        res = subprocess.Popen(
+            shlex.split(command),
+            stdout=output,
+            stderr=subprocess.STDOUT,
+            env=env,
+            cwd=cwd,
         )
+        if wait:
+            res.wait()
+            if res.returncode != 0:
+                raise subprocess.CalledProcessError(res.returncode, command)
+        return res
     except Exception as e:
         print(f"Failed command: {command}")
         print(e)
         update_firestore(f"update_firestore::status=Failed command: {command}")
         exit(1)
+    finally:
+        if output_file:
+            output.close()  # type: ignore
 
 
 def process_output_files(role: str) -> None:
@@ -231,3 +286,14 @@ def process_output_files(role: str) -> None:
             website_send_file(file, f"0_0_party{role}.csv")
 
     print("Finished processing output files")
+
+
+def download_and_extract_data():
+    data_dir = os.path.join(constants.EXECUTABLES_PREFIX, "sf-relate", "notebooks", "data")
+    os.makedirs(data_dir, exist_ok=True)
+
+    run_protocol_command(
+        "wget https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz", message="Downloading Data", cwd=data_dir
+    )
+
+    run_protocol_command("tar -xvf demo.tar.gz", message="Extracting Data", cwd=data_dir)
