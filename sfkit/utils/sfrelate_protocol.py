@@ -143,6 +143,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
 
     os.environ["t"] = "demo"
     os.environ["FOLDER"] = "config/demo/"
+    os.environ["PYTHONUNBUFFERED"] = "TRUE"
 
     # get demo data
     if demo:
@@ -192,6 +193,8 @@ def start_sfrelate(role: str, demo: bool) -> None:
 
 
 def run_protocol_command(command: str, message: str) -> subprocess.Popen:
+    command_prefix = f"cd {constants.EXECUTABLES_PREFIX}sf-relate"
+    command = f"{command_prefix} && {command}"
     print(f"Running command: {command}")
     if message:
         update_firestore(f"update_firestore::task={message}")
