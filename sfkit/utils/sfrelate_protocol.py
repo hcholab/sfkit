@@ -92,7 +92,7 @@ def update_config_global(demo) -> None:
     if demo:
         with open(file_path, "r") as file:
             filedata = file.read()
-            filedata = filedata.replace("PARA = 1", "PARA = 10")
+            filedata = filedata.replace("PARA = 3", "PARA = 10")
             filedata = filedata.replace("5110", "3110")
         with open(file_path, "w") as file:
             file.write(filedata)
