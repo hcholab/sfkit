@@ -245,6 +245,7 @@ def run_protocol_command(
 
     try:
         if output_file:
+            output_file = f"{cwd}/{output_file}"
             with open(output_file, "w", buffering=1) as output:
                 process = subprocess.Popen(
                     shlex.split(command), stdout=output, stderr=subprocess.STDOUT, env=full_env, cwd=cwd
