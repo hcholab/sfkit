@@ -23,6 +23,8 @@ def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
 
     validated = "validated" in doc_ref_dict["status"][username]
     if not validated:
+        update_firestore("update_firestore::task=Validating Data Format")
+
         if study_type == "SF-GWAS":
             if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
                 geno_binary_file_prefix, data_path = validate_sfgwas(

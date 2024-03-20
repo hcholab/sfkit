@@ -19,7 +19,7 @@ def test_website_get(mocker):
     mocker.patch("sfkit.api.open")
     mocker.patch("sfkit.api.get_service_account_headers", return_value={})
 
-    res = api.website_get("web")
+    res = api.send_request("web")
 
     assert res.status_code == 200
     assert res.url == "https://sfkit-website-bhj5a4wkqa-uc.a.run.app/api/web"

@@ -192,7 +192,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             )
         )
         threads[-1].start()
-    if demo or role == "0":
+    if demo or role == "0" or role == "1": # role 1 as sfrelate doesn't actually need a CP0
         time.sleep(1)
         threads.append(
             threading.Thread(

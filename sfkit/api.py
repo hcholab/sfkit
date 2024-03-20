@@ -32,7 +32,9 @@ def website_send_file(file: IOBase, filename: str) -> bool:
     return response.status_code == 200
 
 
-def website_get(request_type: str, params: Union[dict, None] = None) -> requests.Response:
+def send_request(
+    request_type: str, params: Union[dict, None] = None, data: Union[dict, None] = None, method: str = "GET"
+) -> requests.Response:
     if params is None:
         params = {}
     url = f"{constants.SFKIT_API_URL}/{request_type}"
@@ -49,11 +51,16 @@ def website_get(request_type: str, params: Union[dict, None] = None) -> requests
             "content-type": "application/json",
         }
 
-    return requests.get(url, headers=headers, params=params)
+    if method == "GET":
+        return requests.get(url, headers=headers, params=params)
+    elif method == "POST":
+        return requests.post(url, headers=headers, json=data, params=params)
+    else:
+        raise ValueError(f"Invalid method: {method}")
 
 
 def get_doc_ref_dict() -> dict:
-    response = website_get("get_doc_ref_dict")
+    response = send_request("get_doc_ref_dict")
     return response.json()
 
 
@@ -63,18 +70,18 @@ def get_study_options() -> dict:
 
 
 def get_username() -> str:
-    response = website_get("get_username")
+    response = send_request("get_username")
     return response.json().get("username", "")
 
 
 def update_firestore(msg: str) -> bool:
     print(f"Updating firestore with msg: {msg}")
-    response = website_get("update_firestore", params={"msg": msg})
+    response = send_request("update_firestore", params={"msg": msg})  # TODO: use POST once the API is updated
     return response.status_code == 200
 
 
 def create_cp0() -> bool:
-    response = website_get("create_cp0")
+    response = send_request("create_cp0", method="POST")
     return response.status_code == 200
 
 
