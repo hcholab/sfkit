@@ -2,10 +2,12 @@ import os
 import shlex
 import subprocess
 import sys
+import tarfile
 import threading
 import time
-from typing import List
 import traceback
+import urllib.request
+from typing import List
 
 import tomlkit
 
@@ -192,7 +194,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             )
         )
         threads[-1].start()
-    if demo or role == "0" or role == "1": # role 1 as sfrelate doesn't actually need a CP0
+    if demo or role == "0" or role == "1":  # role 1 as sfrelate doesn't actually need a CP0
         time.sleep(1)
         threads.append(
             threading.Thread(
@@ -314,7 +316,7 @@ def process_output_files(role: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
 
-    out_path = f"{constants.EXECUTABLES_PREFIX}sf-relate/out/demo"
+    out_path = f"{constants.EXECUTABLES_PREFIX}/sf-relate/config/demo/out/raw"
     copy_to_out_folder([out_path])
 
     if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
@@ -331,9 +333,13 @@ def process_output_files(role: str) -> None:
 def download_and_extract_data():
     data_dir = os.path.join(constants.EXECUTABLES_PREFIX, "sf-relate", "notebooks", "data")
     os.makedirs(data_dir, exist_ok=True)
+    tar_url = "https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz"
+    tar_path = os.path.join(data_dir, "demo.tar.gz")
 
-    run_protocol_command(
-        "wget https://storage.googleapis.com/sfkit_1000_genomes/demo.tar.gz", message="Downloading Data", cwd=data_dir
-    )
+    print("Downloading Data")
+    urllib.request.urlretrieve(tar_url, tar_path)
 
-    run_protocol_command("tar -xvf demo.tar.gz", message="Extracting Data", cwd=data_dir)
+    print("Extracting Data")
+    with tarfile.open(tar_path) as tar:
+        tar.extractall(path=data_dir)
+    os.remove(tar_path)
