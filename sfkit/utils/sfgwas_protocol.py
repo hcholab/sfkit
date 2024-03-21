@@ -139,11 +139,11 @@ def generate_shared_keys(role: int, skip_cp0: bool = False) -> None:
         with open(shared_key_path, "wb") as f:
             f.write(shared_key)
 
-    if skip_cp0:  # make dummy keys for cp0
+    if skip_cp0:
         with open(os.path.join(constants.SFKIT_DIR, "shared_key_0_1.bin"), "wb") as f:
-            f.write(b"\x00" * 32)
+            f.write(constants.DUMMY_KEY_01)
         with open(os.path.join(constants.SFKIT_DIR, "shared_key_0_2.bin"), "wb") as f:
-            f.write(b"\x00" * 32)
+            f.write(constants.DUMMY_KEY_02)
 
     cp0: str = doc_ref_dict["participants"][0]
     random.seed(doc_ref_dict["personal_parameters"][cp0]["PUBLIC_KEY"]["value"])
