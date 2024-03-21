@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import tarfile
 
-import urllib3
+import requests
 
 from sfkit.utils.helper_functions import condition_or_fail
 
@@ -24,7 +24,9 @@ def install_go() -> None:
                 if os.path.exists(go_tarball_path):
                     os.remove(go_tarball_path)
                 print("Downloading Go tarball...")
-                urllib3.request.urlretrieve(go_tarball_url, go_tarball_path)
+                response = requests.get(go_tarball_url)
+                with open(go_tarball_path, "wb") as f:
+                    f.write(response.content)
                 print("Extracting Go tarball...")
                 shutil.rmtree(go_installed_dir, ignore_errors=True)
                 with tarfile.open(go_tarball_path) as tar:
