@@ -12,10 +12,13 @@ import numpy as np
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.utils import constants
-from sfkit.utils.helper_functions import (condition_or_fail,
-                                          copy_results_to_cloud_storage,
-                                          copy_to_out_folder, plot_assoc,
-                                          postprocess_assoc)
+from sfkit.utils.helper_functions import (
+    condition_or_fail,
+    copy_results_to_cloud_storage,
+    copy_to_out_folder,
+    plot_assoc,
+    postprocess_assoc,
+)
 
 
 def get_file_paths() -> Tuple[str, str]:
@@ -178,16 +181,18 @@ def make_new_assoc_and_manhattan_plot(doc_ref_dict: dict, demo: bool, role: str)
     )
 
 
-def to_float_int_or_bool(string: str) -> Union[float, int, bool, str]:
-    if string.lower() in {"true", "false"}:
-        return string.lower() == "true"
+def to_float_int_or_bool(value) -> Union[float, int, bool, str]:
+    if isinstance(value, (int, float, bool)):
+        return value
+    if isinstance(value, str) and value.lower() in {"true", "false"}:
+        return value.lower() == "true"
     try:
-        return int(string)
+        return int(value)
     except ValueError:
         try:
-            return float(string)
+            return float(value)
         except ValueError:
-            return string
+            return value
 
 
 def boot_sfkit_proxy(role: str, protocol: str) -> None:
