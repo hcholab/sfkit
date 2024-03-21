@@ -1,5 +1,6 @@
 import fileinput
 import multiprocessing
+import os
 import time
 
 from google.cloud import storage
@@ -168,7 +169,7 @@ def prepare_data(data_path: str, role: str) -> None:
     study_title: str = doc_ref_dict["title"]
 
     if role == "0":
-        run_command(f"mkdir -p {data_path}")
+        os.makedirs(data_path, exist_ok=True)
         storage.Client().bucket("sfkit").blob(f"{study_title}/pos.txt").download_to_filename(f"{data_path}/pos.txt")
 
 

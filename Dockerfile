@@ -22,6 +22,7 @@ RUN git clone https://github.com/froelich/sf-relate . && \
     git checkout sf-kit && \
     go get relativeMatch && \
     go build && \
+    go test -c -o sf-relate && \
     rm -rf .git
 RUN ln -s /usr/bin/python python3
 
@@ -84,6 +85,7 @@ RUN COMP="$(which clang++)" && \
 FROM dev AS sfkit
 
 RUN pip install poetry
+RUN apk add --update zlib-dev
 
 USER nonroot
 COPY . .
@@ -102,18 +104,12 @@ FROM us.gcr.io/broad-dsp-gcr-public/base/python:distroless
 
 WORKDIR /sfkit
 
-ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/home/nonroot/.local/bin:/usr/local/go/bin:/tmp/go/bin" \
+ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/home/nonroot/.local/bin" \
     PYTHONUNBUFFERED=TRUE \
     SFKIT_DIR="/sfkit/.sfkit" \
-    SFKIT_PROXY_ON=TRUE \
-    GOPATH="/tmp/go" \
-    GOROOT="/usr/local/go" \
-    GOPROXY="https://proxy.golang.org"
+    SFKIT_PROXY_ON=TRUE 
 
 # hadolint ignore=DL3022
-COPY --from=dev /usr/bin/wget /usr/bin/wget
-COPY --from=dev /usr/bin/make /usr/bin/make
-COPY --from=go /usr/local/go/bin/go /usr/local/go/bin/go
 COPY --from=cgr.dev/chainguard/bash     /bin /usr/bin   /bin/
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/

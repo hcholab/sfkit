@@ -53,7 +53,7 @@ def run_protocol(
             doc_ref_dict = get_doc_ref_dict()
             statuses = doc_ref_dict["status"]
 
-        if not demo and role == "1" and not skip_cp0:
+        if not demo and role == "1" and not skip_cp0 and study_type != "SF-RELATE":
             create_cp0()
 
         if phase:

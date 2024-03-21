@@ -105,7 +105,7 @@ def install_sfgwas() -> None:
     print("Finished installing dependencies")
 
 
-def generate_shared_keys(role: int) -> None:
+def generate_shared_keys(role: int, skip_cp0: bool = False) -> None:
     """
     Generate shared keys for the sfgwas protocol
     :param role: 0, 1, 2, ...
@@ -120,6 +120,8 @@ def generate_shared_keys(role: int) -> None:
 
     for i, other_username in enumerate(doc_ref_dict["participants"]):
         if i == role:
+            continue
+        if skip_cp0 and i == 0:
             continue
         other_public_key_str: str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
         while not other_public_key_str:
@@ -136,6 +138,12 @@ def generate_shared_keys(role: int) -> None:
         shared_key_path = os.path.join(constants.SFKIT_DIR, f"shared_key_{min(role, i)}_{max(role, i)}.bin")
         with open(shared_key_path, "wb") as f:
             f.write(shared_key)
+
+    if skip_cp0:
+        with open(os.path.join(constants.SFKIT_DIR, "shared_key_0_1.bin"), "wb") as f:
+            f.write(constants.DUMMY_KEY_01)
+        with open(os.path.join(constants.SFKIT_DIR, "shared_key_0_2.bin"), "wb") as f:
+            f.write(constants.DUMMY_KEY_02)
 
     cp0: str = doc_ref_dict["participants"][0]
     random.seed(doc_ref_dict["personal_parameters"][cp0]["PUBLIC_KEY"]["value"])
@@ -300,7 +308,7 @@ def build_sfgwas() -> None:
     print("Finished building sfgwas code")
 
 
-def sync_with_other_vms(role: str, demo: bool) -> None:
+def sync_with_other_vms(role: str, demo: bool, skip_cp0: bool = False) -> None:
     update_firestore("update_firestore::status=syncing up")
     update_firestore("update_firestore::task=Syncing up machines")
     print("Begin syncing up")
@@ -311,8 +319,10 @@ def sync_with_other_vms(role: str, demo: bool) -> None:
 
     while True:
         doc_ref_dict: dict = get_doc_ref_dict()
-        statuses = doc_ref_dict["status"].values()
-        if all(status == "syncing up" for status in statuses):
+        statuses: dict = doc_ref_dict["status"]
+        if skip_cp0:
+            statuses.pop("Broad", None)
+        if all(status == "syncing up" for status in statuses.values()):
             break
         print("Waiting for all participants to sync up...")
         time.sleep(5)
