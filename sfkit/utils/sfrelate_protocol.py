@@ -14,15 +14,9 @@ import tomlkit
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.utils import constants
-from sfkit.utils.helper_functions import (
-    condition_or_fail,
-    copy_results_to_cloud_storage,
-    copy_to_out_folder,
-    run_command,
-)
+from sfkit.utils.helper_functions import copy_results_to_cloud_storage, copy_to_out_folder, run_command
 from sfkit.utils.sfgwas_helper_functions import to_float_int_or_bool
 from sfkit.utils.sfgwas_protocol import generate_shared_keys, sync_with_other_vms
-from sfkit.utils.sfrelate_helper_functions import install_go
 
 
 def run_sfrelate_protocol(role: str, demo: bool) -> None:
@@ -43,13 +37,15 @@ def install_sfrelate() -> None:
     print("Begin installing dependencies")
 
     run_command("sudo apt-get update && sudo apt-get upgrade -y")
-    run_command("sudo apt-get install git wget unzip python3 python3-pip python3-venv -y")
+    run_command("sudo apt-get install git wget unzip python3 python3-pip python3-venv snapd -y")
 
     # Increase the number of open files allowed
     soft, hard = 1_000_000, 1_000_000
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
-    install_go()
+    run_command("sudo snap install go --classic")
+    run_command("echo 'export PATH=$PATH:/snap/bin' >> ~/.bashrc && source ~/.bashrc")
+    run_command("go version")
 
     if os.path.isdir("sf-relate"):
         print("sf-relate already installed")
