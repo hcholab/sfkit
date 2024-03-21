@@ -330,7 +330,5 @@ def download_and_extract_data():
             if chunk:
                 file.write(chunk)
 
-    print("Extracting Data")
-    with tarfile.open(tar_path, "r:gz") as tar:
-        tar.extractall(path=data_dir)
-    os.remove(tar_path)
+    print("Extracting Data using tar command")
+    run_command(f"tar -xvf {tar_path} -C {data_dir}")
