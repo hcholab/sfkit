@@ -22,6 +22,7 @@ RUN git clone https://github.com/froelich/sf-relate . && \
     git checkout sf-kit && \
     go get relativeMatch && \
     go build && \
+    go test -c -o sf-relate && \
     rm -rf .git
 RUN ln -s /usr/bin/python python3
 

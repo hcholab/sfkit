@@ -71,7 +71,7 @@ def install_sfrelate() -> None:
         run_command("git clone https://github.com/froelich/sf-relate.git")
         run_command("cd sf-relate && git checkout sf-kit")
         run_command("cd sf-relate && go get relativeMatch")
-        run_command("cd sf-relate && go build && go test -c -o goParty")
+        run_command("cd sf-relate && go build && go test -c -o sf-relate")
 
     print("Finished installing dependencies")
 
@@ -186,7 +186,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             threading.Thread(
                 target=thread_target,
                 kwargs={
-                    "command": "./goParty",
+                    "command": "./sf-relate",
                     "output_file": "config/demo/logs/X/test.txt",
                     "message": "MHE - Party 1",
                     "env_vars": env_vars | {"PID": "1"},
@@ -200,7 +200,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             threading.Thread(
                 target=thread_target,
                 kwargs={
-                    "command": "./goParty",
+                    "command": "./sf-relate",
                     "output_file": "config/demo/logs/Z/test.txt",
                     "message": "MHE - Party 0",
                     "env_vars": env_vars | {"PID": "0"},
@@ -213,7 +213,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             threading.Thread(
                 target=thread_target,
                 kwargs={
-                    "command": "./goParty",
+                    "command": "./sf-relate",
                     "output_file": "config/demo/logs/Y/test.txt",
                     "message": "MHE - Party 2",
                     "env_vars": env_vars | {"PID": "2"},
