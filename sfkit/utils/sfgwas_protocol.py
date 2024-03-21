@@ -122,23 +122,28 @@ def generate_shared_keys(role: int, skip_cp0: bool = False) -> None:
         if i == role:
             continue
         if skip_cp0 and i == 0:
-            shared_key = b"\x00" * 32  # dummy key
-        else:
-            other_public_key_str: str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
-            while not other_public_key_str:
-                if i == 0:  # Broad/cp0
-                    print("Waiting for the Broad (CP0) to set up...")
-                else:
-                    print(f"No public key found for {other_username}.  Waiting...")
-                time.sleep(5)
-                doc_ref_dict = get_doc_ref_dict()
-                other_public_key_str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
-            other_public_key = PublicKey(other_public_key_str.encode(), encoder=HexEncoder)
-            condition_or_fail(my_private_key != other_public_key, "Private and public keys must be different")
-            shared_key = Box(my_private_key, other_public_key).shared_key()
+            continue
+        other_public_key_str: str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
+        while not other_public_key_str:
+            if i == 0:  # Broad/cp0
+                print("Waiting for the Broad (CP0) to set up...")
+            else:
+                print(f"No public key found for {other_username}.  Waiting...")
+            time.sleep(5)
+            doc_ref_dict = get_doc_ref_dict()
+            other_public_key_str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
+        other_public_key = PublicKey(other_public_key_str.encode(), encoder=HexEncoder)
+        condition_or_fail(my_private_key != other_public_key, "Private and public keys must be different")
+        shared_key = Box(my_private_key, other_public_key).shared_key()
         shared_key_path = os.path.join(constants.SFKIT_DIR, f"shared_key_{min(role, i)}_{max(role, i)}.bin")
         with open(shared_key_path, "wb") as f:
             f.write(shared_key)
+
+    if skip_cp0:  # make dummy keys for cp0
+        with open(os.path.join(constants.SFKIT_DIR, "shared_key_0_1.bin"), "wb") as f:
+            f.write(b"\x00" * 32)
+        with open(os.path.join(constants.SFKIT_DIR, "shared_key_0_2.bin"), "wb") as f:
+            f.write(b"\x00" * 32)
 
     cp0: str = doc_ref_dict["participants"][0]
     random.seed(doc_ref_dict["personal_parameters"][cp0]["PUBLIC_KEY"]["value"])
