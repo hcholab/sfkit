@@ -23,12 +23,12 @@ def run_sfrelate_protocol(role: str, demo: bool) -> None:
     if not (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         install_sfrelate()
     if not demo:
-        generate_shared_keys(int(role))
+        generate_shared_keys(int(role), skip_cp0=True)
     print("Begin updating config files")
     update_config_local(role, demo)
     update_config_global(demo)
     make_missing_folders()
-    sync_with_other_vms(role, demo)
+    sync_with_other_vms(role, demo, skip_cp0=True)
     start_sfrelate(role, demo)
 
 

@@ -105,7 +105,7 @@ def install_sfgwas() -> None:
     print("Finished installing dependencies")
 
 
-def generate_shared_keys(role: int) -> None:
+def generate_shared_keys(role: int, skip_cp0: bool = False) -> None:
     """
     Generate shared keys for the sfgwas protocol
     :param role: 0, 1, 2, ...
@@ -119,6 +119,8 @@ def generate_shared_keys(role: int) -> None:
         my_private_key = PrivateKey(f.readline().rstrip().encode(), encoder=HexEncoder)
 
     for i, other_username in enumerate(doc_ref_dict["participants"]):
+        if skip_cp0 and i == 0:
+            continue
         if i == role:
             continue
         other_public_key_str: str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
@@ -300,7 +302,7 @@ def build_sfgwas() -> None:
     print("Finished building sfgwas code")
 
 
-def sync_with_other_vms(role: str, demo: bool) -> None:
+def sync_with_other_vms(role: str, demo: bool, skip_cp0: bool = False) -> None:
     update_firestore("update_firestore::status=syncing up")
     update_firestore("update_firestore::task=Syncing up machines")
     print("Begin syncing up")
@@ -311,7 +313,9 @@ def sync_with_other_vms(role: str, demo: bool) -> None:
 
     while True:
         doc_ref_dict: dict = get_doc_ref_dict()
-        statuses = doc_ref_dict["status"].values()
+        statuses = list(doc_ref_dict["status"].values())
+        if skip_cp0:
+            statuses = statuses[1:]
         if all(status == "syncing up" for status in statuses):
             break
         print("Waiting for all participants to sync up...")
