@@ -1,4 +1,5 @@
 import os
+import resource
 import shlex
 import subprocess
 import sys
@@ -21,6 +22,7 @@ from sfkit.utils.helper_functions import (
 )
 from sfkit.utils.sfgwas_helper_functions import to_float_int_or_bool
 from sfkit.utils.sfgwas_protocol import generate_shared_keys, sync_with_other_vms
+from sfkit.utils.sfrelate_helper_functions import install_go
 
 
 def run_sfrelate_protocol(role: str, demo: bool) -> None:
@@ -42,27 +44,12 @@ def install_sfrelate() -> None:
 
     run_command("sudo apt-get update && sudo apt-get upgrade -y")
     run_command("sudo apt-get install git wget unzip python3 python3-pip python3-venv -y")
-    run_command("ulimit -n 1000000")
 
-    if os.path.isdir("/usr/local/go"):
-        print("go already installed")
-    else:
-        print("Installing go")
-        max_retries = 3
-        retries = 0
-        while retries < max_retries:
-            run_command("rm -f go1.22.0.linux-amd64.tar.gz")
-            run_command("wget -nc https://golang.org/dl/go1.22.0.linux-amd64.tar.gz")
-            run_command("sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz")
-            if os.path.isdir("/usr/local/go"):
-                break
-            retries += 1
-        if not os.path.isdir("/usr/local/go"):
-            condition_or_fail(False, "go failed to install")
-        os.environ["PATH"] += f"{os.pathsep}/usr/local/go/bin"
-        run_command("export GOCACHE=~/.cache/go-build")
-        run_command("go version")
-        print("go successfully installed")
+    # Increase the number of open files allowed
+    soft, hard = 1_000_000, 1_000_000
+    resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
+
+    install_go()
 
     if os.path.isdir("sf-relate"):
         print("sf-relate already installed")
@@ -161,13 +148,13 @@ def start_sfrelate(role: str, demo: bool) -> None:
     if demo or role == "1":
         run_protocol_command(
             "python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo",
-            message="party 1 data processing",
+            message="Party 1 Data Processing",
             env_vars=env_vars,
         )
     if demo or role == "2":
         run_protocol_command(
             "python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo",
-            message="party 2 data processing",
+            message="Party 2 Data Processing",
             env_vars=env_vars,
         )
 
