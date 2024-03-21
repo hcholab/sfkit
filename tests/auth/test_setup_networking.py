@@ -6,7 +6,11 @@ from sfkit.auth import setup_networking
 def test_setup_networking(mocker):
     mocker.patch(
         "sfkit.auth.setup_networking.get_doc_ref_dict",
-        return_value={"participants": ["a@a.com", "b@b.com"], "setup_configuration": "website"},
+        return_value={
+            "participants": ["a@a.com", "b@b.com"],
+            "setup_configuration": "website",
+            "study_type": "SF-RELATE",
+        },
     )
     mocker.patch("sfkit.auth.setup_networking.update_firestore")
     mocker.patch("sfkit.auth.setup_networking.get_username", return_value="a@a.com")
@@ -25,7 +29,11 @@ def test_setup_networking(mocker):
 
     mocker.patch(
         "sfkit.auth.setup_networking.get_doc_ref_dict",
-        return_value={"participants": ["a@a.com", "b@b.com"], "setup_configuration": "user"},
+        return_value={
+            "participants": ["a@a.com", "b@b.com"],
+            "setup_configuration": "user",
+            "study_type": "SF-RELATE",
+        },
     )
     setup_networking.setup_networking("")
 
