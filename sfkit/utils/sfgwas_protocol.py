@@ -313,10 +313,10 @@ def sync_with_other_vms(role: str, demo: bool, skip_cp0: bool = False) -> None:
 
     while True:
         doc_ref_dict: dict = get_doc_ref_dict()
-        statuses = list(doc_ref_dict["status"].values())
+        statuses: dict = doc_ref_dict["status"]
         if skip_cp0:
-            statuses = statuses[1:]
-        if all(status == "syncing up" for status in statuses):
+            statuses.pop("Broad", None)
+        if all(status == "syncing up" for status in statuses.values()):
             break
         print("Waiting for all participants to sync up...")
         time.sleep(5)
