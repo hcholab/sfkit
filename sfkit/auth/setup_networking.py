@@ -17,6 +17,7 @@ def setup_networking(ports_str: str, ip_address: str = "") -> None:
 
     authenticate_user()
     doc_ref_dict: dict = get_doc_ref_dict()
+    role: int = doc_ref_dict["participants"].index(get_username())
 
     if not ip_address:
         if doc_ref_dict["setup_configuration"] == "website":
@@ -39,16 +40,13 @@ def setup_networking(ports_str: str, ip_address: str = "") -> None:
             )
             ports_str = ",".join(ports_str.split(",")[: len(doc_ref_dict["participants"])])
         ports_str = "null," * pad_length + ports_str
+    elif doc_ref_dict["study_type"] == "SF-RELATE":
+        default = ["null,3110,7320", "null,null,9210", "null,null,null"]
+        ports_str = default[role]
     else:
-        # auto-calculate port assignment
-        role: int = doc_ref_dict["participants"].index(get_username())
-        if doc_ref_dict["study_type"] == "SF-RELATE":
-            default = ["null,3110,7320", "null,null,9210", "null,null,null"]
-            ports_str = default[role]
-        else:
-            base = 8100 + MAX_PARTICIPANTS * MAX_THREADS * role
-            ports = [base + MAX_THREADS * r for r in range(len(doc_ref_dict["participants"]))]
-            ports_str = ",".join([str(p) for p in ports])
+        base = 8100 + MAX_PARTICIPANTS * MAX_THREADS * role
+        ports = [base + MAX_THREADS * r for r in range(len(doc_ref_dict["participants"]))]
+        ports_str = ",".join([str(p) for p in ports])
 
     update_firestore(f"update_firestore::PORTS={ports_str}")
     print("Successfully communicated networking information!")
