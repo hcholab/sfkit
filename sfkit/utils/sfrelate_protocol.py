@@ -44,6 +44,7 @@ def install_sfrelate() -> None:
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
     run_command("sudo snap install go --classic")
+    os.environ["PATH"] += f"{os.pathsep}/snap/bin"
     run_command("echo 'export PATH=$PATH:/snap/bin' >> ~/.bashrc && source ~/.bashrc")
     run_command("go version")
 
