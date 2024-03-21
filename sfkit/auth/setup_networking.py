@@ -41,10 +41,14 @@ def setup_networking(ports_str: str, ip_address: str = "") -> None:
         ports_str = "null," * pad_length + ports_str
     else:
         # auto-calculate port assignment
-        role = str(doc_ref_dict["participants"].index(get_username()))
-        base = 8100 + MAX_PARTICIPANTS * MAX_THREADS * int(role)
-        ports = [base + MAX_THREADS * r for r in range(len(doc_ref_dict["participants"]))]
-        ports_str = ",".join([str(p) for p in ports])
+        role: int = doc_ref_dict["participants"].index(get_username())
+        if doc_ref_dict["study_type"] == "SF-RELATE":
+            default = ["null,3110,7320", "null,null,9210", "null,null,null"]
+            ports_str = default[role]
+        else:
+            base = 8100 + MAX_PARTICIPANTS * MAX_THREADS * role
+            ports = [base + MAX_THREADS * r for r in range(len(doc_ref_dict["participants"]))]
+            ports_str = ",".join([str(p) for p in ports])
 
     update_firestore(f"update_firestore::PORTS={ports_str}")
     print("Successfully communicated networking information!")

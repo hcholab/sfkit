@@ -96,11 +96,9 @@ def update_config_global(demo) -> None:
     data["PARA"] = 10
 
     # Update the ip addresses and ports
-    for i, participant in enumerate(doc_ref_dict["participants"][1:]):  # no cp0 for sf-relate
+    for i, participant in enumerate(doc_ref_dict["participants"]):
         ip_addr = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
         data.get("servers", {}).get(f"party{i}", {})["ipaddr"] = "127.0.0.1" if constants.SFKIT_PROXY_ON else ip_addr
-        if i == 1:  # no cp0 for sf-relate
-            data.get("servers", {}).get("party0", {})["ipaddr"] = "127.0.0.1" if constants.SFKIT_PROXY_ON else ip_addr
 
         ports: list = doc_ref_dict["personal_parameters"][participant]["PORTS"]["value"].split(",")
         for j, port in enumerate(ports):
