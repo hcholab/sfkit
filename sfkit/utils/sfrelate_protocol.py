@@ -7,7 +7,7 @@ import tarfile
 import threading
 import time
 import traceback
-import urllib.request
+import requests
 from typing import List
 
 import tomlkit
@@ -324,9 +324,13 @@ def download_and_extract_data():
     tar_path = os.path.join(data_dir, "demo.tar.gz")
 
     print("Downloading Data")
-    urllib.request.urlretrieve(tar_url, tar_path)
+    response = requests.get(tar_url, stream=True)
+    with open(tar_path, "wb") as file:
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                file.write(chunk)
 
     print("Extracting Data")
-    with tarfile.open(tar_path) as tar:
+    with tarfile.open(tar_path, "r:gz") as tar:
         tar.extractall(path=data_dir)
     os.remove(tar_path)
