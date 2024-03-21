@@ -84,6 +84,7 @@ RUN COMP="$(which clang++)" && \
 FROM dev AS sfkit
 
 RUN pip install poetry
+RUN apk add --update zlib-dev
 
 USER nonroot
 COPY . .

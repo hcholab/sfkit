@@ -26,25 +26,25 @@ def test_website_get(mocker):
 
 
 def test_get_doc_ref_dict(mocker):
-    mocker.patch("sfkit.api.website_get", mock_website_get)
+    mocker.patch("sfkit.api.send_request", mock_send_request)
     res = api.get_doc_ref_dict()
     assert res == {"get_doc_ref_dict": "get_doc_ref_dict"}
 
 
 def test_get_username(mocker):
-    mocker.patch("sfkit.api.website_get", mock_website_get)
+    mocker.patch("sfkit.api.send_request", mock_send_request)
     res = api.get_username()
     assert res == ""
 
 
 def test_update_firestore(mocker):
-    mocker.patch("sfkit.api.website_get", mock_website_get)
+    mocker.patch("sfkit.api.send_request", mock_send_request)
     res = api.update_firestore("msg")
     assert res == True
 
 
 def test_create_cp0(mocker):
-    mocker.patch("sfkit.api.website_get", mock_website_get)
+    mocker.patch("sfkit.api.send_request", mock_send_request)
     res = api.create_cp0()
     assert res == True
 
@@ -58,5 +58,5 @@ def mock_get_post(url, headers, params=None, files=None):
     return res
 
 
-def mock_website_get(request_type: str, params: dict = dict()) -> Response:
+def mock_send_request(request_type: str, params: dict = dict(), method: str = "GET") -> Response:
     return mock_get_post(request_type, {}, params)
