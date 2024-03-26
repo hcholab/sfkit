@@ -54,6 +54,8 @@ def get_parser() -> argparse.ArgumentParser:
     runprotocol.add_argument("--retry", help="Retry the protocol", action="store_true")
 
     subparsers.add_parser("server", help="Start the sfkit server.")
-    subparsers.add_parser("client", help="Start the sfkit client.")
+    client = subparsers.add_parser("client", help="Start the sfkit client.")
+    client.add_argument("--study_id", help="Study ID for the client to use.")
+    client.add_argument("--data_path", help="Path to the data directory for the client.")
 
     return parser
