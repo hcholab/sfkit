@@ -2,6 +2,7 @@ import json
 import os
 import socket
 import sys
+import logging
 from contextlib import contextmanager
 from io import StringIO
 from threading import Thread
@@ -15,14 +16,23 @@ from sfkit.sidecar.utils import get_sock_path
 
 
 @contextmanager
-def capture_output():
+def capture_output_and_logs():
     new_out = StringIO()
+    new_err = StringIO()
     old_out = sys.stdout
+    old_err = sys.stderr
+    stream_handler = logging.StreamHandler(new_out)
+    logger = logging.getLogger()
+    old_handlers = logger.handlers[:]
     try:
         sys.stdout = new_out
-        yield sys.stdout
+        sys.stderr = new_err
+        logger.handlers = [stream_handler]
+        yield sys.stdout, sys.stderr, new_out
     finally:
         sys.stdout = old_out
+        sys.stderr = old_err
+        logger.handlers = old_handlers
 
 
 def handle_client(client):
@@ -35,25 +45,17 @@ def handle_client(client):
             study_id = request.get("study_id", "")
             data_path = request.get("data_path", "")
 
-            with capture_output() as output:
-                auth(study_id)
-            client.sendall(output.getvalue().encode("utf-8"))
+            def execute_and_send_feedback(operation):
+                with capture_output_and_logs() as (stdout, stderr, logs):
+                    operation()
+                feedback = logs.getvalue() + stdout.getvalue() + stderr.getvalue()
+                client.sendall(feedback.encode("utf-8"))
 
-            with capture_output() as output:
-                setup_networking()
-            client.sendall(output.getvalue().encode("utf-8"))
-
-            with capture_output() as output:
-                generate_personal_keys()
-            client.sendall(output.getvalue().encode("utf-8"))
-
-            with capture_output() as output:
-                register_data(data_path=data_path)
-            client.sendall(output.getvalue().encode("utf-8"))
-
-            with capture_output() as output:
-                run_protocol()
-            client.sendall(output.getvalue().encode("utf-8"))
+            execute_and_send_feedback(lambda: auth(study_id))
+            execute_and_send_feedback(lambda: setup_networking())
+            execute_and_send_feedback(lambda: generate_personal_keys())
+            execute_and_send_feedback(lambda: register_data(data_path=data_path))
+            execute_and_send_feedback(lambda: run_protocol())
 
             response = f"All commands executed for study_id: {study_id}, data_path: {data_path}"
             client.sendall(response.encode("utf-8"))
