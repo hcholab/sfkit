@@ -20,6 +20,7 @@ def register_data(geno_binary_file_prefix: str = "", data_path: str = "") -> boo
 
     if doc_ref_dict.get("demo"):
         print("No validation: using demo data!")
+        update_firestore("update_firestore::status=validated data")
         return True
 
     username: str = get_username()
