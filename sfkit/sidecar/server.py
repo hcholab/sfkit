@@ -1,5 +1,6 @@
 import json
 import os
+import select
 import socket
 import subprocess
 from threading import Thread
@@ -25,14 +26,17 @@ def handle_client(client: socket.socket):
             )  # TODO: add study_id and data_path args
 
             while process.poll() is None:
-                if line := process.stdout.readline().strip():  # type: ignore
+                rlist, _, _ = select.select([process.stdout, process.stderr], [], [])
+
+                if not rlist:
+                    process.kill()
+
+                for stream in rlist:
+                    line = stream.readline().strip()
+                    print(line)
                     client.sendall(line.encode("utf-8"))
 
-                if line := process.stderr.readline().strip():  # type: ignore
-                    client.sendall(line.encode("utf-8"))
-
-            client.sendall("Finished running sfkit".encode("utf-8"))
-
+            process.wait()
     finally:
         client.close()
 
