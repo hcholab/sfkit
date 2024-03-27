@@ -19,8 +19,8 @@ def register_data(geno_binary_file_prefix: str = "", data_path: str = "") -> boo
     doc_ref_dict: dict = get_doc_ref_dict()
 
     if doc_ref_dict.get("demo"):
-        geno_binary_file_prefix = "demo"
-        data_path = "demo"
+        print("No validation: using demo data!")
+        return True
 
     username: str = get_username()
     role: str = str(doc_ref_dict["participants"].index(username))
