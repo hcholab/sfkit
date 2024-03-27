@@ -19,8 +19,8 @@ def handle_client(client):
 
             # Example of running a command and capturing its output
             process = subprocess.Popen(
-                ["sfkit", "all", study_id, data_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-            )
+                ["sfkit", "all"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            )  # TODO: add study_id and data_path args
             stdout, stderr = process.communicate()
 
             # Send both stdout and stderr back to the client
