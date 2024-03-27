@@ -21,11 +21,14 @@ def handle_client(client):
             process = subprocess.Popen(
                 ["sfkit", "all"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
             )  # TODO: add study_id and data_path args
-            stdout, stderr = process.communicate()
 
-            # Send both stdout and stderr back to the client
-            response = stdout + "\n" + stderr
-            client.sendall(response.encode("utf-8"))
+            if process.stdout:
+                for line in process.stdout:
+                    client.sendall(line.encode("utf-8"))
+
+                process.stdout.close()
+            if return_code := process.wait():
+                raise subprocess.CalledProcessError(return_code, process.args)
     finally:
         client.close()
 
