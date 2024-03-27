@@ -10,13 +10,19 @@ from sfkit.utils.helper_functions import authenticate_user, condition_or_fail
 from sfkit.api import get_username, website_send_file
 
 
-def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
+def register_data(geno_binary_file_prefix: str = "", data_path: str = "") -> bool:
     """
     Register data with the server and validate that the data formatting looks correct.
     """
     authenticate_user()
 
     doc_ref_dict: dict = get_doc_ref_dict()
+
+    if doc_ref_dict.get("demo"):
+        print("No validation: using demo data!")
+        update_firestore("update_firestore::status=validated data")
+        return True
+
     username: str = get_username()
     role: str = str(doc_ref_dict["participants"].index(username))
     study_type: str = doc_ref_dict["study_type"]

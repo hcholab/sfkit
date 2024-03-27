@@ -60,20 +60,36 @@ def install_sfrelate() -> None:
     print("Finished installing dependencies")
 
 
-def update_config_local(role: str, demo) -> None:
-    config_file_path = f"{constants.EXECUTABLES_PREFIX}sf-relate/config/demo/configLocal.Party{role}.toml"
+def update_config_local(role: str, demo: bool) -> None:
+    if demo or role == "0":
+        if role == "0":
+            raise ValueError("Function should not be run for role 0.")
+        return
 
-    with open(config_file_path, "r") as file:
-        filedata = file.read()
+    data_path_file = os.path.join(constants.SFKIT_DIR, "data_path.txt")
+    try:
+        with open(data_path_file, "r") as f:
+            data_path = f.readline().strip()
+    except IOError:
+        raise FileNotFoundError(f"Data path file not found: {data_path_file}")
 
-    if role != "0" and not demo:
-        with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "r") as f:
-            data_path = f.readline().rstrip()
-        if data_path:
+    if not data_path:
+        raise ValueError("Data path not found in data_path.txt")
+
+    files = [role] + (["0"] if role == "1" else [])
+
+    for i in files:
+        config_file_path = os.path.join(
+            constants.EXECUTABLES_PREFIX, "sf-relate", "config", "demo", f"configLocal.Party{i}.toml"
+        )
+        try:
+            with open(config_file_path, "r") as file:
+                filedata = file.read()
             filedata = filedata.replace("notebooks/data/demo", data_path)
-
-    with open(config_file_path, "w") as file:
-        file.write(filedata)
+            with open(config_file_path, "w") as file:
+                file.write(filedata)
+        except IOError as e:
+            raise IOError(f"Error processing file {config_file_path}: {e}")
 
 
 def update_config_global(demo) -> None:
@@ -303,7 +319,7 @@ def process_output_files(role: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
 
-    out_path = f"{constants.EXECUTABLES_PREFIX}/sf-relate/config/demo/out/raw"
+    out_path = f"{constants.EXECUTABLES_PREFIX}sf-relate/config/demo/out/raw"
     copy_to_out_folder([out_path])
 
     if results_path := doc_ref_dict["personal_parameters"][user_id].get("RESULTS_PATH", {}).get("value", ""):
