@@ -20,14 +20,19 @@ def handle_client(client: socket.socket):
 
             client.sendall("Received request".encode("utf-8"))
 
-            # Example of running a command and capturing its output
+            command = ["env", "PYTHONUNBUFFERED=x", "sfkit", "all"]
+            if study_id:
+                command.extend(["--study_id", study_id])
+            if data_path:
+                command.extend(["--data_path", data_path])
+
             process = subprocess.Popen(
-                ["env", "PYTHONUNBUFFERED=x", "sfkit", "all"],
+                command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
                 bufsize=1,
-            )  # TODO: add study_id and data_path args
+            )
 
             while process.poll() is None:
                 rlist, _, _ = select.select([process.stdout, process.stderr], [], [])
