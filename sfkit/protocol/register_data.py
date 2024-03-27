@@ -17,6 +17,11 @@ def register_data(geno_binary_file_prefix: str = "", data_path: str = "") -> boo
     authenticate_user()
 
     doc_ref_dict: dict = get_doc_ref_dict()
+
+    if doc_ref_dict.get("demo"):
+        geno_binary_file_prefix = "demo"
+        data_path = "demo"
+
     username: str = get_username()
     role: str = str(doc_ref_dict["participants"].index(username))
     study_type: str = doc_ref_dict["study_type"]
