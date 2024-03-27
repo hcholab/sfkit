@@ -22,7 +22,7 @@ def handle_client(client: socket.socket):
 
             # Example of running a command and capturing its output
             process = subprocess.Popen(
-                ["stdbuf", "-oL", "-eL", "sfkit", "all"],
+                ["env", "PYTHONUNBUFFERED=x", "sfkit", "all"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
