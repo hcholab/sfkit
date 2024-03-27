@@ -10,7 +10,7 @@ from sfkit.utils.helper_functions import authenticate_user, condition_or_fail
 from sfkit.api import get_username, website_send_file
 
 
-def register_data(geno_binary_file_prefix: str, data_path: str) -> bool:
+def register_data(geno_binary_file_prefix: str = "", data_path: str = "") -> bool:
     """
     Register data with the server and validate that the data formatting looks correct.
     """

@@ -37,5 +37,13 @@ def main() -> None:
         retry: bool = args.retry or False
         skip_cp0: bool = args.skip_cp0 or False
         run_protocol(phase, demo, visualize_results, results_path, retry, skip_cp0)
+    elif args.command == "all":
+        study_id: str = args.study_id or ""
+        data_path: str = args.data_path or ""
+        auth(study_id)
+        setup_networking()
+        generate_personal_keys()
+        register_data(data_path=data_path)
+        run_protocol()
     else:
         parser.print_help()

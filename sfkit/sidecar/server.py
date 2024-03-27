@@ -4,6 +4,11 @@ import socket
 from threading import Thread
 
 from sfkit.sidecar.utils import get_sock_path
+from sfkit.auth.auth import auth
+from sfkit.auth.setup_networking import setup_networking
+from sfkit.encryption.generate_personal_keys import generate_personal_keys
+from sfkit.protocol.register_data import register_data
+from sfkit.protocol.run_protocol import run_protocol
 
 
 def handle_client(client):
@@ -15,9 +20,12 @@ def handle_client(client):
             request = json.loads(data.decode("utf-8"))
             study_id = request.get("study_id", "")
             data_path = request.get("data_path", "")
-            # Execute the sequence of commands here
-            # For simplicity, this is just a placeholder
-            response = f"Commands executed for study_id: {study_id}, data_path: {data_path}"
+            auth(study_id)
+            setup_networking()
+            generate_personal_keys()
+            register_data(data_path=data_path)
+            run_protocol()
+            response = f"All commands executed for study_id: {study_id}, data_path: {data_path}"
             client.sendall(response.encode("utf-8"))
     finally:
         client.close()
