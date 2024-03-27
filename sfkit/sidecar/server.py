@@ -14,7 +14,12 @@ def handle_client(client: socket.socket):
             data = client.recv(1024)
             if not data:
                 break
-            request = json.loads(data.decode("utf-8"))
+            try:
+                request = json.loads(data.decode("utf-8"))
+            except json.JSONDecodeError:
+                client.sendall("Invalid JSON format".encode("utf-8"))
+                continue
+
             study_id = request.get("study_id", "")
             data_path = request.get("data_path", "")
 
@@ -26,26 +31,30 @@ def handle_client(client: socket.socket):
             if data_path:
                 command.extend(["--data_path", data_path])
 
-            process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1,
-            )
+            try:
+                with subprocess.Popen(
+                    command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                ) as process:
+                    while process.poll() is None:
+                        rlist, _, _ = select.select([process.stdout, process.stderr], [], [])
 
-            while process.poll() is None:
-                rlist, _, _ = select.select([process.stdout, process.stderr], [], [])
+                        if not rlist:
+                            process.kill()
 
-                if not rlist:
-                    process.kill()
+                        for stream in rlist:
+                            line = stream.readline().strip()
+                            print(line)
+                            client.sendall(line.encode("utf-8"))
 
-                for stream in rlist:
-                    line = stream.readline().strip()
-                    print(line)
-                    client.sendall(line.encode("utf-8"))
-
-            process.wait()
+                    process.wait()
+            except Exception as e:
+                client.sendall(f"Error executing command: {str(e)}".encode("utf-8"))
+    except Exception as e:
+        client.sendall(f"Unexpected error: {str(e)}".encode("utf-8"))
     finally:
         client.close()
 
