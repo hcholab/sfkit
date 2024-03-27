@@ -58,4 +58,8 @@ def get_parser() -> argparse.ArgumentParser:
     client.add_argument("--study_id", help="Study ID for the client to use.")
     client.add_argument("--data_path", help="Path to the data directory for the client.")
 
+    run_all = subparsers.add_parser("all", help="Run all commands.")
+    run_all.add_argument("--study_id", help="Study ID for the client to use.")
+    run_all.add_argument("--data_path", help="Path to the data directory for the client.")
+
     return parser
