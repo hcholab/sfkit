@@ -22,7 +22,11 @@ def handle_client(client: socket.socket):
 
             # Example of running a command and capturing its output
             process = subprocess.Popen(
-                ["sfkit", "all"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1
+                ["stdbuf", "-oL", "-eL", "sfkit", "all"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
             )  # TODO: add study_id and data_path args
 
             while process.poll() is None:
