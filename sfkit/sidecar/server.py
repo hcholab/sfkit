@@ -21,15 +21,15 @@ def handle_client(client: socket.socket):
 
             # Example of running a command and capturing its output
             process = subprocess.Popen(
-                ["sfkit", "all"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                ["sfkit", "all"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1
             )  # TODO: add study_id and data_path args
 
-            if process.stdout:
-                for line in process.stdout:
-                    print(line)
-                    client.sendall(line.encode("utf-8"))
+            for line in process.stdout:  # type: ignore
+                print(line)
+                client.sendall(line.encode("utf-8"))
 
-                process.stdout.close()
+            process.stdout.close()  # type: ignore
+
             if return_code := process.wait():
                 raise subprocess.CalledProcessError(return_code, process.args)
     finally:
