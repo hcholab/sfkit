@@ -7,7 +7,7 @@ from threading import Thread
 from sfkit.sidecar.utils import get_sock_path
 
 
-def handle_client(client):
+def handle_client(client: socket.socket):
     try:
         while True:
             data = client.recv(1024)
@@ -17,6 +17,8 @@ def handle_client(client):
             study_id = request.get("study_id", "")
             data_path = request.get("data_path", "")
 
+            client.sendall("Received request".encode("utf-8"))
+
             # Example of running a command and capturing its output
             process = subprocess.Popen(
                 ["sfkit", "all"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -24,6 +26,7 @@ def handle_client(client):
 
             if process.stdout:
                 for line in process.stdout:
+                    print(line)
                     client.sendall(line.encode("utf-8"))
 
                 process.stdout.close()
