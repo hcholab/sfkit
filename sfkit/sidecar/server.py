@@ -51,11 +51,16 @@ def handle_client(client):
                 feedback = logs.getvalue()  #  + stdout.getvalue() + stderr.getvalue()
                 client.sendall(feedback.encode("utf-8"))
 
-            execute_and_send_feedback(lambda: auth(study_id))
-            execute_and_send_feedback(lambda: setup_networking())
-            execute_and_send_feedback(lambda: generate_personal_keys())
-            execute_and_send_feedback(lambda: register_data(data_path=data_path))
-            execute_and_send_feedback(lambda: run_protocol())
+            # execute_and_send_feedback(lambda: auth(study_id))
+            auth(study_id)
+            # execute_and_send_feedback(lambda: setup_networking())
+            setup_networking()
+            # execute_and_send_feedback(lambda: generate_personal_keys())
+            generate_personal_keys()
+            # execute_and_send_feedback(lambda: register_data(data_path=data_path))
+            register_data(data_path=data_path)
+            # execute_and_send_feedback(lambda: run_protocol())
+            run_protocol()
 
             response = f"All commands executed for study_id: {study_id}, data_path: {data_path}"
             client.sendall(response.encode("utf-8"))
