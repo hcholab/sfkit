@@ -24,14 +24,15 @@ def handle_client(client: socket.socket):
                 ["sfkit", "all"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1
             )  # TODO: add study_id and data_path args
 
-            for line in process.stdout:  # type: ignore
-                print(line)
-                client.sendall(line.encode("utf-8"))
+            while process.poll() is None:
+                if line := process.stdout.readline().strip():  # type: ignore
+                    client.sendall(line.encode("utf-8"))
 
-            process.stdout.close()  # type: ignore
+                if line := process.stderr.readline().strip():  # type: ignore
+                    client.sendall(line.encode("utf-8"))
 
-            if return_code := process.wait():
-                raise subprocess.CalledProcessError(return_code, process.args)
+            client.sendall("Finished running sfkit".encode("utf-8"))
+
     finally:
         client.close()
 
