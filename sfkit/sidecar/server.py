@@ -1,13 +1,9 @@
 import json
 import os
 import socket
+import subprocess
 from threading import Thread
 
-from sfkit.auth.auth import auth
-from sfkit.auth.setup_networking import setup_networking
-from sfkit.encryption.generate_personal_keys import generate_personal_keys
-from sfkit.protocol.register_data import register_data
-from sfkit.protocol.run_protocol import run_protocol
 from sfkit.sidecar.utils import get_sock_path
 
 
@@ -21,13 +17,14 @@ def handle_client(client):
             study_id = request.get("study_id", "")
             data_path = request.get("data_path", "")
 
-            auth(study_id)
-            setup_networking()
-            generate_personal_keys()
-            register_data(data_path=data_path)
-            run_protocol()
+            # Example of running a command and capturing its output
+            process = subprocess.Popen(
+                ["sfkit", "all", study_id, data_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            )
+            stdout, stderr = process.communicate()
 
-            response = f"All commands executed for study_id: {study_id}, data_path: {data_path}"
+            # Send both stdout and stderr back to the client
+            response = stdout + "\n" + stderr
             client.sendall(response.encode("utf-8"))
     finally:
         client.close()
