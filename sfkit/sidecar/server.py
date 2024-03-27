@@ -48,7 +48,7 @@ def handle_client(client):
             def execute_and_send_feedback(operation):
                 with capture_output_and_logs() as (stdout, stderr, logs):
                     operation()
-                feedback = logs.getvalue() + stdout.getvalue() + stderr.getvalue()
+                feedback = logs.getvalue()  #  + stdout.getvalue() + stderr.getvalue()
                 client.sendall(feedback.encode("utf-8"))
 
             execute_and_send_feedback(lambda: auth(study_id))
