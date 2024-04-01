@@ -1,11 +1,10 @@
 import json
 import os
-import select
 import socket
 import subprocess
-from threading import Thread
 
 from sfkit.sidecar.utils import get_sock_path
+from sfkit.utils import constants
 
 
 def handle_client(client: socket.socket):
@@ -22,7 +21,7 @@ def handle_client(client: socket.socket):
 
             study_id = request.get("study_id", "")
             data_path = os.path.realpath(request.get("data_path", ""))
-            
+
             if not data_path.startswith(constants.SAFE_DATA_PATH):
                 client.sendall("Invalid data_path".encode("utf-8"))
                 client.close()
@@ -44,9 +43,8 @@ def handle_client(client: socket.socket):
                     text=True,
                     bufsize=1,
                 ) as process:
-                    while True:
-                        line = process.stdout.readline().strip()
-                        if line:
+                    while process.stdout:
+                        if line := process.stdout.readline().strip():
                             client.sendall(line.encode("utf-8"))
                             print(line)
                         elif process.poll() is not None:
