@@ -21,36 +21,36 @@ def handle_client(client: socket.socket):
                 continue
 
             study_id = request.get("study_id", "")
-            data_path = request.get("data_path", "")
+            data_path = os.path.realpath(request.get("data_path", ""))
+            
+            if not data_path.startswith(constants.SAFE_DATA_PATH):
+                client.sendall("Invalid data_path".encode("utf-8"))
+                client.close()
+                return
 
             client.sendall("Received request".encode("utf-8"))
 
-            command = ["env", "PYTHONUNBUFFERED=x", "sfkit", "all"]
+            command = ["sfkit", "all"]
             if study_id:
                 command.extend(["--study_id", study_id])
-            if data_path:
-                command.extend(["--data_path", data_path])
+            command.extend(["--data_path", data_path])
 
             try:
                 with subprocess.Popen(
                     command,
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    env=dict(os.environ, PYTHONUNBUFFERED="1"),
                     text=True,
                     bufsize=1,
                 ) as process:
-                    while process.poll() is None:
-                        rlist, _, _ = select.select([process.stdout, process.stderr], [], [])
-
-                        if not rlist:
-                            process.kill()
-
-                        for stream in rlist:
-                            line = stream.readline().strip()
-                            print(line)
+                    while True:
+                        line = process.stdout.readline().strip()
+                        if line:
                             client.sendall(line.encode("utf-8"))
-
-                    process.wait()
+                            print(line)
+                        elif process.poll() is not None:
+                            break
             except Exception as e:
                 client.sendall(f"Error executing command: {str(e)}".encode("utf-8"))
     except Exception as e:
@@ -70,4 +70,4 @@ def server_command():
 
     while True:
         client, _ = server.accept()
-        Thread(target=handle_client, args=(client,)).start()
+        handle_client(client)
