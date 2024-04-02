@@ -66,6 +66,8 @@ def server_command():
     server.bind(sock_path)
     server.listen(1)
 
+    os.chmod(sock_path, 0o770)
+
     while True:
         client, _ = server.accept()
         handle_client(client)
