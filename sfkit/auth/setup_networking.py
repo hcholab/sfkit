@@ -9,7 +9,7 @@ MAX_PARTICIPANTS = 10
 MAX_THREADS = 100
 
 
-def setup_networking(ports_str: str, ip_address: str = "") -> None:
+def setup_networking(ports_str: str = "", ip_address: str = "") -> None:
     print("Setting up networking...")
     print(
         "NOTE: this step should be run after all participants have joined the study.  If you run this step before all participants have joined, you will need to re-run this step after all participants have joined."
