@@ -6,11 +6,15 @@ from sfkit.protocol.register_data import register_data
 from sfkit.protocol.run_protocol import run_protocol
 from sfkit.sidecar.client import client_command
 from sfkit.sidecar.server import server_command
+from sfkit.utils import constants
 
 
 def main() -> None:
     parser = get_parser()
     args = parser.parse_args()
+
+    if args.command not in ("client", "help", "-h", ""):
+        print(f"SFKIT_API_URL: {constants.SFKIT_API_URL}")
 
     if args.command == "server":
         server_command()
