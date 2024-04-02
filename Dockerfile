@@ -29,7 +29,7 @@ RUN ln -s /usr/bin/python python3
 
 FROM go AS sfkit-proxy
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
-    git checkout 858e6ca && \
+    git checkout 91b2a07 && \
     CGO_ENABLED=0 go build
 
 
@@ -107,7 +107,7 @@ WORKDIR /sfkit
 ENV PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/home/nonroot/.local/bin" \
     PYTHONUNBUFFERED=TRUE \
     SFKIT_DIR="/sfkit/.sfkit" \
-    SFKIT_PROXY_ON=TRUE 
+    SFKIT_PROXY_ON=TRUE
 
 # hadolint ignore=DL3022
 COPY --from=cgr.dev/chainguard/bash     /bin /usr/bin   /bin/
