@@ -23,7 +23,7 @@ def handle_client(client: socket.socket):
             data_path = os.path.realpath(request.get("data_path", ""))
 
             if not data_path.startswith(constants.SAFE_DATA_PATH):
-                client.sendall("Invalid data_path".encode("utf-8"))
+                client.sendall(f"data_path should start with {constants.SAFE_DATA_PATH}".encode("utf-8"))
                 client.close()
                 return
 
