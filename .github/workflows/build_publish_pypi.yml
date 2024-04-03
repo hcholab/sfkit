@@ -48,10 +48,6 @@ jobs:
         run: |
           poetry run pytest
 
-      - name: Build with poetry
-        run: |
-          poetry build
-
       - name: Test publish with poetry
         if: github.ref != 'refs/heads/main'
         run: |
@@ -61,11 +57,11 @@ jobs:
           poetry config repositories.test-pypi https://test.pypi.org/legacy/
           poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_TOKEN }}
 
-          poetry publish -r test-pypi
+          poetry publish --build -r test-pypi
 
       - name: Publish with poetry
         if: github.ref == 'refs/heads/main'
         run: |
           poetry version patch
           poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-          poetry publish
+          poetry publish --build
