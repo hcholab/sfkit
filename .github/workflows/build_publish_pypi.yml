@@ -52,8 +52,15 @@ jobs:
         run: |
           poetry build
 
-      - name: Publish with poetry
+      - name: Test publish with poetry
+        if: github.ref != 'refs/heads/main'
         run: |
-          poetry config repositories.test-pypi https://test.pypi.org/legacy/
-          poetry config pypi-token.pypi ${{ github.ref == 'refs/heads/main' && secrets.PYPI_TOKEN || secrets.TEST_PYPI_TOKEN }}
+          poetry config repositories.test-pypi 'https://test.pypi.org/legacy/'
+          poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_TOKEN }}
+          poetry publish
+
+      - name: Publish with poetry
+        if: github.ref == 'refs/heads/main'
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
           poetry publish
