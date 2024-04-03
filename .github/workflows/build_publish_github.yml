@@ -1,6 +1,6 @@
 # This workflow builds, lints, tests and pushes the Docker image into the GitHub Container Registry,
 # and publishes a release with a corresponding distributable package.
-name: Build and Publish
+name: Build and Publish to GitHub
 
 on:
   push:
