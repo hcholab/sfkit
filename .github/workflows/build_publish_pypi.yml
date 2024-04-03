@@ -52,29 +52,20 @@ jobs:
         run: |
           poetry build
 
-      - name: Extract metadata (tags, labels)
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: |
-            name=,enable=false
-          tags: |
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-
-      - name: Set version
-        run:
-          poetry version ${{ steps.meta.outputs.version }}
-
       - name: Test publish with poetry
         if: github.ref != 'refs/heads/main'
         run: |
+          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+          poetry version "$(poetry version)-${SHORT_SHA}"
+
           poetry config repositories.test-pypi https://test.pypi.org/legacy/
           poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_TOKEN }}
+
           poetry publish -r test-pypi
 
       - name: Publish with poetry
         if: github.ref == 'refs/heads/main'
         run: |
+          poetry version patch
           poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
           poetry publish
