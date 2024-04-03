@@ -13,7 +13,7 @@ def main() -> None:
     parser = get_parser()
     args = parser.parse_args()
 
-    if args.command not in ("client", "help", "-h", ""):
+    if args.command not in (None, "client"):
         print(f"SFKIT_API_URL: {constants.SFKIT_API_URL}")
 
     if args.command == "server":
