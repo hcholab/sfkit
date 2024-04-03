@@ -200,9 +200,28 @@ jobs:
       uses: imjasonh/setup-crane@v0.3
       if: github.ref == 'refs/heads/main'
 
-    - name: Publish release archives
+    - name: Publish release archives to GitHub
       if: github.ref == 'refs/heads/main'
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
         ./publish_release.sh "${{ env.IMAGE }}"
+
+  pypi:
+    needs: [prepare, build]
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    if: needs.prepare.outputs.push == 'true'
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Build
+      run: |
+        pip install poetry
+        poetry build
+
+    - name: Publish
+      run: |
+        poetry config pypi-token.pypi ${{ github.ref == 'refs/heads/main' && secrets.PYPI_TOKEN || secrets.TEST_PYPI_TOKEN }}
+        poetry publish
