@@ -55,8 +55,8 @@ jobs:
       - name: Test publish with poetry
         if: github.ref != 'refs/heads/main'
         run: |
-          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
-          poetry version "$(poetry version)-${SHORT_SHA}"
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          poetry version "$(poetry version -s)+g${SHORT_SHA}"
 
           poetry config repositories.test-pypi https://test.pypi.org/legacy/
           poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_TOKEN }}
