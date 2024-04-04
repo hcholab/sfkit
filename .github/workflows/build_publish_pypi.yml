@@ -59,7 +59,7 @@ jobs:
           poetry version patch
 
       - name: Test publish with poetry
-        if: github.ref != 'refs/heads/main'
+        if: false # github.ref != 'refs/heads/main'
         run: |
           poetry config repositories.test-pypi https://test.pypi.org/legacy/
           poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_TOKEN }}
