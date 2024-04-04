@@ -27,9 +27,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          fetch-tags: true
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
@@ -51,22 +48,22 @@ jobs:
         run: |
           poetry run pytest
 
-      - name: Set version from Git
-        run: |
-          GIT_TAG=$(git describe --tags)
-          GIT_VERSION="${GIT_TAG%%-*}"
-          poetry version "0.1.${GIT_VERSION##*\.}"
-          poetry version patch
-
       - name: Test publish with poetry
         if: false # github.ref != 'refs/heads/main'
         run: |
+          poetry version $(curl -s https://test.pypi.org/pypi/sfkit/json | jq -r '.info.version')
+          poetry version patch
+
           poetry config repositories.test-pypi https://test.pypi.org/legacy/
           poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_TOKEN }}
+
           poetry publish --build -r test-pypi
 
       - name: Publish with poetry
         if: github.ref == 'refs/heads/main'
         run: |
+          poetry version $(curl -s https://pypi.org/pypi/sfkit/json | jq -r '.info.version')
+          poetry version patch
+
           poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
           poetry publish --build

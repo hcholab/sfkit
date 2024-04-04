@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sfkit"
-version = "0.1"
+version = "0.0.241" # will be auto-replaced via GitHub Action
 authors = ["Simon Mendelsohn <smendels@broadinstitute.org>"]
 description = "Some CLI Tools For The Secure Multi-party Genomic Analysis Website"
 readme = "README.md"
