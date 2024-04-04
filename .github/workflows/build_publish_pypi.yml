@@ -51,20 +51,22 @@ jobs:
         run: |
           poetry run pytest
 
+      - name: Set version from Git
+        run: |
+          GIT_TAG=$(git describe --tags)
+          GIT_VERSION="${GIT_TAG%%-*}"
+          poetry version "0.1.${GIT_VERSION##*\.}"
+          poetry version patch
+
       - name: Test publish with poetry
         if: github.ref != 'refs/heads/main'
         run: |
-          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
-          poetry version "$(poetry version -s)+g${SHORT_SHA}"
-
           poetry config repositories.test-pypi https://test.pypi.org/legacy/
           poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_TOKEN }}
-
           poetry publish --build -r test-pypi
 
       - name: Publish with poetry
         if: github.ref == 'refs/heads/main'
         run: |
-          poetry version patch
           poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
           poetry publish --build
