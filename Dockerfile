@@ -1,6 +1,6 @@
 # hadolint global ignore=DL3006,DL3013,DL3018,DL3059
 
-FROM golang:1.21 AS go
+FROM golang:1.22 AS go
 
 WORKDIR /build
 
@@ -29,7 +29,7 @@ RUN ln -s /usr/bin/python python3
 
 FROM go AS sfkit-proxy
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
-    git checkout 91b2a07 && \
+    git checkout a4e447b && \
     CGO_ENABLED=0 go build
 
 
