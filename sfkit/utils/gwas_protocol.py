@@ -2,6 +2,7 @@ import fileinput
 import multiprocessing
 import os
 import time
+from shutil import copy2
 
 from google.cloud import storage
 
@@ -12,7 +13,7 @@ from sfkit.utils.helper_functions import (
     copy_to_out_folder,
     plot_assoc,
     postprocess_assoc,
-    run_command_shell_equals_true,
+    run_command,
 )
 
 
@@ -48,7 +49,7 @@ def install_gwas_dependencies() -> None:
                     sudo apt-get --assume-yes install python3-pip
                     sudo pip3 install numpy"""
     for command in commands.split("\n"):
-        run_command_shell_equals_true(command)
+        run_command(command)
     print("\n\n Finished installing dependencies \n\n")
 
 
@@ -56,34 +57,46 @@ def install_gwas_repo() -> None:
     update_firestore("update_firestore::task=Installing GWAS repo")
     print("\n\n Begin installing GWAS repo \n\n")
     command = "git clone https://github.com/hcholab/secure-gwas secure-gwas"
-    run_command_shell_equals_true(command)
+    run_command(command)
     print("\n\n Finished installing GWAS repo \n\n")
 
 
 def install_ntl_library() -> None:
     update_firestore("update_firestore::task=Installing NTL library")
     print("\n\n Begin installing NTL library \n\n")
-    commands = """curl https://libntl.org/ntl-10.3.0.tar.gz --output ntl-10.3.0.tar.gz
-                tar -zxvf ntl-10.3.0.tar.gz
-                cp secure-gwas/code/NTL_mod/ZZ.h ntl-10.3.0/include/NTL/
-                cp secure-gwas/code/NTL_mod/ZZ.cpp ntl-10.3.0/src/
-                cd ntl-10.3.0/src && ./configure NTL_THREAD_BOOST=on
-                cd ntl-10.3.0/src && make all
-                cd ntl-10.3.0/src && sudo make install"""
-    for command in commands.split("\n"):
-        run_command_shell_equals_true(command)
+    commands = [
+        "curl https://libntl.org/ntl-10.3.0.tar.gz --output ntl-10.3.0.tar.gz",
+        "tar -zxvf ntl-10.3.0.tar.gz",
+        "cp secure-gwas/code/NTL_mod/ZZ.h ntl-10.3.0/include/NTL/",
+        "cp secure-gwas/code/NTL_mod/ZZ.cpp ntl-10.3.0/src/",
+    ]
+    for command in commands:
+        run_command(command)
+
+    os.chdir("ntl-10.3.0/src")
+    configure_commands = ["./configure NTL_THREAD_BOOST=on", "make all", "sudo make install"]
+    for command in configure_commands:
+        run_command(command)
+    os.chdir("../..")
+
     print("\n\n Finished installing NTL library \n\n")
 
 
 def compile_gwas_code() -> None:
     update_firestore("update_firestore::task=Compiling GWAS code")
     print("\n\n Begin compiling GWAS code \n\n")
-    command = """cd secure-gwas/code && COMP=$(which clang++) &&\
-                sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile &&\
-                sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile &&\
-                sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile &&\
-                sudo make"""
-    run_command_shell_equals_true(command)
+    os.chdir("secure-gwas/code")
+    commands = [
+        "COMP=$(which clang++)",
+        "sed -i 's|^CPP.*$|CPP = ${COMP}|g' Makefile",
+        "sed -i 's|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g' Makefile",
+        "sed -i 's|^LDPATH.*$|LDPATH = -L/usr/local/lib|g' Makefile",
+        "sudo make",
+    ]
+    for command in commands:
+        run_command(command)
+    os.chdir("../..")
+
     print("\n\n Finished compiling GWAS code \n\n")
 
 
@@ -177,17 +190,11 @@ def copy_data_to_gwas_repo(
     data_path: str, role: str
 ) -> None:  # TODO: change the path in parameter file instead? Or move instead of copy?
     print("\n\n Copy data to GWAS repo \n\n")
-    commands = f"""cp '{data_path}'/g.bin secure-gwas/test_data/g.bin
-    cp '{data_path}'/m.bin secure-gwas/test_data/m.bin
-    cp '{data_path}'/p.bin secure-gwas/test_data/p.bin
-    cp '{data_path}'/other_shared_key.bin secure-gwas/test_data/other_shared_key.bin
-    cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"""
-
-    if role == "0":
-        commands = f"cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"
-
-    for command in commands.split("\n"):
-        run_command_shell_equals_true(command)
+    files_to_copy = ["g.bin", "m.bin", "p.bin", "other_shared_key.bin", "pos.txt"] if role != "0" else ["pos.txt"]
+    for file_name in files_to_copy:
+        src_file_path = os.path.join(data_path, file_name)
+        dest_file_path = os.path.join("secure-gwas/test_data", file_name)
+        copy2(src_file_path, dest_file_path)
     print("\n\n Finished copying data to GWAS repo \n\n")
 
 
@@ -210,13 +217,16 @@ def sync_with_other_vms(role: str) -> None:
 def start_datasharing(role: str, demo: bool) -> None:
     update_firestore("update_firestore::task=Performing data sharing protocol")
     print("\n\n starting data sharing protocol \n\n")
+
+    os.chdir(f"{constants.EXECUTABLES_PREFIX}secure-gwas/code")
     if demo:
-        command = f"cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bash run_example_datasharing.sh"
+        command = "bash run_example_datasharing.sh"
     else:
-        command = f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
+        command = f"bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
         if role != "0":
             command += " ../test_data/"
-    run_command_shell_equals_true(command, fail_message="Failed MPC-GWAS data sharing protocol")
+    run_command(command, fail_message="Failed MPC-GWAS data sharing protocol")
+
     print("\n\n Finished data sharing protocol\n\n")
 
 
@@ -226,11 +236,14 @@ def start_gwas(role: str, demo: bool) -> None:
     time.sleep(100 + 30 * int(role))
     print("\n\n starting GWAS \n\n")
     update_firestore("update_firestore::status=starting GWAS")
+
+    os.chdir(f"{constants.EXECUTABLES_PREFIX}secure-gwas/code")
     if demo:
-        command = f"cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bash run_example_gwas.sh"
+        command = "bash run_example_gwas.sh"
     else:
-        command = f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bin/GwasClient '{role}' ../par/test.par.'{role}'.txt"
-    run_command_shell_equals_true(command, fail_message="Failed MPC-GWAS protocol")
+        command = f"bin/GwasClient '{role}' ../par/test.par.'{role}'.txt"
+    run_command(command, fail_message="Failed MPC-GWAS protocol")
+
     print("\n\n Finished GWAS \n\n")
 
     if role != "0":

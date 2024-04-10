@@ -12,7 +12,6 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
-beautifulsoup4 = "^4.12.2"
 checksumdir = "^1.2.0"
 google-auth = "^2.23.4"
 google-cloud-storage = "^2.13.0"

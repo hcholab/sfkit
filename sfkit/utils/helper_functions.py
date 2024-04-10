@@ -1,5 +1,4 @@
 import os
-import select
 import shutil
 import subprocess
 
@@ -20,26 +19,7 @@ def authenticate_user() -> None:
         exit(1)
 
 
-def run_command_shell_equals_true(command: str, fail_message: str = "") -> None:
-    with subprocess.Popen(
-        command, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-    ) as proc:
-        while proc.poll() is None:
-            readable, _, _ = select.select([proc.stdout, proc.stderr], [], [])
-
-            for stream in readable:
-                if line := stream.readline().rstrip():
-                    print(line)
-
-        res = proc.returncode
-
-    if res != 0:
-        print(f"FAILED - {command}")
-        print(f"Return code: {res}")
-        condition_or_fail(False, fail_message)
-
-
-def run_command_shell_equals_false(command: str, fail_message: str = "") -> None:
+def run_command(command: str, fail_message: str = "") -> None:
     command_list = command.split()
     with subprocess.Popen(
         command_list,

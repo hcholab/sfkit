@@ -3,13 +3,12 @@ import resource
 import shlex
 import subprocess
 import sys
-import tarfile
 import threading
 import time
 import traceback
-import requests
 from typing import List
 
+import requests
 import tomlkit
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
@@ -17,7 +16,7 @@ from sfkit.utils import constants
 from sfkit.utils.helper_functions import (
     copy_results_to_cloud_storage,
     copy_to_out_folder,
-    run_command_shell_equals_true,
+    run_command,
 )
 from sfkit.utils.sfgwas_helper_functions import to_float_int_or_bool
 from sfkit.utils.sfgwas_protocol import generate_shared_keys, sync_with_other_vms
@@ -40,26 +39,31 @@ def install_sfrelate() -> None:
     update_firestore("update_firestore::task=Installing dependencies")
     print("Begin installing dependencies")
 
-    run_command_shell_equals_true("sudo apt-get update && sudo apt-get upgrade -y")
-    run_command_shell_equals_true("sudo apt-get install git wget unzip python3 python3-pip python3-venv snapd -y")
+    run_command("sudo apt-get update")
+    run_command("sudo apt-get upgrade -y")
+    run_command("sudo apt-get install git wget unzip python3 python3-pip python3-venv snapd -y")
 
     # Increase the number of open files allowed
     soft, hard = 1_000_000, 1_000_000
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
-    run_command_shell_equals_true("sudo snap install go --classic")
+    run_command("sudo snap install go --classic")
     os.environ["PATH"] += f"{os.pathsep}/snap/bin"
-    run_command_shell_equals_true("echo 'export PATH=$PATH:/snap/bin' >> ~/.bashrc && source ~/.bashrc")
-    run_command_shell_equals_true("go version")
+    with open(os.path.expanduser("~/.bashrc"), "a") as file:
+        file.write("\nexport PATH=$PATH:/snap/bin\n")
+    run_command("go version")
 
     if os.path.isdir("sf-relate"):
         print("sf-relate already installed")
     else:
         print("Installing sf-relate")
-        run_command_shell_equals_true("git clone https://github.com/froelich/sf-relate.git")
-        run_command_shell_equals_true("cd sf-relate && git checkout sf-kit")
-        run_command_shell_equals_true("cd sf-relate && go get relativeMatch")
-        run_command_shell_equals_true("cd sf-relate && go build && go test -c -o sf-relate")
+        run_command("git clone https://github.com/froelich/sf-relate.git")
+        os.chdir("sf-relate")
+        run_command("git checkout sf-kit")
+        run_command("go get relativeMatch")
+        run_command("go build")
+        run_command("go test -c -o sf-relate")
+        os.chdir("..")
 
     print("Finished installing dependencies")
 
@@ -351,4 +355,4 @@ def download_and_extract_data():
                 file.write(chunk)
 
     print("Extracting Data using tar command")
-    run_command_shell_equals_true(f"tar -xvf {tar_path} -C {data_dir}")
+    run_command(f"tar -xvf {tar_path} -C {data_dir}")

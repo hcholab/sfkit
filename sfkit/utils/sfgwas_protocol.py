@@ -17,7 +17,7 @@ from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import (
     condition_or_fail,
-    run_command_shell_equals_false,
+    run_command,
 )
 from sfkit.utils.sfgwas_helper_functions import (
     boot_sfkit_proxy,
@@ -60,17 +60,17 @@ def install_sfgwas() -> None:
     plink2_download_link = "https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_latest.zip"
     plink2_zip_file = plink2_download_link.split("/")[-1]
 
-    run_command_shell_equals_false("sudo apt-get update -y")
-    run_command_shell_equals_false("sudo apt-get install wget git zip unzip -y")
+    run_command("sudo apt-get update -y")
+    run_command("sudo apt-get install wget git zip unzip -y")
 
     print("Installing go")
     max_retries = 3
     retries = 0
     while retries < max_retries:
-        run_command_shell_equals_false("rm -f https://golang.org/dl/go1.18.1.linux-amd64.tar.gz")
-        run_command_shell_equals_false("wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz")
-        run_command_shell_equals_false("sudo rm -rf /usr/local/go")
-        run_command_shell_equals_false("sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz")
+        run_command("rm -f https://golang.org/dl/go1.18.1.linux-amd64.tar.gz")
+        run_command("wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz")
+        run_command("sudo rm -rf /usr/local/go")
+        run_command("sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz")
         if os.path.isdir("/usr/local/go"):
             break
         retries += 1
@@ -78,9 +78,9 @@ def install_sfgwas() -> None:
         condition_or_fail(False, "go failed to install")
     print("go successfully installed")
 
-    run_command_shell_equals_false(f"wget -nc {plink2_download_link}")
-    run_command_shell_equals_false(f"sudo unzip -o {plink2_zip_file} -d /usr/local/bin")
-    run_command_shell_equals_false("pip3 install numpy")
+    run_command(f"wget -nc {plink2_download_link}")
+    run_command(f"sudo unzip -o {plink2_zip_file} -d /usr/local/bin")
+    run_command("pip3 install numpy")
 
     # make sure plink2 successfully installed
     condition_or_fail(
@@ -92,22 +92,22 @@ def install_sfgwas() -> None:
         print("lattigo already exists")
     else:
         print("Installing lattigo")
-        run_command_shell_equals_false("git clone https://github.com/hcholab/lattigo")
+        run_command("git clone https://github.com/hcholab/lattigo")
         os.chdir("lattigo")
-        run_command_shell_equals_false("git switch lattigo_pca")
+        run_command("git switch lattigo_pca")
         os.chdir("..")
 
     if os.path.isdir("mpc-core"):
         print("mpc-core already exists")
     else:
         print("Installing mpc-core")
-        run_command_shell_equals_false("git clone https://github.com/hhcho/mpc-core")
+        run_command("git clone https://github.com/hhcho/mpc-core")
 
     if os.path.isdir("sfgwas"):
         print("sfgwas already exists")
     else:
         print("Installing sfgwas")
-        run_command_shell_equals_false("git clone https://github.com/hcholab/sfgwas")
+        run_command("git clone https://github.com/hcholab/sfgwas")
 
     print("Finished installing dependencies")
 
@@ -317,8 +317,8 @@ def build_sfgwas() -> None:
     os.environ["GOCACHE"] = os.path.join(os.environ["HOME"], ".cache", "go-build")
     os.chdir("sfgwas")
 
-    run_command_shell_equals_false("go get -t github.com/hcholab/sfgwas")
-    run_command_shell_equals_false("go build")
+    run_command("go get -t github.com/hcholab/sfgwas")
+    run_command("go build")
 
     os.chdir("..")
 
