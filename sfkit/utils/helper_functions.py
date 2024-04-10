@@ -20,7 +20,7 @@ def authenticate_user() -> None:
         exit(1)
 
 
-def run_command(command: str, fail_message: str = "") -> None:
+def run_command_shell_equals_true(command: str, fail_message: str = "") -> None:
     with subprocess.Popen(
         command, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     ) as proc:
@@ -35,6 +35,29 @@ def run_command(command: str, fail_message: str = "") -> None:
 
     if res != 0:
         print(f"FAILED - {command}")
+        print(f"Return code: {res}")
+        condition_or_fail(False, fail_message)
+
+
+def run_command_shell_equals_false(command: str, fail_message: str = "") -> None:
+    command_list = command.split()
+    with subprocess.Popen(
+        command_list,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        env=dict(os.environ, PYTHONUNBUFFERED="1"),
+        text=True,
+        bufsize=1,
+    ) as process:
+        while process.stdout:
+            if line := process.stdout.readline().strip():
+                print(line)
+            elif process.poll() is not None:
+                break
+
+    res = process.returncode
+    if res != 0:
+        print(f"FAILED - {command_list}")
         print(f"Return code: {res}")
         condition_or_fail(False, fail_message)
 

@@ -12,7 +12,7 @@ from sfkit.utils.helper_functions import (
     copy_to_out_folder,
     plot_assoc,
     postprocess_assoc,
-    run_command,
+    run_command_shell_equals_true,
 )
 
 
@@ -48,7 +48,7 @@ def install_gwas_dependencies() -> None:
                     sudo apt-get --assume-yes install python3-pip
                     sudo pip3 install numpy"""
     for command in commands.split("\n"):
-        run_command(command)
+        run_command_shell_equals_true(command)
     print("\n\n Finished installing dependencies \n\n")
 
 
@@ -56,7 +56,7 @@ def install_gwas_repo() -> None:
     update_firestore("update_firestore::task=Installing GWAS repo")
     print("\n\n Begin installing GWAS repo \n\n")
     command = "git clone https://github.com/hcholab/secure-gwas secure-gwas"
-    run_command(command)
+    run_command_shell_equals_true(command)
     print("\n\n Finished installing GWAS repo \n\n")
 
 
@@ -71,7 +71,7 @@ def install_ntl_library() -> None:
                 cd ntl-10.3.0/src && make all
                 cd ntl-10.3.0/src && sudo make install"""
     for command in commands.split("\n"):
-        run_command(command)
+        run_command_shell_equals_true(command)
     print("\n\n Finished installing NTL library \n\n")
 
 
@@ -83,7 +83,7 @@ def compile_gwas_code() -> None:
                 sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile &&\
                 sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile &&\
                 sudo make"""
-    run_command(command)
+    run_command_shell_equals_true(command)
     print("\n\n Finished compiling GWAS code \n\n")
 
 
@@ -187,7 +187,7 @@ def copy_data_to_gwas_repo(
         commands = f"cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"
 
     for command in commands.split("\n"):
-        run_command(command)
+        run_command_shell_equals_true(command)
     print("\n\n Finished copying data to GWAS repo \n\n")
 
 
@@ -216,7 +216,7 @@ def start_datasharing(role: str, demo: bool) -> None:
         command = f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
         if role != "0":
             command += " ../test_data/"
-    run_command(command, fail_message="Failed MPC-GWAS data sharing protocol")
+    run_command_shell_equals_true(command, fail_message="Failed MPC-GWAS data sharing protocol")
     print("\n\n Finished data sharing protocol\n\n")
 
 
@@ -230,7 +230,7 @@ def start_gwas(role: str, demo: bool) -> None:
         command = f"cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bash run_example_gwas.sh"
     else:
         command = f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bin/GwasClient '{role}' ../par/test.par.'{role}'.txt"
-    run_command(command, fail_message="Failed MPC-GWAS protocol")
+    run_command_shell_equals_true(command, fail_message="Failed MPC-GWAS protocol")
     print("\n\n Finished GWAS \n\n")
 
     if role != "0":
