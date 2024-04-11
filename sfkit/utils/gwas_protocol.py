@@ -1,6 +1,7 @@
 import fileinput
 import multiprocessing
 import os
+import shutil
 import time
 from shutil import copy2
 
@@ -86,9 +87,11 @@ def compile_gwas_code() -> None:
     update_firestore("update_firestore::task=Compiling GWAS code")
     print("\n\n Begin compiling GWAS code \n\n")
     os.chdir("secure-gwas/code")
+    comp = shutil.which("clang++")
+    if comp is None:
+        raise FileNotFoundError("clang++ compiler not found.")
     commands = [
-        "COMP=$(which clang++)",
-        "sed -i 's|^CPP.*$|CPP = ${COMP}|g' Makefile",
+        f"sed -i 's|^CPP.*$|CPP = {comp}|g' Makefile",
         "sed -i 's|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g' Makefile",
         "sed -i 's|^LDPATH.*$|LDPATH = -L/usr/local/lib|g' Makefile",
         "sudo make",
