@@ -7,6 +7,7 @@ import fileinput
 import os
 import random
 import shutil
+import threading
 import time
 
 import tomlkit
@@ -346,29 +347,26 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
 
     if constants.SFKIT_PROXY_ON:
         boot_sfkit_proxy(role=role, protocol=protocol)
+        os.environ["ALL_PROXY"] = "socks5://localhost:8000"
 
-    protocol_command = f"export PID={role} && go run sfgwas.go | tee stdout_party{role}.txt"
-    if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
-        protocol_command = f"cd {constants.EXECUTABLES_PREFIX}sfgwas && PID={role} sfgwas | tee stdout_party{role}.txt"
-    if demo:
-        protocol_command = "bash run_example.sh"
-        if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
-            # cannot use "go run" from run_example.sh in Docker, so reproducing that script in Python here
-            protocol_command = (
-                " & ".join(
-                    f"(cd {constants.EXECUTABLES_PREFIX}sfgwas && PID={r} sfgwas | tee stdout_party{r}.txt)"
-                    for r in range(3)
-                )
-                + " & wait $(jobs -p)"
-            )
-    command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd {constants.EXECUTABLES_PREFIX}sfgwas && {protocol_command}"
-    if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
-        command = f"export PYTHONUNBUFFERED=TRUE && {protocol_command}"
+    os.chdir(f"{constants.EXECUTABLES_PREFIX}sfgwas")
 
-    if constants.SFKIT_PROXY_ON:
-        command = f"export ALL_PROXY=socks5://localhost:8000 && {command}"
+    if demo and (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
+        threads = []
+        for r in range(3):
+            thread = threading.Thread(target=run_sfprotocol_with_task_updates, args=("sfgwas", str(r), protocol))
+            threads.append(thread)
+            thread.start()
 
-    run_sfprotocol_with_task_updates(command, protocol, demo, role)
+        for thread in threads:
+            thread.join()
+    elif demo:
+        run_sfprotocol_with_task_updates("bash run_example.sh", protocol, role)
+    elif constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
+        run_sfprotocol_with_task_updates("sfgwas", protocol, role)
+    else:
+        run_sfprotocol_with_task_updates("go run sfgwas.go", protocol, role)
+
     print(f"Finished {protocol} protocol")
 
     if role == "0":
