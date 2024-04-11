@@ -39,9 +39,11 @@ def install_sfrelate() -> None:
     update_firestore("update_firestore::task=Installing dependencies")
     print("Begin installing dependencies")
 
-    run_command("sudo apt-get update")
-    run_command("sudo apt-get upgrade -y")
-    run_command("sudo apt-get install git wget unzip python3 python3-pip python3-venv snapd -y")
+    run_command(["sudo", "apt-get", "update"])
+    run_command(["sudo", "apt-get", "upgrade", "-y"])
+    run_command(
+        ["sudo", "apt-get", "install", "git", "wget", "unzip", "python3", "python3-pip", "python3-venv", "snapd", "-y"]
+    )
 
     # Increase the number of open files allowed
     soft, hard = 1_000_000, 1_000_000
@@ -53,12 +55,12 @@ def install_sfrelate() -> None:
         print("sf-relate already installed")
     else:
         print("Installing sf-relate")
-        run_command("git clone https://github.com/froelich/sf-relate.git")
+        run_command(["git", "clone", "https://github.com/froelich/sf-relate.git"])
         os.chdir("sf-relate")
-        run_command("git checkout sf-kit")
-        run_command("go get relativeMatch")
-        run_command("go build")
-        run_command("go test -c -o sf-relate")
+        run_command(["git", "checkout", "sf-kit"])
+        run_command(["go", "get", "relativeMatch"])
+        run_command(["go", "build"])
+        run_command(["go", "test", "-c", "-o", "sf-relate"])
         os.chdir("..")
 
     print("Finished installing dependencies")
@@ -167,13 +169,13 @@ def start_sfrelate(role: str, demo: bool) -> None:
     # preprocess data
     if demo or role == "1":
         run_protocol_command(
-            "python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo",
+            ["python3", "notebooks/pgen_to_npy.py", "-PARTY", "1", "-FOLDER", "config/demo"],
             message="Party 1 Data Processing",
             env_vars=env_vars,
         )
     if demo or role == "2":
         run_protocol_command(
-            "python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo",
+            ["python3", "notebooks/pgen_to_npy.py", "-PARTY", "2", "-FOLDER", "config/demo"],
             message="Party 2 Data Processing",
             env_vars=env_vars,
         )
@@ -193,7 +195,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             threading.Thread(
                 target=thread_target,
                 kwargs={
-                    "command": "./sf-relate",
+                    "command": ["./sf-relate"],
                     "output_file": "config/demo/logs/X/test.txt",
                     "message": "MHE - Party 1",
                     "env_vars": env_vars | {"PID": "1"},
@@ -207,7 +209,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             threading.Thread(
                 target=thread_target,
                 kwargs={
-                    "command": "./sf-relate",
+                    "command": ["./sf-relate"],
                     "output_file": "config/demo/logs/Z/test.txt",
                     "message": "MHE - Party 0",
                     "env_vars": env_vars | {"PID": "0"},
@@ -220,7 +222,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             threading.Thread(
                 target=thread_target,
                 kwargs={
-                    "command": "./sf-relate",
+                    "command": ["./sf-relate"],
                     "output_file": "config/demo/logs/Y/test.txt",
                     "message": "MHE - Party 2",
                     "env_vars": env_vars | {"PID": "2"},
@@ -242,13 +244,13 @@ def start_sfrelate(role: str, demo: bool) -> None:
     # post process
     if demo or role == "1":
         run_protocol_command(
-            "python3 notebooks/step3_post_process.py -PARTY 1 -FOLDER config/demo/",
+            ["python3", "notebooks/step3_post_process.py", "-PARTY", "1", "-FOLDER", "config/demo/"],
             message="Post Processing - Party 1",
             env_vars=env_vars,
         )
     if demo or role == "2":
         run_protocol_command(
-            "python3 notebooks/step3_post_process.py -PARTY 2 -FOLDER config/demo/",
+            ["python3", "notebooks/step3_post_process.py", "-PARTY", "2", "-FOLDER", "config/demo/"],
             message="Post Processing - Party 2",
             env_vars=env_vars,
         )
@@ -273,7 +275,7 @@ def handle_output(stream, write_to_file=None, print_stderr=False):
 
 
 def run_protocol_command(
-    command,
+    command_list: list,
     message: str = "",
     env_vars=None,
     output_file: str = "",
@@ -288,10 +290,10 @@ def run_protocol_command(
     process_env = os.environ.copy()
     process_env.update(env_vars)
 
-    print(f"Running command: {command} from {cwd}")
+    print(f"Running command: {command_list} from {cwd}")
 
     with subprocess.Popen(
-        command.split(),
+        command_list,
         env=process_env,
         cwd=cwd,
         stdout=subprocess.PIPE,
@@ -315,7 +317,7 @@ def run_protocol_command(
 
         proc.wait()
         if proc.returncode != 0:
-            raise subprocess.CalledProcessError(proc.returncode, command)
+            raise subprocess.CalledProcessError(proc.returncode, command_list)
 
 
 def process_output_files(role: str) -> None:
@@ -351,4 +353,4 @@ def download_and_extract_data():
                 file.write(chunk)
 
     print("Extracting Data using tar command")
-    run_command(f"tar -xvf {tar_path} -C {data_dir}")
+    run_command(["tar", "-xvf", tar_path, "-C", data_dir])

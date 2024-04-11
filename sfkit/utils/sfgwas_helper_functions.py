@@ -50,8 +50,7 @@ def move(source: str, destination: str) -> None:
     shutil.move(source, destination)
 
 
-def run_sfprotocol_with_task_updates(command: str, protocol: str, role: str) -> None:
-    command_list = command.split()
+def run_sfprotocol_with_task_updates(command_list: list, protocol: str, role: str) -> None:
     env = dict(os.environ, PYTHONUNBUFFERED="1", PID=role)
     if protocol == "gwas":
         env["PROTOCOL"] = "gwas"
@@ -90,12 +89,12 @@ def run_sfprotocol_with_task_updates(command: str, protocol: str, role: str) -> 
                 ):
                     timeout = 30
 
-                check_for_failure(command, protocol, process, stream, line)
+                check_for_failure(command_list, protocol, process, stream, line)
 
         process.wait()
 
 
-def check_for_failure(command: str, protocol: str, process: subprocess.Popen, stream: list, line: str) -> None:
+def check_for_failure(command_list: list, protocol: str, process: subprocess.Popen, stream: list, line: str) -> None:
     if (
         stream == process.stderr
         and line
@@ -103,7 +102,7 @@ def check_for_failure(command: str, protocol: str, process: subprocess.Popen, st
         and "[watchdog] gc finished" not in line
         and "warning:" not in line
     ):
-        print(f"FAILED - {command}")
+        print(f"FAILED - {command_list}")
         print(f"Stderr: {line}")
         condition_or_fail(False, f"Failed {protocol} protocol")
 

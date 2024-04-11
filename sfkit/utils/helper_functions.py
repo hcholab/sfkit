@@ -19,8 +19,7 @@ def authenticate_user() -> None:
         exit(1)
 
 
-def run_command(command: str, fail_message: str = "") -> None:
-    command_list = command.split()
+def run_command(command_list: list, fail_message: str = "") -> None:
     with subprocess.Popen(
         command_list,
         stdout=subprocess.PIPE,
@@ -155,9 +154,9 @@ def copy_to_out_folder(relevant_paths: list) -> None:
 
 def install_go():
     print("Installing go")
-    run_command("sudo snap install go --classic")
+    run_command(["sudo", "snap", "install", "go", "--classic"])
     os.environ["PATH"] += f"{os.pathsep}/snap/bin"
     with open(os.path.expanduser("~/.bashrc"), "a") as file:
         file.write("\nexport PATH=$PATH:/snap/bin\n")
-    run_command("go version")
+    run_command(["go", "version"])
     print("Finished installing go")

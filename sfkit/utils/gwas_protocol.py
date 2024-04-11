@@ -38,18 +38,20 @@ def run_gwas_protocol(role: str, demo: bool = False) -> None:
 def install_gwas_dependencies() -> None:
     update_firestore("update_firestore::task=Installing dependencies")
     print("\n\n Begin installing dependencies \n\n")
-    commands = """sudo apt-get --assume-yes update
-                    sudo apt-get --assume-yes install build-essential
-                    sudo apt-get --assume-yes install clang-3.9
-                    sudo apt-get --assume-yes install libgmp3-dev
-                    sudo apt-get --assume-yes install libssl-dev
-                    sudo apt-get --assume-yes install libsodium-dev
-                    sudo apt-get --assume-yes install libomp-dev
-                    sudo apt-get --assume-yes install netcat-openbsd
-                    sudo apt-get --assume-yes install git
-                    sudo apt-get --assume-yes install python3-pip
-                    pip3 install numpy"""
-    for command in commands.split("\n"):
+    commands = [
+        ["sudo", "apt-get", "--assume-yes", "update"],
+        ["sudo", "apt-get", "--assume-yes", "install", "build-essential"],
+        ["sudo", "apt-get", "--assume-yes", "install", "clang-3.9"],
+        ["sudo", "apt-get", "--assume-yes", "install", "libgmp3-dev"],
+        ["sudo", "apt-get", "--assume-yes", "install", "libssl-dev"],
+        ["sudo", "apt-get", "--assume-yes", "install", "libsodium-dev"],
+        ["sudo", "apt-get", "--assume-yes", "install", "libomp-dev"],
+        ["sudo", "apt-get", "--assume-yes", "install", "netcat-openbsd"],
+        ["sudo", "apt-get", "--assume-yes", "install", "git"],
+        ["sudo", "apt-get", "--assume-yes", "install", "python3-pip"],
+        ["pip3", "install", "numpy"],
+    ]
+    for command in commands:
         run_command(command)
     print("\n\n Finished installing dependencies \n\n")
 
@@ -59,8 +61,7 @@ def install_gwas_repo() -> None:
     print("\n\n Begin installing GWAS repo \n\n")
     if os.path.exists("secure-gwas"):
         shutil.rmtree("secure-gwas")
-    command = "git clone https://github.com/hcholab/secure-gwas secure-gwas"
-    run_command(command)
+    run_command(["git", "clone", "https://github.com/hcholab/secure-gwas", "secure-gwas"])
     print("\n\n Finished installing GWAS repo \n\n")
 
 
@@ -68,16 +69,16 @@ def install_ntl_library() -> None:
     update_firestore("update_firestore::task=Installing NTL library")
     print("\n\n Begin installing NTL library \n\n")
     commands = [
-        "curl https://libntl.org/ntl-10.3.0.tar.gz --output ntl-10.3.0.tar.gz",
-        "tar -zxvf ntl-10.3.0.tar.gz",
-        "cp secure-gwas/code/NTL_mod/ZZ.h ntl-10.3.0/include/NTL/",
-        "cp secure-gwas/code/NTL_mod/ZZ.cpp ntl-10.3.0/src/",
+        ["curl", "https://libntl.org/ntl-10.3.0.tar.gz", "--output", "ntl-10.3.0.tar.gz"],
+        ["tar", "-zxvf", "ntl-10.3.0.tar.gz"],
+        ["cp", "secure-gwas/code/NTL_mod/ZZ.h", "ntl-10.3.0/include/NTL/"],
+        ["cp", "secure-gwas/code/NTL_mod/ZZ.cpp", "ntl-10.3.0/src/"],
     ]
     for command in commands:
         run_command(command)
 
     os.chdir("ntl-10.3.0/src")
-    configure_commands = ["./configure NTL_THREAD_BOOST=on", "make all", "sudo make install"]
+    configure_commands = [["./configure", "NTL_THREAD_BOOST=on"], ["make", "all"], ["sudo", "make", "install"]]
     for command in configure_commands:
         run_command(command)
     os.chdir("../..")
@@ -108,7 +109,7 @@ def compile_gwas_code() -> None:
             else:
                 file.write(line)
 
-    run_command("sudo make")
+    run_command(["sudo", "make"])
     os.chdir("../..")
 
     print("\n\n Finished compiling GWAS code \n\n")
@@ -234,11 +235,11 @@ def start_datasharing(role: str, demo: bool) -> None:
 
     os.chdir(f"{constants.EXECUTABLES_PREFIX}secure-gwas/code")
     if demo:
-        command = "bash run_example_datasharing.sh"
+        command = ["bash", "run_example_datasharing.sh"]
     else:
-        command = f"bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
+        command = ["bin/DataSharingClient", role, f"../par/test.par.{role}.txt"]
         if role != "0":
-            command += " ../test_data/"
+            command.append("../test_data/")
     run_command(command, fail_message="Failed MPC-GWAS data sharing protocol")
 
     print("\n\n Finished data sharing protocol\n\n")
@@ -253,9 +254,9 @@ def start_gwas(role: str, demo: bool) -> None:
 
     os.chdir(f"{constants.EXECUTABLES_PREFIX}secure-gwas/code")
     if demo:
-        command = "bash run_example_gwas.sh"
+        command = ["bash", "run_example_gwas.sh"]
     else:
-        command = f"bin/GwasClient '{role}' ../par/test.par.'{role}'.txt"
+        command = ["bin/GwasClient", role, f"../par/test.par.{role}.txt"]
     run_command(command, fail_message="Failed MPC-GWAS protocol")
 
     print("\n\n Finished GWAS \n\n")

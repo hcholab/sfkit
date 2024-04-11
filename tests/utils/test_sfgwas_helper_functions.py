@@ -48,10 +48,10 @@ def test_run_sfprotocol_with_task_updates(mocker: Callable[..., Generator[Mocker
     mocker.patch("sfkit.utils.sfgwas_helper_functions.check_for_failure")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.open")
 
-    sfgwas_helper_functions.run_sfprotocol_with_task_updates("true", "SF-GWAS", "1")
-    sfgwas_helper_functions.run_sfprotocol_with_task_updates('echo "sfkit: hi"', "PCA", "1")
+    sfgwas_helper_functions.run_sfprotocol_with_task_updates(["true"], "SF-GWAS", "1")
+    sfgwas_helper_functions.run_sfprotocol_with_task_updates(["echo", "sfkit: hi"], "PCA", "1")
     sfgwas_helper_functions.run_sfprotocol_with_task_updates(
-        'echo "Output collectively decrypted and saved to"', "", "1"
+        ["echo", "Output collectively decrypted and saved to"], "", "1"
     )
 
     mocker.patch(
@@ -72,16 +72,16 @@ def test_run_sfprotocol_with_task_updates(mocker: Callable[..., Generator[Mocker
 def test_check_for_failure(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     mocker.patch("sfkit.utils.sfgwas_helper_functions.condition_or_fail")
 
-    command = "my_command"
+    command_list = ["my_command"]
     protocol = "my_protocol"
     process = Mock(spec=subprocess.Popen)
     stream = MagicMock(name="stderr")
     process.stderr = stream
     line = "my error message"
 
-    sfgwas_helper_functions.check_for_failure(command, protocol, process, stream, line)
+    sfgwas_helper_functions.check_for_failure(command_list, protocol, process, stream, line)
 
-    sfgwas_helper_functions.check_for_failure(command, protocol, process, stream, "warning: my warning message")
+    sfgwas_helper_functions.check_for_failure(command_list, protocol, process, stream, "warning: my warning message")
 
 
 def test_post_process_results(mocker: Callable[..., Generator[MockerFixture, None, None]]):

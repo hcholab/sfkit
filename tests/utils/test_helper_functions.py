@@ -24,12 +24,12 @@ def test_authenticate_user(mocker: Callable[..., Generator[MockerFixture, None, 
 def test_run_command(mocker: Callable[..., Generator[MockerFixture, None, None]]) -> None:
     mocker.patch("sfkit.utils.helper_functions.os.chdir")
     mocker.patch("sfkit.utils.helper_functions.condition_or_fail")
-    helper_functions.run_command("true")
-    helper_functions.run_command('echo "Hello, World!"')
+    helper_functions.run_command(["true"])
+    helper_functions.run_command(["echo", '"Hello, World!"'])
 
     # failure
     with pytest.raises(FileNotFoundError):
-        helper_functions.run_command("asdf")
+        helper_functions.run_command(["asdf"])
 
 
 def test_condition_or_fail(mocker: Callable[..., Generator[MockerFixture, None, None]]) -> None:
