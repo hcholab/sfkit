@@ -151,3 +151,13 @@ def copy_to_out_folder(relevant_paths: list) -> None:
                 if os.path.exists(destination):
                     shutil.rmtree(destination)
                 shutil.copytree(path, destination)
+
+
+def install_go():
+    print("Installing go")
+    run_command("sudo snap install go --classic")
+    os.environ["PATH"] += f"{os.pathsep}/snap/bin"
+    with open(os.path.expanduser("~/.bashrc"), "a") as file:
+        file.write("\nexport PATH=$PATH:/snap/bin\n")
+    run_command("go version")
+    print("Finished installing go")

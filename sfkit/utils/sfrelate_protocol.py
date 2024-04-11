@@ -16,6 +16,7 @@ from sfkit.utils import constants
 from sfkit.utils.helper_functions import (
     copy_results_to_cloud_storage,
     copy_to_out_folder,
+    install_go,
     run_command,
 )
 from sfkit.utils.sfgwas_helper_functions import to_float_int_or_bool
@@ -47,11 +48,7 @@ def install_sfrelate() -> None:
     soft, hard = 1_000_000, 1_000_000
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
-    run_command("sudo snap install go --classic")
-    os.environ["PATH"] += f"{os.pathsep}/snap/bin"
-    with open(os.path.expanduser("~/.bashrc"), "a") as file:
-        file.write("\nexport PATH=$PATH:/snap/bin\n")
-    run_command("go version")
+    install_go()
 
     if os.path.isdir("sf-relate"):
         print("sf-relate already installed")

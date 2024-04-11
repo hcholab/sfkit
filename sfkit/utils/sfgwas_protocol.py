@@ -17,6 +17,7 @@ from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import (
     condition_or_fail,
+    install_go,
     run_command,
 )
 from sfkit.utils.sfgwas_helper_functions import (
@@ -61,22 +62,9 @@ def install_sfgwas() -> None:
     plink2_zip_file = plink2_download_link.split("/")[-1]
 
     run_command("sudo apt-get update -y")
-    run_command("sudo apt-get install wget git zip unzip -y")
+    run_command("sudo apt-get install wget git zip unzip snapd -y")
 
-    print("Installing go")
-    max_retries = 3
-    retries = 0
-    while retries < max_retries:
-        run_command("rm -f https://golang.org/dl/go1.18.1.linux-amd64.tar.gz")
-        run_command("wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz")
-        run_command("sudo rm -rf /usr/local/go")
-        run_command("sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz")
-        if os.path.isdir("/usr/local/go"):
-            break
-        retries += 1
-    if not os.path.isdir("/usr/local/go"):
-        condition_or_fail(False, "go failed to install")
-    print("go successfully installed")
+    install_go()
 
     run_command(f"wget -nc {plink2_download_link}")
     run_command(f"sudo unzip -o {plink2_zip_file} -d /usr/local/bin")
