@@ -44,7 +44,7 @@ def install_gwas_dependencies() -> None:
                     sudo apt-get --assume-yes install libssl-dev
                     sudo apt-get --assume-yes install libsodium-dev
                     sudo apt-get --assume-yes install libomp-dev
-                    sudo apt-get --assume-yes install netcat
+                    sudo apt-get --assume-yes install netcat-openbsd
                     sudo apt-get --assume-yes install git
                     sudo apt-get --assume-yes install python3-pip
                     sudo pip3 install numpy"""
