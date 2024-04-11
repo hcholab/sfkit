@@ -57,6 +57,8 @@ def install_gwas_dependencies() -> None:
 def install_gwas_repo() -> None:
     update_firestore("update_firestore::task=Installing GWAS repo")
     print("\n\n Begin installing GWAS repo \n\n")
+    if os.path.exists("secure-gwas"):
+        shutil.rmtree("secure-gwas")
     command = "git clone https://github.com/hcholab/secure-gwas secure-gwas"
     run_command(command)
     print("\n\n Finished installing GWAS repo \n\n")
