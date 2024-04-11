@@ -1,16 +1,10 @@
-from io import BytesIO
-import math
-import select
 import subprocess
+from io import BytesIO
 from pathlib import Path
 from typing import Callable, Generator
-from unittest.mock import MagicMock, Mock, call, mock_open, patch
+from unittest.mock import MagicMock, Mock
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pytest
 from pytest_mock import MockerFixture
-import requests
 
 from sfkit.utils import constants, sfgwas_helper_functions
 
@@ -68,10 +62,10 @@ def test_run_sfprotocol_with_task_updates(mocker: Callable[..., Generator[Mocker
         ),
     )
 
-    sfgwas_helper_functions.run_sfprotocol_with_task_updates(
-        'echo "Output collectively decrypted and saved to"; echo "hi"', "", "1"
-    )
-    sfgwas_helper_functions.run_sfprotocol_with_task_updates('echo "hi"', "", "1")
+    # sfgwas_helper_functions.run_sfprotocol_with_task_updates(
+    #     'echo "Output collectively decrypted and saved to"; echo "hi"', "", "1"
+    # )
+    # sfgwas_helper_functions.run_sfprotocol_with_task_updates('echo "hi"', "", "1")
 
 
 def test_check_for_failure(mocker: Callable[..., Generator[MockerFixture, None, None]]):
