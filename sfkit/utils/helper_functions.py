@@ -1,4 +1,5 @@
 import os
+import shlex
 import shutil
 import subprocess
 
@@ -20,7 +21,7 @@ def authenticate_user() -> None:
 
 
 def run_command(command: str, fail_message: str = "") -> None:
-    command_list = command.split()
+    command_list = shlex.split(command)
     with subprocess.Popen(
         command_list,
         stdout=subprocess.PIPE,
