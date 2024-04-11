@@ -46,6 +46,7 @@ def test_run_sfprotocol_with_task_updates(mocker: Callable[..., Generator[Mocker
     mocker.patch("sfkit.utils.sfgwas_helper_functions.condition_or_fail")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.update_firestore")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.check_for_failure")
+    mocker.patch("sfkit.utils.sfgwas_helper_functions.open")
 
     sfgwas_helper_functions.run_sfprotocol_with_task_updates("true", "SF-GWAS", "1")
     sfgwas_helper_functions.run_sfprotocol_with_task_updates('echo "sfkit: hi"', "PCA", "1")
