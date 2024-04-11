@@ -55,6 +55,7 @@ def test_compile_gwas_code(mocker: Callable[..., Generator[MockerFixture, None, 
     mocker.patch("sfkit.utils.gwas_protocol.shutil.which")
     mocker.patch("sfkit.utils.gwas_protocol.run_command")
     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
+    mocker.patch("sfkit.utils.gwas_protocol.open")
 
     gwas_protocol.compile_gwas_code()
 

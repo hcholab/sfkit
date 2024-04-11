@@ -1,6 +1,5 @@
 import os
 import resource
-import shlex
 import subprocess
 import sys
 import threading
@@ -292,7 +291,7 @@ def run_protocol_command(
     print(f"Running command: {command} from {cwd}")
 
     with subprocess.Popen(
-        shlex.split(command),
+        command.split(),
         env=process_env,
         cwd=cwd,
         stdout=subprocess.PIPE,

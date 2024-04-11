@@ -92,14 +92,23 @@ def compile_gwas_code() -> None:
     comp = shutil.which("clang++")
     if comp is None:
         raise FileNotFoundError("clang++ compiler not found.")
-    commands = [
-        f"sed -i 's|^CPP.*$|CPP = {comp}|g' Makefile",
-        "sed -i 's|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g' Makefile",
-        "sed -i 's|^LDPATH.*$|LDPATH = -L/usr/local/lib|g' Makefile",
-        "sudo make",
-    ]
-    for command in commands:
-        run_command(command)
+
+    makefile_path = "Makefile"
+    with open(makefile_path, "r") as file:
+        lines = file.readlines()
+
+    with open(makefile_path, "w") as file:
+        for line in lines:
+            if line.startswith("CPP ="):
+                file.write(f"CPP = {comp}\n")
+            elif line.startswith("INCPATHS ="):
+                file.write("INCPATHS = -I/usr/local/include\n")
+            elif line.startswith("LDPATH ="):
+                file.write("LDPATH = -L/usr/local/lib\n")
+            else:
+                file.write(line)
+
+    run_command("sudo make")
     os.chdir("../..")
 
     print("\n\n Finished compiling GWAS code \n\n")

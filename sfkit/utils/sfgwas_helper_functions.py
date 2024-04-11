@@ -1,7 +1,6 @@
 import atexit
 import os
 import select
-import shlex
 import shutil
 import subprocess
 from time import sleep
@@ -52,7 +51,7 @@ def move(source: str, destination: str) -> None:
 
 
 def run_sfprotocol_with_task_updates(command: str, protocol: str, role: str) -> None:
-    command_list = shlex.split(command)
+    command_list = command.split()
     env = dict(os.environ, PYTHONUNBUFFERED="1", PID=role)
     if protocol == "gwas":
         env["PROTOCOL"] = "gwas"
