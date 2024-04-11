@@ -81,7 +81,7 @@ def run_sfprotocol_with_task_updates(command: str, protocol: str, role: str) -> 
                 return
 
             for stream in rlist:
-                line = stream.readline().decode("utf-8").strip()
+                line = stream.readline().strip()
                 print(line)
                 outfile.write(line + "\n")
                 if constants.SFKIT_PREFIX in line:
