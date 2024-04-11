@@ -47,7 +47,7 @@ def install_gwas_dependencies() -> None:
                     sudo apt-get --assume-yes install netcat-openbsd
                     sudo apt-get --assume-yes install git
                     sudo apt-get --assume-yes install python3-pip
-                    sudo pip3 install numpy"""
+                    pip3 install numpy"""
     for command in commands.split("\n"):
         run_command(command)
     print("\n\n Finished installing dependencies \n\n")
