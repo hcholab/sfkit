@@ -1,7 +1,9 @@
 import fileinput
 import multiprocessing
 import os
+import shutil
 import time
+from shutil import copy2
 
 from google.cloud import storage
 
@@ -36,18 +38,20 @@ def run_gwas_protocol(role: str, demo: bool = False) -> None:
 def install_gwas_dependencies() -> None:
     update_firestore("update_firestore::task=Installing dependencies")
     print("\n\n Begin installing dependencies \n\n")
-    commands = """sudo apt-get --assume-yes update
-                    sudo apt-get --assume-yes install build-essential
-                    sudo apt-get --assume-yes install clang-3.9
-                    sudo apt-get --assume-yes install libgmp3-dev
-                    sudo apt-get --assume-yes install libssl-dev
-                    sudo apt-get --assume-yes install libsodium-dev
-                    sudo apt-get --assume-yes install libomp-dev
-                    sudo apt-get --assume-yes install netcat
-                    sudo apt-get --assume-yes install git
-                    sudo apt-get --assume-yes install python3-pip
-                    sudo pip3 install numpy"""
-    for command in commands.split("\n"):
+    commands = [
+        ["sudo", "apt-get", "--assume-yes", "update"],
+        ["sudo", "apt-get", "--assume-yes", "install", "build-essential"],
+        ["sudo", "apt-get", "--assume-yes", "install", "clang-3.9"],
+        ["sudo", "apt-get", "--assume-yes", "install", "libgmp3-dev"],
+        ["sudo", "apt-get", "--assume-yes", "install", "libssl-dev"],
+        ["sudo", "apt-get", "--assume-yes", "install", "libsodium-dev"],
+        ["sudo", "apt-get", "--assume-yes", "install", "libomp-dev"],
+        ["sudo", "apt-get", "--assume-yes", "install", "netcat-openbsd"],
+        ["sudo", "apt-get", "--assume-yes", "install", "git"],
+        ["sudo", "apt-get", "--assume-yes", "install", "python3-pip"],
+        ["pip3", "install", "numpy"],
+    ]
+    for command in commands:
         run_command(command)
     print("\n\n Finished installing dependencies \n\n")
 
@@ -55,35 +59,59 @@ def install_gwas_dependencies() -> None:
 def install_gwas_repo() -> None:
     update_firestore("update_firestore::task=Installing GWAS repo")
     print("\n\n Begin installing GWAS repo \n\n")
-    command = "git clone https://github.com/hcholab/secure-gwas secure-gwas"
-    run_command(command)
+    if os.path.exists("secure-gwas"):
+        shutil.rmtree("secure-gwas")
+    run_command(["git", "clone", "https://github.com/hcholab/secure-gwas", "secure-gwas"])
     print("\n\n Finished installing GWAS repo \n\n")
 
 
 def install_ntl_library() -> None:
     update_firestore("update_firestore::task=Installing NTL library")
     print("\n\n Begin installing NTL library \n\n")
-    commands = """curl https://libntl.org/ntl-10.3.0.tar.gz --output ntl-10.3.0.tar.gz
-                tar -zxvf ntl-10.3.0.tar.gz
-                cp secure-gwas/code/NTL_mod/ZZ.h ntl-10.3.0/include/NTL/
-                cp secure-gwas/code/NTL_mod/ZZ.cpp ntl-10.3.0/src/
-                cd ntl-10.3.0/src && ./configure NTL_THREAD_BOOST=on
-                cd ntl-10.3.0/src && make all
-                cd ntl-10.3.0/src && sudo make install"""
-    for command in commands.split("\n"):
+    commands = [
+        ["curl", "https://libntl.org/ntl-10.3.0.tar.gz", "--output", "ntl-10.3.0.tar.gz"],
+        ["tar", "-zxvf", "ntl-10.3.0.tar.gz"],
+        ["cp", "secure-gwas/code/NTL_mod/ZZ.h", "ntl-10.3.0/include/NTL/"],
+        ["cp", "secure-gwas/code/NTL_mod/ZZ.cpp", "ntl-10.3.0/src/"],
+    ]
+    for command in commands:
         run_command(command)
+
+    os.chdir("ntl-10.3.0/src")
+    configure_commands = [["./configure", "NTL_THREAD_BOOST=on"], ["make", "all"], ["sudo", "make", "install"]]
+    for command in configure_commands:
+        run_command(command)
+    os.chdir("../..")
+
     print("\n\n Finished installing NTL library \n\n")
 
 
 def compile_gwas_code() -> None:
     update_firestore("update_firestore::task=Compiling GWAS code")
     print("\n\n Begin compiling GWAS code \n\n")
-    command = """cd secure-gwas/code && COMP=$(which clang++) &&\
-                sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile &&\
-                sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile &&\
-                sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile &&\
-                sudo make"""
-    run_command(command)
+    os.chdir("secure-gwas/code")
+    comp = shutil.which("clang++")
+    if comp is None:
+        raise FileNotFoundError("clang++ compiler not found.")
+
+    makefile_path = "Makefile"
+    with open(makefile_path, "r") as file:
+        lines = file.readlines()
+
+    with open(makefile_path, "w") as file:
+        for line in lines:
+            if line.startswith("CPP ="):
+                file.write(f"CPP = {comp}\n")
+            elif line.startswith("INCPATHS ="):
+                file.write("INCPATHS = -I/usr/local/include\n")
+            elif line.startswith("LDPATH ="):
+                file.write("LDPATH = -L/usr/local/lib\n")
+            else:
+                file.write(line)
+
+    run_command(["sudo", "make"])
+    os.chdir("../..")
+
     print("\n\n Finished compiling GWAS code \n\n")
 
 
@@ -177,17 +205,11 @@ def copy_data_to_gwas_repo(
     data_path: str, role: str
 ) -> None:  # TODO: change the path in parameter file instead? Or move instead of copy?
     print("\n\n Copy data to GWAS repo \n\n")
-    commands = f"""cp '{data_path}'/g.bin secure-gwas/test_data/g.bin
-    cp '{data_path}'/m.bin secure-gwas/test_data/m.bin
-    cp '{data_path}'/p.bin secure-gwas/test_data/p.bin
-    cp '{data_path}'/other_shared_key.bin secure-gwas/test_data/other_shared_key.bin
-    cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"""
-
-    if role == "0":
-        commands = f"cp '{data_path}'/pos.txt secure-gwas/test_data/pos.txt"
-
-    for command in commands.split("\n"):
-        run_command(command)
+    files_to_copy = ["g.bin", "m.bin", "p.bin", "other_shared_key.bin", "pos.txt"] if role != "0" else ["pos.txt"]
+    for file_name in files_to_copy:
+        src_file_path = os.path.join(data_path, file_name)
+        dest_file_path = os.path.join("secure-gwas/test_data", file_name)
+        copy2(src_file_path, dest_file_path)
     print("\n\n Finished copying data to GWAS repo \n\n")
 
 
@@ -210,13 +232,16 @@ def sync_with_other_vms(role: str) -> None:
 def start_datasharing(role: str, demo: bool) -> None:
     update_firestore("update_firestore::task=Performing data sharing protocol")
     print("\n\n starting data sharing protocol \n\n")
+
+    os.chdir(f"{constants.EXECUTABLES_PREFIX}secure-gwas/code")
     if demo:
-        command = f"cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bash run_example_datasharing.sh"
+        command = ["bash", "run_example_datasharing.sh"]
     else:
-        command = f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bin/DataSharingClient '{role}' ../par/test.par.'{role}'.txt"
+        command = ["bin/DataSharingClient", role, f"../par/test.par.{role}.txt"]
         if role != "0":
-            command += " ../test_data/"
+            command.append("../test_data/")
     run_command(command, fail_message="Failed MPC-GWAS data sharing protocol")
+
     print("\n\n Finished data sharing protocol\n\n")
 
 
@@ -226,11 +251,14 @@ def start_gwas(role: str, demo: bool) -> None:
     time.sleep(100 + 30 * int(role))
     print("\n\n starting GWAS \n\n")
     update_firestore("update_firestore::status=starting GWAS")
+
+    os.chdir(f"{constants.EXECUTABLES_PREFIX}secure-gwas/code")
     if demo:
-        command = f"cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bash run_example_gwas.sh"
+        command = ["bash", "run_example_gwas.sh"]
     else:
-        command = f"export PYTHONUNBUFFERED=TRUE && cd {constants.EXECUTABLES_PREFIX}secure-gwas/code && bin/GwasClient '{role}' ../par/test.par.'{role}'.txt"
+        command = ["bin/GwasClient", role, f"../par/test.par.{role}.txt"]
     run_command(command, fail_message="Failed MPC-GWAS protocol")
+
     print("\n\n Finished GWAS \n\n")
 
     if role != "0":

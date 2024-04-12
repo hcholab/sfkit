@@ -25,10 +25,12 @@ def test_run_sfgwas_protocol(mocker):
 
 
 def test_install_sfgwas(mocker):
+    mocker.patch("sfkit.utils.sfgwas_protocol.os.chdir")
     mocker.patch("sfkit.utils.sfgwas_protocol.run_command")
     mocker.patch("sfkit.utils.sfgwas_protocol.update_firestore")
     mocker.patch("sfkit.utils.sfgwas_protocol.os.path.isdir", return_value=True)
     mocker.patch("sfkit.utils.sfgwas_protocol.condition_or_fail")
+    mocker.patch("sfkit.utils.sfgwas_protocol.install_go")
 
     sfgwas_protocol.install_sfgwas()
 
@@ -105,6 +107,7 @@ def test_update_sfgwas_go(mocker):
 
 
 def test_build_sfgwas(mocker):
+    mocker.patch("sfkit.utils.sfgwas_protocol.os.chdir")
     mocker.patch("sfkit.utils.sfgwas_protocol.run_command")
     mocker.patch("sfkit.utils.sfgwas_protocol.update_firestore")
 
@@ -115,6 +118,7 @@ def test_start_sfgwas(mocker):
     mocker.patch("sfkit.utils.sfgwas_protocol.update_firestore")
     mocker.patch("sfkit.utils.sfgwas_protocol.run_sfprotocol_with_task_updates")
     mocker.patch("sfkit.utils.sfgwas_protocol.post_process_results")
+    mocker.patch("sfkit.utils.sfgwas_protocol.os.chdir")
 
     sfgwas_protocol.start_sfgwas("0")
     sfgwas_protocol.start_sfgwas("1")

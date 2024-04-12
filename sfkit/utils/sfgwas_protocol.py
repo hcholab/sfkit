@@ -7,6 +7,7 @@ import fileinput
 import os
 import random
 import shutil
+import threading
 import time
 
 import tomlkit
@@ -15,7 +16,11 @@ from nacl.public import Box, PrivateKey, PublicKey
 
 from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.utils import constants
-from sfkit.utils.helper_functions import condition_or_fail, run_command
+from sfkit.utils.helper_functions import (
+    condition_or_fail,
+    install_go,
+    run_command,
+)
 from sfkit.utils.sfgwas_helper_functions import (
     boot_sfkit_proxy,
     get_file_paths,
@@ -57,26 +62,14 @@ def install_sfgwas() -> None:
     plink2_download_link = "https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_latest.zip"
     plink2_zip_file = plink2_download_link.split("/")[-1]
 
-    run_command("sudo apt-get update -y")
-    run_command("sudo apt-get install wget git zip unzip -y")
+    run_command(["sudo", "apt-get", "update", "-y"])
+    run_command(["sudo", "apt-get", "install", "wget", "git", "zip", "unzip", "snapd", "-y"])
 
-    print("Installing go")
-    max_retries = 3
-    retries = 0
-    while retries < max_retries:
-        run_command("rm -f https://golang.org/dl/go1.18.1.linux-amd64.tar.gz")
-        run_command("wget -nc https://golang.org/dl/go1.18.1.linux-amd64.tar.gz")
-        run_command("sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz")
-        if os.path.isdir("/usr/local/go"):
-            break
-        retries += 1
-    if not os.path.isdir("/usr/local/go"):
-        condition_or_fail(False, "go failed to install")
-    print("go successfully installed")
+    install_go()
 
-    run_command(f"wget -nc {plink2_download_link}")
-    run_command(f"sudo unzip -o {plink2_zip_file} -d /usr/local/bin")
-    run_command("pip3 install numpy")
+    run_command(["wget", "-nc", plink2_download_link])
+    run_command(["sudo", "unzip", "-o", plink2_zip_file, "-d", "/usr/local/bin"])
+    run_command(["pip3", "install", "numpy"])
 
     # make sure plink2 successfully installed
     condition_or_fail(
@@ -88,19 +81,22 @@ def install_sfgwas() -> None:
         print("lattigo already exists")
     else:
         print("Installing lattigo")
-        run_command("git clone https://github.com/hcholab/lattigo && cd lattigo && git switch lattigo_pca")
+        run_command(["git", "clone", "https://github.com/hcholab/lattigo"])
+        os.chdir("lattigo")
+        run_command(["git", "switch", "lattigo_pca"])
+        os.chdir("..")
 
     if os.path.isdir("mpc-core"):
         print("mpc-core already exists")
     else:
         print("Installing mpc-core")
-        run_command("git clone https://github.com/hhcho/mpc-core")
+        run_command(["git", "clone", "https://github.com/hhcho/mpc-core"])
 
     if os.path.isdir("sfgwas"):
         print("sfgwas already exists")
     else:
         print("Installing sfgwas")
-        run_command("git clone https://github.com/hcholab/sfgwas && cd sfgwas")
+        run_command(["git", "clone", "https://github.com/hcholab/sfgwas"])
 
     print("Finished installing dependencies")
 
@@ -303,8 +299,18 @@ def build_sfgwas() -> None:
     """
     update_firestore("update_firestore::task=Compiling code")
     print("Building sfgwas code")
-    command = """export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd sfgwas && go get -t github.com/hcholab/sfgwas && go build"""
-    run_command(command)
+
+    if "/usr/local/go/bin" not in os.environ["PATH"]:
+        os.environ["PATH"] += f"{os.pathsep}/usr/local/go/bin"
+    os.environ["HOME"] = os.path.expanduser("~")
+    os.environ["GOCACHE"] = os.path.join(os.environ["HOME"], ".cache", "go-build")
+    os.chdir("sfgwas")
+
+    run_command(["go", "get", "-t", "github.com/hcholab/sfgwas"])
+    run_command(["go", "build"])
+
+    os.chdir("..")
+
     print("Finished building sfgwas code")
 
 
@@ -341,29 +347,26 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
 
     if constants.SFKIT_PROXY_ON:
         boot_sfkit_proxy(role=role, protocol=protocol)
+        os.environ["ALL_PROXY"] = "socks5://localhost:8000"
 
-    protocol_command = f"export PID={role} && go run sfgwas.go | tee stdout_party{role}.txt"
-    if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
-        protocol_command = f"cd {constants.EXECUTABLES_PREFIX}sfgwas && PID={role} sfgwas | tee stdout_party{role}.txt"
-    if demo:
-        protocol_command = "bash run_example.sh"
-        if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
-            # cannot use "go run" from run_example.sh in Docker, so reproducing that script in Python here
-            protocol_command = (
-                " & ".join(
-                    f"(cd {constants.EXECUTABLES_PREFIX}sfgwas && PID={r} sfgwas | tee stdout_party{r}.txt)"
-                    for r in range(3)
-                )
-                + " & wait $(jobs -p)"
-            )
-    command = f"export PYTHONUNBUFFERED=TRUE && export PATH=$PATH:/usr/local/go/bin && export HOME=~ && export GOCACHE=~/.cache/go-build && cd {constants.EXECUTABLES_PREFIX}sfgwas && {protocol_command}"
-    if constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
-        command = f"export PYTHONUNBUFFERED=TRUE && {protocol_command}"
+    os.chdir(f"{constants.EXECUTABLES_PREFIX}sfgwas")
 
-    if constants.SFKIT_PROXY_ON:
-        command = f"export ALL_PROXY=socks5://localhost:8000 && {command}"
+    if demo and (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
+        threads = []
+        for r in range(3):
+            thread = threading.Thread(target=run_sfprotocol_with_task_updates, args=(["sfgwas"], str(r), protocol))
+            threads.append(thread)
+            thread.start()
 
-    run_sfprotocol_with_task_updates(command, protocol, demo, role)
+        for thread in threads:
+            thread.join()
+    elif demo:
+        run_sfprotocol_with_task_updates(["bash", "run_example.sh"], protocol, role)
+    elif constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT:
+        run_sfprotocol_with_task_updates(["sfgwas"], protocol, role)
+    else:
+        run_sfprotocol_with_task_updates(["go", "run", "sfgwas.go"], protocol, role)
+
     print(f"Finished {protocol} protocol")
 
     if role == "0":

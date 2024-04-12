@@ -1,5 +1,4 @@
 import os
-import select
 import shutil
 import subprocess
 
@@ -20,21 +19,24 @@ def authenticate_user() -> None:
         exit(1)
 
 
-def run_command(command: str, fail_message: str = "") -> None:
+def run_command(command_list: list, fail_message: str = "") -> None:
     with subprocess.Popen(
-        command, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-    ) as proc:
-        while proc.poll() is None:
-            readable, _, _ = select.select([proc.stdout, proc.stderr], [], [])
+        command_list,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        env=dict(os.environ, PYTHONUNBUFFERED="1"),
+        text=True,
+        bufsize=1,
+    ) as process:
+        while process.stdout:
+            if line := process.stdout.readline().strip():
+                print(line)
+            elif process.poll() is not None:
+                break
 
-            for stream in readable:
-                if line := stream.readline().rstrip():
-                    print(line)
-
-        res = proc.returncode
-
+    res = process.returncode
     if res != 0:
-        print(f"FAILED - {command}")
+        print(f"FAILED - {command_list}")
         print(f"Return code: {res}")
         condition_or_fail(False, fail_message)
 
@@ -148,3 +150,13 @@ def copy_to_out_folder(relevant_paths: list) -> None:
                 if os.path.exists(destination):
                     shutil.rmtree(destination)
                 shutil.copytree(path, destination)
+
+
+def install_go():
+    print("Installing go")
+    run_command(["sudo", "snap", "install", "go", "--classic"])
+    os.environ["PATH"] += f"{os.pathsep}/snap/bin"
+    with open(os.path.expanduser("~/.bashrc"), "a") as file:
+        file.write("\nexport PATH=$PATH:/snap/bin\n")
+    run_command(["go", "version"])
+    print("Finished installing go")

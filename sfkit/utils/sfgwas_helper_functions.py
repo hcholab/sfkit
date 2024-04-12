@@ -50,49 +50,51 @@ def move(source: str, destination: str) -> None:
     shutil.move(source, destination)
 
 
-def run_sfprotocol_with_task_updates(command: str, protocol: str, demo: bool, role: str) -> None:
-    env = os.environ.copy()
+def run_sfprotocol_with_task_updates(command_list: list, protocol: str, role: str) -> None:
+    env = dict(os.environ, PYTHONUNBUFFERED="1", PID=role)
     if protocol == "gwas":
         env["PROTOCOL"] = "gwas"
     elif protocol == "pca":
         env["PROTOCOL"] = "pca"
 
-    process = subprocess.Popen(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        shell=True,
-        executable="/bin/bash",
-        env=env,
-    )
+    with open(f"stdout_party{role}.txt", "w") as outfile:
+        process = subprocess.Popen(
+            command_list,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env,
+            text=True,
+            bufsize=1,
+        )
 
-    timeout = 86_400
-    while process.poll() is None:
-        rlist, _, _ = select.select([process.stdout, process.stderr], [], [], timeout)
+        timeout = 86_400
+        while process.poll() is None:
+            rlist, _, _ = select.select([process.stdout, process.stderr], [], [], timeout)
 
-        if not rlist:
-            process.kill()
-            if timeout == 86_400:
-                print("WARNING: sfgwas has been stalling for 24 hours. Killing process.")
-                condition_or_fail(False, f"{protocol} protocol has been stalling for 24 hours. Killing process.")
-            return
+            if not rlist:
+                process.kill()
+                if timeout == 86_400:
+                    print("WARNING: sfgwas has been stalling for 24 hours. Killing process.")
+                    condition_or_fail(False, f"{protocol} protocol has been stalling for 24 hours. Killing process.")
+                return
 
-        for stream in rlist:
-            line = stream.readline().decode("utf-8").strip()
-            print(line)
-            if constants.SFKIT_PREFIX in line:
-                update_firestore(f"update_firestore::task={line.split(constants.SFKIT_PREFIX)[1]}")
-            elif "Output collectively decrypted and saved to" in line or (
-                protocol == "pca" and f"Saved data to cache/party{role}/Qpc.txt" in line
-            ):
-                timeout = 30
+            for stream in rlist:
+                line = stream.readline().strip()
+                print(line)
+                outfile.write(line + "\n")
+                if constants.SFKIT_PREFIX in line:
+                    update_firestore(f"update_firestore::task={line.split(constants.SFKIT_PREFIX)[1]}")
+                elif "Output collectively decrypted and saved to" in line or (
+                    protocol == "pca" and f"Saved data to cache/party{role}/Qpc.txt" in line
+                ):
+                    timeout = 30
 
-            check_for_failure(command, protocol, process, stream, line)
+                check_for_failure(command_list, protocol, process, stream, line)
 
-    process.wait()
+        process.wait()
 
 
-def check_for_failure(command: str, protocol: str, process: subprocess.Popen, stream: list, line: str) -> None:
+def check_for_failure(command_list: list, protocol: str, process: subprocess.Popen, stream: list, line: str) -> None:
     if (
         stream == process.stderr
         and line
@@ -100,7 +102,7 @@ def check_for_failure(command: str, protocol: str, process: subprocess.Popen, st
         and "[watchdog] gc finished" not in line
         and "warning:" not in line
     ):
-        print(f"FAILED - {command}")
+        print(f"FAILED - {command_list}")
         print(f"Stderr: {line}")
         condition_or_fail(False, f"Failed {protocol} protocol")
 

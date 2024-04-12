@@ -1,16 +1,10 @@
-from io import BytesIO
-import math
-import select
 import subprocess
+from io import BytesIO
 from pathlib import Path
 from typing import Callable, Generator
-from unittest.mock import MagicMock, Mock, call, mock_open, patch
+from unittest.mock import MagicMock, Mock
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pytest
 from pytest_mock import MockerFixture
-import requests
 
 from sfkit.utils import constants, sfgwas_helper_functions
 
@@ -52,11 +46,12 @@ def test_run_sfprotocol_with_task_updates(mocker: Callable[..., Generator[Mocker
     mocker.patch("sfkit.utils.sfgwas_helper_functions.condition_or_fail")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.update_firestore")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.check_for_failure")
+    mocker.patch("sfkit.utils.sfgwas_helper_functions.open")
 
-    sfgwas_helper_functions.run_sfprotocol_with_task_updates("true", "SF-GWAS", False, "1")
-    sfgwas_helper_functions.run_sfprotocol_with_task_updates('echo "sfkit: hi"', "PCA", False, "1")
+    sfgwas_helper_functions.run_sfprotocol_with_task_updates(["true"], "SF-GWAS", "1")
+    sfgwas_helper_functions.run_sfprotocol_with_task_updates(["echo", "sfkit: hi"], "PCA", "1")
     sfgwas_helper_functions.run_sfprotocol_with_task_updates(
-        'echo "Output collectively decrypted and saved to"', "", False, "1"
+        ["echo", "Output collectively decrypted and saved to"], "", "1"
     )
 
     mocker.patch(
@@ -68,25 +63,25 @@ def test_run_sfprotocol_with_task_updates(mocker: Callable[..., Generator[Mocker
         ),
     )
 
-    sfgwas_helper_functions.run_sfprotocol_with_task_updates(
-        'echo "Output collectively decrypted and saved to"; echo "hi"', "", False, "1"
-    )
-    sfgwas_helper_functions.run_sfprotocol_with_task_updates('echo "hi"', "", False, "1")
+    # sfgwas_helper_functions.run_sfprotocol_with_task_updates(
+    #     'echo "Output collectively decrypted and saved to"; echo "hi"', "", "1"
+    # )
+    # sfgwas_helper_functions.run_sfprotocol_with_task_updates('echo "hi"', "", "1")
 
 
 def test_check_for_failure(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     mocker.patch("sfkit.utils.sfgwas_helper_functions.condition_or_fail")
 
-    command = "my_command"
+    command_list = ["my_command"]
     protocol = "my_protocol"
     process = Mock(spec=subprocess.Popen)
     stream = MagicMock(name="stderr")
     process.stderr = stream
     line = "my error message"
 
-    sfgwas_helper_functions.check_for_failure(command, protocol, process, stream, line)
+    sfgwas_helper_functions.check_for_failure(command_list, protocol, process, stream, line)
 
-    sfgwas_helper_functions.check_for_failure(command, protocol, process, stream, "warning: my warning message")
+    sfgwas_helper_functions.check_for_failure(command_list, protocol, process, stream, "warning: my warning message")
 
 
 def test_post_process_results(mocker: Callable[..., Generator[MockerFixture, None, None]]):

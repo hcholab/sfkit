@@ -43,6 +43,7 @@ def test_install_gwas_repo(mocker: Callable[..., Generator[MockerFixture, None, 
 
 
 def test_install_ntl_library(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    mocker.patch("sfkit.utils.gwas_protocol.os.chdir")
     mocker.patch("sfkit.utils.gwas_protocol.run_command")
     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
 
@@ -50,8 +51,11 @@ def test_install_ntl_library(mocker: Callable[..., Generator[MockerFixture, None
 
 
 def test_compile_gwas_code(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    mocker.patch("sfkit.utils.gwas_protocol.os.chdir")
+    mocker.patch("sfkit.utils.gwas_protocol.shutil.which")
     mocker.patch("sfkit.utils.gwas_protocol.run_command")
     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
+    mocker.patch("sfkit.utils.gwas_protocol.open")
 
     gwas_protocol.compile_gwas_code()
 
@@ -96,6 +100,7 @@ def test_encrypt_or_prepare_data(mocker):
 
 
 def test_copy_data_to_gwas_repo(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    mocker.patch("sfkit.utils.gwas_protocol.copy2")
     mocker.patch("sfkit.utils.gwas_protocol.run_command")
     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
 
@@ -114,6 +119,7 @@ def test_sync_with_other_vms(mocker: Callable[..., Generator[MockerFixture, None
 
 
 def test_start_datasharing(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    mocker.patch("sfkit.utils.gwas_protocol.os.chdir")
     mocker.patch("sfkit.utils.gwas_protocol.run_command")
     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
     mocker.patch("sfkit.utils.gwas_protocol.time.sleep")
@@ -124,6 +130,7 @@ def test_start_datasharing(mocker: Callable[..., Generator[MockerFixture, None, 
 
 
 def test_start_gwas(mocker):
+    mocker.patch("sfkit.utils.gwas_protocol.os.chdir")
     mocker.patch("sfkit.utils.gwas_protocol.run_command")
     mocker.patch("sfkit.utils.gwas_protocol.update_firestore")
     mocker.patch("sfkit.utils.gwas_protocol.time.sleep")

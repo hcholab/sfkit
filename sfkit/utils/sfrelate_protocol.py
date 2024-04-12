@@ -1,20 +1,23 @@
 import os
 import resource
-import shlex
 import subprocess
 import sys
-import tarfile
 import threading
 import time
 import traceback
-import requests
 from typing import List
 
+import requests
 import tomlkit
 
 from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
 from sfkit.utils import constants
-from sfkit.utils.helper_functions import copy_results_to_cloud_storage, copy_to_out_folder, run_command
+from sfkit.utils.helper_functions import (
+    copy_results_to_cloud_storage,
+    copy_to_out_folder,
+    install_go,
+    run_command,
+)
 from sfkit.utils.sfgwas_helper_functions import to_float_int_or_bool
 from sfkit.utils.sfgwas_protocol import generate_shared_keys, sync_with_other_vms
 
@@ -36,26 +39,29 @@ def install_sfrelate() -> None:
     update_firestore("update_firestore::task=Installing dependencies")
     print("Begin installing dependencies")
 
-    run_command("sudo apt-get update && sudo apt-get upgrade -y")
-    run_command("sudo apt-get install git wget unzip python3 python3-pip python3-venv snapd -y")
+    run_command(["sudo", "apt-get", "update"])
+    run_command(["sudo", "apt-get", "upgrade", "-y"])
+    run_command(
+        ["sudo", "apt-get", "install", "git", "wget", "unzip", "python3", "python3-pip", "python3-venv", "snapd", "-y"]
+    )
 
     # Increase the number of open files allowed
     soft, hard = 1_000_000, 1_000_000
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
-    run_command("sudo snap install go --classic")
-    os.environ["PATH"] += f"{os.pathsep}/snap/bin"
-    run_command("echo 'export PATH=$PATH:/snap/bin' >> ~/.bashrc && source ~/.bashrc")
-    run_command("go version")
+    install_go()
 
     if os.path.isdir("sf-relate"):
         print("sf-relate already installed")
     else:
         print("Installing sf-relate")
-        run_command("git clone https://github.com/froelich/sf-relate.git")
-        run_command("cd sf-relate && git checkout sf-kit")
-        run_command("cd sf-relate && go get relativeMatch")
-        run_command("cd sf-relate && go build && go test -c -o sf-relate")
+        run_command(["git", "clone", "https://github.com/froelich/sf-relate.git"])
+        os.chdir("sf-relate")
+        run_command(["git", "checkout", "sf-kit"])
+        run_command(["go", "get", "relativeMatch"])
+        run_command(["go", "build"])
+        run_command(["go", "test", "-c", "-o", "sf-relate"])
+        os.chdir("..")
 
     print("Finished installing dependencies")
 
@@ -163,13 +169,13 @@ def start_sfrelate(role: str, demo: bool) -> None:
     # preprocess data
     if demo or role == "1":
         run_protocol_command(
-            "python3 notebooks/pgen_to_npy.py -PARTY 1 -FOLDER config/demo",
+            ["python3", "notebooks/pgen_to_npy.py", "-PARTY", "1", "-FOLDER", "config/demo"],
             message="Party 1 Data Processing",
             env_vars=env_vars,
         )
     if demo or role == "2":
         run_protocol_command(
-            "python3 notebooks/pgen_to_npy.py -PARTY 2 -FOLDER config/demo",
+            ["python3", "notebooks/pgen_to_npy.py", "-PARTY", "2", "-FOLDER", "config/demo"],
             message="Party 2 Data Processing",
             env_vars=env_vars,
         )
@@ -189,7 +195,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             threading.Thread(
                 target=thread_target,
                 kwargs={
-                    "command": "./sf-relate",
+                    "command": ["./sf-relate"],
                     "output_file": "config/demo/logs/X/test.txt",
                     "message": "MHE - Party 1",
                     "env_vars": env_vars | {"PID": "1"},
@@ -203,7 +209,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             threading.Thread(
                 target=thread_target,
                 kwargs={
-                    "command": "./sf-relate",
+                    "command": ["./sf-relate"],
                     "output_file": "config/demo/logs/Z/test.txt",
                     "message": "MHE - Party 0",
                     "env_vars": env_vars | {"PID": "0"},
@@ -216,7 +222,7 @@ def start_sfrelate(role: str, demo: bool) -> None:
             threading.Thread(
                 target=thread_target,
                 kwargs={
-                    "command": "./sf-relate",
+                    "command": ["./sf-relate"],
                     "output_file": "config/demo/logs/Y/test.txt",
                     "message": "MHE - Party 2",
                     "env_vars": env_vars | {"PID": "2"},
@@ -238,13 +244,13 @@ def start_sfrelate(role: str, demo: bool) -> None:
     # post process
     if demo or role == "1":
         run_protocol_command(
-            "python3 notebooks/step3_post_process.py -PARTY 1 -FOLDER config/demo/",
+            ["python3", "notebooks/step3_post_process.py", "-PARTY", "1", "-FOLDER", "config/demo/"],
             message="Post Processing - Party 1",
             env_vars=env_vars,
         )
     if demo or role == "2":
         run_protocol_command(
-            "python3 notebooks/step3_post_process.py -PARTY 2 -FOLDER config/demo/",
+            ["python3", "notebooks/step3_post_process.py", "-PARTY", "2", "-FOLDER", "config/demo/"],
             message="Post Processing - Party 2",
             env_vars=env_vars,
         )
@@ -269,7 +275,7 @@ def handle_output(stream, write_to_file=None, print_stderr=False):
 
 
 def run_protocol_command(
-    command,
+    command_list: list,
     message: str = "",
     env_vars=None,
     output_file: str = "",
@@ -284,10 +290,10 @@ def run_protocol_command(
     process_env = os.environ.copy()
     process_env.update(env_vars)
 
-    print(f"Running command: {command} from {cwd}")
+    print(f"Running command: {command_list} from {cwd}")
 
     with subprocess.Popen(
-        shlex.split(command),
+        command_list,
         env=process_env,
         cwd=cwd,
         stdout=subprocess.PIPE,
@@ -311,7 +317,7 @@ def run_protocol_command(
 
         proc.wait()
         if proc.returncode != 0:
-            raise subprocess.CalledProcessError(proc.returncode, command)
+            raise subprocess.CalledProcessError(proc.returncode, command_list)
 
 
 def process_output_files(role: str) -> None:
@@ -347,4 +353,4 @@ def download_and_extract_data():
                 file.write(chunk)
 
     print("Extracting Data using tar command")
-    run_command(f"tar -xvf {tar_path} -C {data_dir}")
+    run_command(["tar", "-xvf", tar_path, "-C", data_dir])
