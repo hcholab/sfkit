@@ -354,7 +354,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
     if demo and (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         threads = []
         for r in range(3):
-            thread = threading.Thread(target=run_sfprotocol_with_task_updates, args=(["sfgwas"], str(r), protocol))
+            thread = threading.Thread(target=run_sfprotocol_with_task_updates, args=(["sfgwas"], protocol, str(r)))
             threads.append(thread)
             thread.start()
 
