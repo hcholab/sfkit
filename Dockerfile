@@ -30,7 +30,9 @@ RUN ln -s /usr/bin/python python3
 FROM go AS sfkit-proxy
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
     git checkout e7cdca7 && \
-    GOEXPERIMENT=boringcrypto go build
+    GOEXPERIMENT=boringcrypto go build && \
+    # ensure BoringCrypto is enabled, fail if not
+    go tool nm sfkit-proxy | grep crypto/internal/boring/sig.BoringCrypto
 
 
 FROM cgr.dev/chainguard/python:latest-dev AS dev
