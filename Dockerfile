@@ -29,8 +29,8 @@ RUN ln -s /usr/bin/python python3
 
 FROM go AS sfkit-proxy
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
-    git checkout a4e447b && \
-    CGO_ENABLED=0 go build
+    git checkout e7cdca7 && \
+    GOEXPERIMENT=boringcrypto go build
 
 
 FROM cgr.dev/chainguard/python:latest-dev AS dev
@@ -85,7 +85,7 @@ RUN COMP="$(which clang++)" && \
 FROM dev AS sfkit
 
 RUN pip install poetry
-RUN apk add --update zlib-dev
+RUN apk add --no-cache zlib-dev
 
 USER nonroot
 COPY . .
