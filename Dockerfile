@@ -139,6 +139,7 @@ COPY --from=sf-relate    --chown=nonroot /build          ./sf-relate/
 COPY --from=sfkit-proxy --chown=nonroot /build/*-proxy  ./
 
 COPY --from=sfkit /build/.venv/lib /usr/lib/
+COPY --from=sfkit /build/.venv/lib64 /usr/lib64/
 COPY --from=sfkit /build/dist/sfkit*.whl ./
 
 RUN microdnf install -y --setopt=install_weak_deps=0 python3 python3-pip && \
