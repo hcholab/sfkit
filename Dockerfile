@@ -1,7 +1,10 @@
 # hadolint global ignore=DL3006,DL3013,DL3018,DL3041,DL3059
 
+# -------------------- base -------------------- #
 FROM registry.access.redhat.com/ubi9/ubi-minimal AS base
 
+
+# -------------------- go -------------------- #
 FROM base AS go
 
 RUN microdnf install -y --setopt=install_weak_deps=0 \
@@ -12,27 +15,32 @@ RUN microdnf install -y --setopt=install_weak_deps=0 \
 WORKDIR /build
 
 
+# -------------------- sfgwas -------------------- #
 FROM go AS sfgwas
+
 RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
     git checkout db52ea4 && \
     go build && \
     mkdir cache && \
     rm -rf .git
-# RUN ln -s /usr/bin/python python3
 
 
+# -------------------- sf-relate -------------------- #
 FROM go as sf-relate
+
 RUN git clone https://github.com/froelich/sf-relate . && \
     git checkout 9d1a076 && \
     go get relativeMatch && \
     go build && \
     go test -c -o sf-relate && \
     rm -rf .git
-# RUN ln -s /usr/bin/python python3
 
 
+# -------------------- sfkit-proxy -------------------- #
 FROM go AS sfkit-proxy
+
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
+
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
     git checkout 3695077 && \
     go build && \
@@ -42,16 +50,16 @@ RUN git clone https://github.com/hcholab/sfkit-proxy . && \
     | grep -E 'FIPS-capable Go binary.*Yes'
 
 
+# -------------------- dev -------------------- #
 FROM base AS dev
 
 WORKDIR /build
 
-# # hadolint ignore=DL3002
-# USER root
-
-
+# -------------------- plink2 -------------------- #
 FROM dev AS plink2
+
 ARG MARCH=native
+
 RUN microdnf install -y unzip && \
     microdnf clean all && \
     ARCH=$(grep -q avx2 /proc/cpuinfo && [ "${MARCH}" = "native" ] || [ "${MARCH}" = "x86-64-v3" ] && echo "avx2" || echo "x86_64") && \
@@ -59,6 +67,7 @@ RUN microdnf install -y unzip && \
     unzip plink2.zip
 
 
+# -------------------- secure-gwas -------------------- #
 FROM dev AS secure-gwas
 
 RUN curl -O https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
@@ -98,7 +107,7 @@ RUN sed -i "s|^CPP.*$|CPP = /usr/bin/clang++|g" Makefile && \
     sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
     make "-j$(nproc)"
 
-
+# -------------------- sfkit package -------------------- #
 FROM dev AS sfkit
 
 ENV PIP_NO_CACHE_DIR=1
@@ -107,9 +116,6 @@ RUN microdnf install -y --setopt=install_weak_deps=0 python3-pip && \
     microdnf clean all && \
     pip install poetry
 
-# RUN apk add --no-cache zlib-dev
-
-# USER nonroot
 COPY . .
 RUN poetry install --only main,dev
 
@@ -122,6 +128,7 @@ RUN poetry build -f wheel
 RUN poetry install --only main --sync
 
 
+# -------------------- final image -------------------- #
 FROM base
 
 WORKDIR /sfkit
