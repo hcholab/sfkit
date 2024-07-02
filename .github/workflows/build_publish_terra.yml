@@ -123,10 +123,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Ensure that Dockerfile uses a blessed base runtime image
-      - name: Run Trivy vulnerability scanner
-        uses: broadinstitute/dsp-appsec-trivy-action@v1
-
       # Improve Docker layer caching/reproducibility
       - name: Reset timestamps
         run: find . -exec touch -t 197001010000 {} +
@@ -163,6 +159,11 @@ jobs:
           cache-to: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }},mode=max
           labels: ${{ needs.meta.outputs.labels }}
           push: true
+
+      - name: Run Trivy vulnerability scanner
+        uses: broadinstitute/dsp-appsec-trivy-action@v1
+        with:
+          image: "${{ needs.meta.outputs.image }}@${{ steps.build.outputs.digest }}"
 
       - name: Export digest
         run: |
