@@ -2,10 +2,8 @@ from io import IOBase
 from json.decoder import JSONDecodeError
 from typing import Union
 
-import backoff
 import google.auth
 import requests
-from google.auth.exceptions import RefreshError, TransportError
 from google.auth.transport.requests import Request as GAuthRequest
 
 from sfkit.utils import constants
@@ -94,7 +92,6 @@ def create_cp0() -> bool:
     return response.status_code == 200
 
 
-@backoff.on_exception(backoff.expo, (RefreshError, TransportError), max_tries=5)
 def get_service_account_headers():
     creds, _ = google.auth.default()
     creds = creds.with_scopes(["openid", "email", "profile"])  # type: ignore
