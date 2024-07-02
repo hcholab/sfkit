@@ -164,6 +164,7 @@ jobs:
         uses: broadinstitute/dsp-appsec-trivy-action@v1
         with:
           image: "${{ needs.meta.outputs.image }}@${{ steps.build.outputs.digest }}"
+          severities: HIGH,CRITICAL
 
       - name: Export digest
         run: |
