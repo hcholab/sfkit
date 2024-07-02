@@ -141,6 +141,7 @@ jobs:
           ${{ steps.flags.outputs.cache-from }}
         cache-to: |
           ${{ steps.flags.outputs.cache-to }}
+        pull: true
 
     - name: Export digest
       run: |
