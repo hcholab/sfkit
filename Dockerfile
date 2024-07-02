@@ -142,12 +142,12 @@ ENV OPENSSL_FORCE_FIPS_MODE=1 \
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
-COPY --from=sf-relate    --chown=nonroot /build          ./sf-relate/
+COPY --from=sf-relate   --chown=nonroot /build          ./sf-relate/
 COPY --from=sfkit-proxy --chown=nonroot /build/*-proxy  ./
 
-COPY --from=sfkit /build/.venv/lib /usr/lib/
-COPY --from=sfkit /build/.venv/lib64 /usr/lib64/
-COPY --from=sfkit /build/dist/sfkit*.whl ./
+COPY --from=sfkit /build/.venv/lib          /usr/lib/
+COPY --from=sfkit /build/.venv/lib64        /usr/lib64/
+COPY --from=sfkit /build/dist/sfkit*.whl    ./
 
 RUN microdnf install -y --setopt=install_weak_deps=0 python3 python3-pip && \
     pip install --no-cache-dir ./*.whl && \
