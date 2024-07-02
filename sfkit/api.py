@@ -94,7 +94,7 @@ def create_cp0() -> bool:
     return response.status_code == 200
 
 
-@backoff.on_exception(backoff.expo, (RefreshError, TransportError), max_tries=5, jitter=backoff.full_jitter)
+@backoff.on_exception(backoff.expo, (RefreshError, TransportError), max_tries=5)
 def get_service_account_headers():
     creds, _ = google.auth.default()
     creds = creds.with_scopes(["openid", "email", "profile"])  # type: ignore
