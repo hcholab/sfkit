@@ -30,3 +30,7 @@ DUMMY_KEY_02 = b"\x71\x63\xec\xc9\xbd\x57\xbb\xbf\x28\x61\xec\x09\x7a\x43\x80\x1
 SOCK_PATH = os.getenv("SFKIT_SOCK", os.path.join(SFKIT_DIR, "server.sock"))
 SAFE_DATA_PATH = os.environ.get("SAFE_DATA_PATH", "/data")
 SAFE_DATA_PATH = os.path.join(os.path.realpath(SAFE_DATA_PATH), "")
+
+ENV = os.environ.copy()
+if SFKIT_PROXY_ON:
+    ENV["ALL_PROXY"] = "socks5://localhost:8000"

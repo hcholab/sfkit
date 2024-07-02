@@ -287,7 +287,7 @@ def run_protocol_command(
     if message:
         update_firestore(f"update_firestore::task={message}")
 
-    process_env = os.environ.copy()
+    process_env = constants.ENV.copy()
     process_env.update(env_vars)
 
     print(f"Running command: {command_list} from {cwd}")

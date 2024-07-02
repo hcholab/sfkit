@@ -347,7 +347,6 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
 
     if constants.SFKIT_PROXY_ON:
         boot_sfkit_proxy(role=role, protocol=protocol)
-        os.environ["ALL_PROXY"] = "socks5://localhost:8000"
 
     os.chdir(f"{constants.EXECUTABLES_PREFIX}sfgwas")
 
