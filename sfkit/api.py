@@ -1,4 +1,5 @@
 from io import IOBase
+from json.decoder import JSONDecodeError
 from typing import Union
 
 import google.auth
@@ -52,11 +53,17 @@ def send_request(
         }
 
     if method == "GET":
-        return requests.get(url, headers=headers, params=params)
+        res = requests.get(url, headers=headers, params=params)
     elif method == "POST":
-        return requests.post(url, headers=headers, json=data, params=params)
+        res = requests.post(url, headers=headers, json=data, params=params)
     else:
         raise ValueError(f"Invalid method: {method}")
+
+    try:
+        res.json()
+    except JSONDecodeError as e:
+        print(f"JSONDecodeError: {e}, trying to decode: {res.text}")
+    return res
 
 
 def get_doc_ref_dict() -> dict:
