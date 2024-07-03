@@ -348,6 +348,7 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
     if constants.SFKIT_PROXY_ON:
         boot_sfkit_proxy(role=role, protocol=protocol)
 
+    cwd = os.getcwd()
     os.chdir(f"{constants.EXECUTABLES_PREFIX}sfgwas")
 
     if demo and (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
@@ -365,6 +366,8 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
         run_sfprotocol_with_task_updates(["sfgwas"], protocol, role)
     else:
         run_sfprotocol_with_task_updates(["go", "run", "sfgwas.go"], protocol, role)
+
+    os.chdir(cwd)
 
     print(f"Finished {protocol} protocol")
 
