@@ -233,6 +233,7 @@ def start_datasharing(role: str, demo: bool) -> None:
     update_firestore("update_firestore::task=Performing data sharing protocol")
     print("\n\n starting data sharing protocol \n\n")
 
+    cwd = os.getcwd()
     os.chdir(f"{constants.EXECUTABLES_PREFIX}secure-gwas/code")
     if demo:
         command = ["bash", "run_example_datasharing.sh"]
@@ -241,6 +242,7 @@ def start_datasharing(role: str, demo: bool) -> None:
         if role != "0":
             command.append("../test_data/")
     run_command(command, fail_message="Failed MPC-GWAS data sharing protocol")
+    os.chdir(cwd)
 
     print("\n\n Finished data sharing protocol\n\n")
 
@@ -252,12 +254,14 @@ def start_gwas(role: str, demo: bool) -> None:
     print("\n\n starting GWAS \n\n")
     update_firestore("update_firestore::status=starting GWAS")
 
+    cwd = os.getcwd()
     os.chdir(f"{constants.EXECUTABLES_PREFIX}secure-gwas/code")
     if demo:
         command = ["bash", "run_example_gwas.sh"]
     else:
         command = ["bin/GwasClient", role, f"../par/test.par.{role}.txt"]
     run_command(command, fail_message="Failed MPC-GWAS protocol")
+    os.chdir(cwd)
 
     print("\n\n Finished GWAS \n\n")
 

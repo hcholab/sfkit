@@ -124,7 +124,7 @@ def encrypt_data() -> None:
     with open(input_dir_path, "r") as f:
         input_dir = f.readline().rstrip()
 
-    data_hash = checksumdir.dirhash(input_dir, "md5")
+    data_hash = checksumdir.dirhash(input_dir, "sha1")
     condition_or_fail(
         data_hash == doc_ref_dict["personal_parameters"][username]["DATA_HASH"]["value"], "Data hash mismatch"
     )

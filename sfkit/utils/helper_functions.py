@@ -24,7 +24,7 @@ def run_command(command_list: list, fail_message: str = "") -> None:
         command_list,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        env=dict(os.environ, PYTHONUNBUFFERED="1"),
+        env=dict(constants.ENV.copy(), PYTHONUNBUFFERED="1"),
         text=True,
         bufsize=1,
     ) as process:

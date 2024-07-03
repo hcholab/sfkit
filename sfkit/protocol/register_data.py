@@ -48,7 +48,7 @@ def register_data(geno_binary_file_prefix: str = "", data_path: str = "") -> boo
         update_firestore("update_firestore::status=validated data")
 
         if constants.BLOCKS_MODE not in doc_ref_dict["description"]:
-            data_hash = checksumdir.dirhash(data_path, "md5")
+            data_hash = checksumdir.dirhash(data_path, "sha1")
             update_firestore(f"update_firestore::DATA_HASH={data_hash}")
 
         with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "w") as f:

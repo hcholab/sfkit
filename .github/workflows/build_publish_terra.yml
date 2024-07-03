@@ -123,17 +123,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Ensure that Dockerfile uses a blessed base runtime image
-      - name: Run Trivy vulnerability scanner
-        uses: broadinstitute/dsp-appsec-trivy-action@v1
-
       # Improve Docker layer caching/reproducibility
       - name: Reset timestamps
         run: find . -exec touch -t 197001010000 {} +
 
       - name: Auth to GCP
         id: gcp-auth
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           token_format: access_token
           workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
@@ -153,17 +149,23 @@ jobs:
 
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           platforms: ${{ matrix.platform }}
           build-args: |
             MARCH=${{ steps.args.outputs.march }}
-            VERSION=${{ github.sha }}-${{ github.run_attempt }}
           outputs: type=image,name=${{ needs.meta.outputs.image }},push-by-digest=true,name-canonical=true
           cache-from: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }}
           cache-to: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }},mode=max
           labels: ${{ needs.meta.outputs.labels }}
           push: true
+          pull: true
+
+      - name: Run Trivy vulnerability scanner
+        uses: broadinstitute/dsp-appsec-trivy-action@v1
+        with:
+          image: "${{ needs.meta.outputs.image }}@${{ steps.build.outputs.digest }}"
+          severities: HIGH,CRITICAL
 
       - name: Export digest
         run: |
@@ -172,9 +174,9 @@ jobs:
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: digests
+          name: digest-${{ steps.args.outputs.march }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -190,17 +192,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download digests
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: digests
           path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Auth to GCP
         id: gcp-auth
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           token_format: access_token
           workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}

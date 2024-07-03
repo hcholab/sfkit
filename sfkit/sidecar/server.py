@@ -39,7 +39,7 @@ def handle_client(client: socket.socket):
                     command,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    env=dict(os.environ, PYTHONUNBUFFERED="1"),
+                    env=dict(constants.ENV.copy(), PYTHONUNBUFFERED="1"),
                     text=True,
                     bufsize=1,
                 ) as process:

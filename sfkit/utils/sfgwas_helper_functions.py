@@ -51,7 +51,7 @@ def move(source: str, destination: str) -> None:
 
 
 def run_sfprotocol_with_task_updates(command_list: list, protocol: str, role: str) -> None:
-    env = dict(os.environ, PYTHONUNBUFFERED="1", PID=role)
+    env = dict(constants.ENV.copy(), PYTHONUNBUFFERED="1", PID=role)
     if protocol == "gwas":
         env["PROTOCOL"] = "gwas"
     elif protocol == "pca":
