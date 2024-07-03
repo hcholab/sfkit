@@ -149,10 +149,15 @@ COPY --from=sfkit /build/.venv/lib          /usr/lib/
 COPY --from=sfkit /build/.venv/lib64        /usr/lib64/
 COPY --from=sfkit /build/dist/sfkit*.whl    ./
 
-RUN microdnf install -y --setopt=install_weak_deps=0 python3 python3-pip && \
+RUN microdnf install -y --setopt=install_weak_deps=0 \
+        findutils \
+        python3 \
+        python3-pip \
+    && \
     pip install --no-cache-dir ./*.whl && \
     microdnf remove -y python3-pip && \
-    microdnf clean all && \
+    microdnf clean all \
+    && \
     adduser nonroot && \
     chown -R nonroot:nonroot .
 
