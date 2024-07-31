@@ -5,7 +5,7 @@ workflow sfkit {
     String study_id
     Directory? data
     Int num_cores = 16 # TODO: test with smaller CP0
-    String api_url = "https://sfkit.dsde.broadinstitute.org/api"
+    String api_url = "https://sfkit.dsde-prod.broadinstitute.org/api"
     String docker = "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
   }
 
