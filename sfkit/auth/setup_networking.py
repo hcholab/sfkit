@@ -17,9 +17,8 @@ def setup_networking(ports_str: str = "", ip_address: str = "") -> None:
     )
 
     authenticate_user()
-    doc_ref_dict = get_doc_ref_dict()
-    username = get_username()
-    role: int = doc_ref_dict["participants"].index(username)
+    doc_ref_dict: dict = get_doc_ref_dict()
+    role: int = doc_ref_dict["participants"].index(get_username())
 
     if not ip_address:
         if constants.SFKIT_PROXY_ON:
