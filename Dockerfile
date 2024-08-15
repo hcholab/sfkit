@@ -1,7 +1,7 @@
 # hadolint global ignore=DL3006,DL3013,DL3018,DL3041,DL3059
 
 # -------------------- base -------------------- #
-FROM registry.access.redhat.com/ubi9/ubi-minimal AS base
+FROM redhat/ubi9-minimal AS base
 
 
 # -------------------- go -------------------- #
@@ -26,7 +26,7 @@ RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
 
 
 # -------------------- sf-relate -------------------- #
-FROM go as sf-relate
+FROM go AS sf-relate
 
 RUN git clone https://github.com/froelich/sf-relate . && \
     git checkout 9d1a076 && \

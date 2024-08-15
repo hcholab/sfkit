@@ -8,7 +8,6 @@ def test_setup_networking(mocker):
         "sfkit.auth.setup_networking.get_doc_ref_dict",
         return_value={
             "participants": ["a@a.com", "b@b.com"],
-            "setup_configuration": "website",
             "study_type": "SF-RELATE",
         },
     )
@@ -31,7 +30,6 @@ def test_setup_networking(mocker):
         "sfkit.auth.setup_networking.get_doc_ref_dict",
         return_value={
             "participants": ["a@a.com", "b@b.com"],
-            "setup_configuration": "user",
             "study_type": "SF-RELATE",
         },
     )

@@ -3,6 +3,7 @@ import socket
 from requests import get
 
 from sfkit.api import get_doc_ref_dict, get_username, update_firestore
+from sfkit.utils import constants
 from sfkit.utils.helper_functions import authenticate_user
 
 MAX_PARTICIPANTS = 10
@@ -20,7 +21,7 @@ def setup_networking(ports_str: str = "", ip_address: str = "") -> None:
     role: int = doc_ref_dict["participants"].index(get_username())
 
     if not ip_address:
-        if doc_ref_dict["setup_configuration"] == "website":
+        if constants.SFKIT_PROXY_ON:
             ip_address = socket.gethostbyname(socket.gethostname())  # internal ip address
             print("Using internal ip address:", ip_address)
         else:
