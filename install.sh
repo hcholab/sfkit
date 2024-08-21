@@ -53,7 +53,7 @@ cd sfkit
 python3 -m pip install -U ./sfkit*.whl
 rm ./sfkit*.whl
 mkdir -p ~/.local/bin/ && mv plink2 sfkit-proxy ~/.local/bin/
-mkdir -p ~/.local/lib/ && mv lib*.so.* ~/.local/lib/
+mkdir -p ~/.local/lib/ && mv lib/* ~/.local/lib/
 mkdir -p ~/.local/sfgwas && mv sfgwas ~/.local/
 mkdir -p ~/.local/sf-relate && mv sf-relate ~/.local/
 mkdir -p ~/.local/secure-gwas && mv secure-gwas ~/.local/

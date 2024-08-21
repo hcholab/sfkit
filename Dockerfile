@@ -139,7 +139,7 @@ ENV OPENSSL_FORCE_FIPS_MODE=1 \
     SFKIT_DIR="/sfkit/.sfkit" \
     SFKIT_PROXY_ON=TRUE
 
-COPY --from=base        --chown=nonroot /usr/lib64/libc.so.6 /usr/lib64/libssl.so.3 ./
+COPY --from=base        --chown=nonroot /usr/lib64/libc.so.6 /usr/lib64/libssl.so.3 ./lib/
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
