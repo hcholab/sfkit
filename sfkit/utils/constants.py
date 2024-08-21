@@ -21,8 +21,11 @@ AUTH_KEY = os.path.join(SFKIT_DIR, "auth_key.txt")
 IS_DOCKER = os.path.exists("/.dockerenv")
 IS_INSTALLED_VIA_SCRIPT = (is_installed("sfgwas") and is_installed("plink2") and is_installed("GwasClient")) or TERRA_DEPLOYMENT_ENV
 EXECUTABLES_PREFIX = os.path.expanduser("~") + "/.local/" if IS_INSTALLED_VIA_SCRIPT else ""
-if IS_INSTALLED_VIA_SCRIPT and os.environ.get("LD_LIBRARY_PATH"):
-    os.environ["LD_LIBRARY_PATH"] += ":" + os.path.expanduser("~") + "/.local/lib"
+if IS_INSTALLED_VIA_SCRIPT:
+    if os.environ.get("LD_LIBRARY_PATH"):
+        os.environ["LD_LIBRARY_PATH"] += ":" + os.path.expanduser("~") + "/.local/lib"
+    if os.environ.get("PATH"):
+        os.environ["PATH"] += f":{EXECUTABLES_PREFIX}/secure-gwas/code/bin:{EXECUTABLES_PREFIX}/sfgwas:{EXECUTABLES_PREFIX}/sf-relate"
 
 SFKIT_PREFIX = "sfkit: "
 OUT_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "out")
