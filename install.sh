@@ -50,12 +50,19 @@ echo
 
 echo Installing sfkit...
 cd sfkit
-python3 -m pip install -U ./sfkit*.whl
+python3 -m pip install -U patchelf ./sfkit*.whl
 rm ./sfkit*.whl
-mkdir -p ~/.local/bin/ && mv plink2 ~/.local/bin/ && mv sfkit-proxy ~/.local/bin/
+mkdir -p ~/.local/bin/ && mv plink2 sfkit-proxy ~/.local/bin/
+mkdir -p ~/.local/lib/ && mv lib/* ~/.local/lib/
 mkdir -p ~/.local/sfgwas && mv sfgwas ~/.local/
 mkdir -p ~/.local/sf-relate && mv sf-relate ~/.local/
 mkdir -p ~/.local/secure-gwas && mv secure-gwas ~/.local/
+echo
+
+echo Patching sfkit binaries...
+for p in ~/.local/bin/sfkit-proxy ~/.local/sfgwas/sfgwas ~/.local/sf-relate/sf-relate ~/.local/secure-gwas/code/bin/* ; do
+  patchelf --set-interpreter ~/.local/lib/ld-linux-x86-64.so.2 "$p"
+done
 echo
 
 if ! type sfkit &>/dev/null || ! echo "$PATH" | grep -q "/.local/bin" ; then
