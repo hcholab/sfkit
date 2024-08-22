@@ -140,11 +140,11 @@ ENV OPENSSL_FORCE_FIPS_MODE=1 \
     SFKIT_PROXY_ON=TRUE
 
 COPY --from=base        --chown=nonroot \
-    /usr/lib64/ld-linux-x86-64.so.2 \
-    /usr/lib64/libc.so.6 \
-    /usr/lib64/libcrypto.so.3 \
-    /usr/lib64/libresolv.so.2 \
-    /usr/lib64/libssl.so.3 \
+    /lib64/ld-linux-x86-64.so.2 \
+    /lib64/libc.so.6 \
+    /lib64/libcrypto.so.3 \
+    /lib64/libssl.so.3 \
+    /lib64/libstdc++.so.6 \
     ./lib/
 
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
