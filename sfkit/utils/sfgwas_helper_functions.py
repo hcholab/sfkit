@@ -226,7 +226,7 @@ def boot_sfkit_proxy(role: str, protocol: str) -> None:
         "-mpc",
         config_file_path,
         "-socks",
-        os.environ["ALL_PROXY"],
+        constants.ENV["ALL_PROXY"],
     ]
     if not auth_key.startswith("study_id:"):
         command.extend(["-auth-key", auth_key])
