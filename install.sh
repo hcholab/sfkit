@@ -59,11 +59,13 @@ mkdir -p ~/.local/sf-relate && mv sf-relate ~/.local/
 mkdir -p ~/.local/secure-gwas && mv secure-gwas ~/.local/
 echo
 
-echo Patching sfkit binaries...
-for p in ~/.local/bin/sfkit-proxy ~/.local/sfgwas/sfgwas ~/.local/sf-relate/sf-relate ~/.local/secure-gwas/code/bin/* ; do
-  patchelf --set-interpreter ~/.local/lib/ld-linux-x86-64.so.2 "$p"
-done
-echo
+if ! ldd --version | grep -q 2.35 ; then
+  echo Patching sfkit binaries...
+  for p in ~/.local/bin/sfkit-proxy ~/.local/sfgwas/sfgwas ~/.local/sf-relate/sf-relate ~/.local/secure-gwas/code/bin/* ; do
+    patchelf --set-interpreter ~/.local/lib/ld-linux-x86-64.so.2 "$p"
+  done
+  echo
+fi
 
 if ! type sfkit &>/dev/null || ! echo "$PATH" | grep -q "/.local/bin" ; then
   echo Updating PATH...
