@@ -27,7 +27,7 @@ def setup_networking(ports_str: str = "", ip_address: str = "") -> None:
         if constants.SFKIT_PROXY_ON:
             if nat_type.startswith("Symmetric"):
                 print("Error: Symmetric NAT detected. This type of NAT is not supported when SFKIT_PROXY_ON=true.")
-                print("Please use a different network or configure your router to use a different NAT type.")
+                print("Please use a different network or configure your network to use a different NAT type.")
                 sys.exit(1)
             print(f"NAT type: {nat_type}")
 
