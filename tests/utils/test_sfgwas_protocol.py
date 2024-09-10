@@ -1,6 +1,7 @@
 # sourcery skip: no-wildcard-imports
+from helper_functions_and_constants import *
+
 from sfkit.utils import sfgwas_protocol
-from tests.helper_functions_and_constants import *
 
 
 def test_run_sfgwas_protocol(mocker):

@@ -1,7 +1,7 @@
 import socket
 import sys
 
-import stun
+from stun import get_ip_info
 
 from sfkit.api import get_doc_ref_dict, get_username, update_firestore
 from sfkit.utils import constants
@@ -22,7 +22,7 @@ def setup_networking(ports_str: str = "", ip_address: str = "") -> None:
     role: int = doc_ref_dict["participants"].index(get_username())
 
     if not ip_address:
-        nat_type, ip_address, _ = stun.get_ip_info()
+        nat_type, ip_address, _ = get_ip_info()
 
         if constants.SFKIT_PROXY_ON:
             if nat_type.startswith("Symmetric"):

@@ -1,8 +1,8 @@
 # sourcery skip: no-wildcard-imports
 import pytest
+from helper_functions_and_constants import *
 
 from sfkit.protocol import run_protocol
-from tests.helper_functions_and_constants import *
 
 
 def test_run_protocol(mocker):
