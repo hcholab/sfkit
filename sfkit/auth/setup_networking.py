@@ -1,6 +1,7 @@
 import socket
+import sys
 
-from requests import get
+import stun
 
 from sfkit.api import get_doc_ref_dict, get_username, update_firestore
 from sfkit.utils import constants
@@ -21,11 +22,18 @@ def setup_networking(ports_str: str = "", ip_address: str = "") -> None:
     role: int = doc_ref_dict["participants"].index(get_username())
 
     if not ip_address:
+        nat_type, ip_address, _ = stun.get_ip_info()
+
         if constants.SFKIT_PROXY_ON:
+            if nat_type.startswith("Symmetric"):
+                print("Error: Symmetric NAT detected. This type of NAT is not supported when SFKIT_PROXY_ON=true.")
+                print("Please use a different network or configure your router to use a different NAT type.")
+                sys.exit(1)
+            print(f"NAT type: {nat_type}")
+
             ip_address = socket.gethostbyname(socket.gethostname())  # internal ip address
             print("Using internal ip address:", ip_address)
-        else:
-            ip_address = get("https://api.ipify.org").content.decode("utf-8")  # external ip address
+        else: # external ip address
             print("Using external ip address:", ip_address)
 
     print("Processing...")
