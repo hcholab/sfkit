@@ -58,7 +58,7 @@ def get_parser() -> argparse.ArgumentParser:
     client.add_argument("--study_id", help="Study ID for the client to use.")
     client.add_argument("--data_path", help="Path to the data directory for the client.")
 
-    run_all = subparsers.add_parser("run", aliases=["all"], help="Run the entire setup and the protocol.")
+    run_all = subparsers.add_parser("run", aliases=["all"], help="All-in-one command to set up and run the protocol.")
     run_all.add_argument("--study_id", help="Study ID for the client to use.")
     run_all.add_argument("--data_path", help="Path to the data directory for the client.")
 
