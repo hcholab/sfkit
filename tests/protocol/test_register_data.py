@@ -3,10 +3,10 @@ from pathlib import Path
 from typing import Callable, Generator
 
 import pytest
+from helper_functions_and_constants import *
 from pytest_mock import MockerFixture
 
 from sfkit.protocol import register_data
-from tests.helper_functions_and_constants import *
 
 
 def test_register_data(mocker: Callable[..., Generator[MockerFixture, None, None]]):

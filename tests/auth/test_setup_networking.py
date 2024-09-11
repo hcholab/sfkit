@@ -17,7 +17,7 @@ def test_setup_networking(mocker):
     mocker.patch("sfkit.auth.setup_networking.input", return_value="8000")
     mocker.patch("sfkit.auth.setup_networking.socket.gethostbyname", return_value="170.0.0.1")
     mocker.patch("sfkit.auth.setup_networking.socket.gethostname")
-    mocker.patch("sfkit.auth.setup_networking.get")
+    mocker.patch("sfkit.auth.setup_networking.get_ip_info", return_value=("Restric NAT", "1.2.3.4", 12345))
 
     setup_networking.setup_networking("")
 

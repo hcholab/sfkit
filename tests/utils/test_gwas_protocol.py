@@ -1,8 +1,10 @@
 # sourcery skip: no-wildcard-imports
 from typing import Callable, Generator
+
+from helper_functions_and_constants import *
 from pytest_mock import MockerFixture
+
 from sfkit.utils import gwas_protocol
-from tests.helper_functions_and_constants import *
 
 undo_mock_changes()
 

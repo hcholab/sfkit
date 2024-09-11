@@ -3,11 +3,11 @@ from io import BytesIO, StringIO
 from typing import Callable, Generator
 
 import pytest
+from helper_functions_and_constants import *
 from nacl.public import PrivateKey, PublicKey
 from pytest_mock import MockerFixture
 
 from sfkit.encryption.mpc import encrypt_data
-from tests.helper_functions_and_constants import *
 
 
 def test_encrypt_GMP(mocker: Callable[..., Generator[MockerFixture, None, None]]):
