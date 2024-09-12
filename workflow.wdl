@@ -5,6 +5,7 @@ workflow sfkit {
     String study_id
     Directory? data
     Int num_cores = 16 # TODO: test with smaller CP0
+    Int boot_disk_size_gb = 128
     String api_url = "https://sfkit.dsde-prod.broadinstitute.org/api"
     String docker = "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
   }
@@ -14,6 +15,7 @@ workflow sfkit {
       study_id = study_id,
       data = data,
       num_cores = num_cores,
+      boot_disk_size_gb = boot_disk_size_gb,
       api_url = api_url,
       docker = docker,
   }
@@ -24,6 +26,7 @@ task cli {
     String study_id
     Directory? data
     Int num_cores
+    Int boot_disk_size_gb
     String api_url
     String docker
   }
@@ -52,7 +55,7 @@ task cli {
     memory: "~{num_cores * 8} GB"
 
     # TODO: allow specifying sfgwas cache directory inside /cromwell_root
-    bootDiskSizeGb: 100
+    bootDiskSizeGb: boot_disk_size_gb
   }
 
   output {
