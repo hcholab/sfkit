@@ -8,7 +8,6 @@ workflow sfkit {
     Int boot_disk_size_gb = 128
     String api_url = "https://sfkit.dsde-prod.broadinstitute.org/api"
     String docker = "us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit"
-    Boolean demo = false
   }
 
   call cli {
@@ -19,7 +18,6 @@ workflow sfkit {
       boot_disk_size_gb = boot_disk_size_gb,
       api_url = api_url,
       docker = docker,
-      demo = demo,
   }
 }
 
@@ -31,7 +29,6 @@ task cli {
     Int boot_disk_size_gb
     String api_url
     String docker
-    Boolean demo
   }
 
   command <<<
@@ -44,8 +41,8 @@ task cli {
       sfkit networking
       sfkit generate_keys
 
-      if [ -n "~{data}" ] || [ "~{demo}" = true ]; then
-        sfkit register_data --data_path "~{if demo then "demo" else data}"
+      if [ -n "~{data}" ]; then
+        sfkit register_data --data_path "~{data}"
       fi
 
       sfkit run_protocol
