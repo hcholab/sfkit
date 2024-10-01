@@ -4,10 +4,10 @@
 FROM redhat/ubi9-minimal AS base
 
 RUN echo install_weak_deps=0 >> /etc/dnf/dnf.conf && \
-    microdnf upgrade -y && \
     curl -O https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     rpm -ivh ./*.rpm && \
     rm -f ./*.rpm && \
+    microdnf upgrade -y && \
     microdnf install -y \
         libsodium && \
     microdnf clean all
