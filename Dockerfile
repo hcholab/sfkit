@@ -3,11 +3,20 @@
 # -------------------- base -------------------- #
 FROM redhat/ubi9-minimal AS base
 
+RUN echo install_weak_deps=0 >> /etc/dnf/dnf.conf && \
+    curl -O https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
+    rpm -ivh ./*.rpm && \
+    rm -f ./*.rpm && \
+    microdnf upgrade -y && \
+    microdnf install -y \
+        libsodium && \
+    microdnf clean all
+
 
 # -------------------- go -------------------- #
 FROM base AS go
 
-RUN microdnf install -y --setopt=install_weak_deps=0 \
+RUN microdnf install -y \
         git-core \
         go-toolset \
     && microdnf clean all
@@ -70,9 +79,7 @@ RUN microdnf install -y unzip && \
 # -------------------- secure-gwas -------------------- #
 FROM dev AS secure-gwas
 
-RUN curl -O https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-    rpm -ivh ./*.rpm && \
-    microdnf install -y --setopt=install_weak_deps=0 \
+RUN microdnf install -y \
         clang \
         git-core \
         gmp-devel \
@@ -112,7 +119,7 @@ FROM dev AS sfkit
 
 ENV PIP_NO_CACHE_DIR=1
 
-RUN microdnf install -y --setopt=install_weak_deps=0 python3-pip && \
+RUN microdnf install -y python3-pip && \
     microdnf clean all && \
     pip install poetry
 
@@ -139,15 +146,6 @@ ENV OPENSSL_FORCE_FIPS_MODE=1 \
     SFKIT_DIR="/sfkit/.sfkit" \
     SFKIT_PROXY_ON=TRUE
 
-COPY --from=base        --chown=nonroot \
-    /lib64/ld-linux-x86-64.so.2 \
-    /lib64/libc.so.6 \
-    /lib64/libcrypto.so.3 \
-    /lib64/libpthread.so.0 \
-    /lib64/libssl.so.3 \
-    /lib64/libstdc++.so.6 \
-    ./lib/
-
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
@@ -158,7 +156,7 @@ COPY --from=sfkit /build/.venv/lib          /usr/lib/
 COPY --from=sfkit /build/.venv/lib64        /usr/lib64/
 COPY --from=sfkit /build/dist/sfkit*.whl    ./
 
-RUN microdnf install -y --setopt=install_weak_deps=0 \
+RUN microdnf install -y \
         findutils \
         python3 \
         python3-pip \
