@@ -76,8 +76,8 @@ RUN microdnf install -y unzip && \
     unzip plink2.zip
 
 
-# -------------------- secure-gwas -------------------- #
-FROM dev AS secure-gwas
+# -------------------- c++ & ntl -------------------- #
+FROM dev AS cpp
 
 RUN microdnf install -y \
         clang \
@@ -87,18 +87,15 @@ RUN microdnf install -y \
         openssl-devel \
         perl \
         tar \
-    && microdnf clean all \
-    && rm -f ./*.rpm
-
-RUN git clone --depth 1 https://github.com/hcholab/secure-gwas . && \
-    git checkout d4c6dbc && \
-    rm -rf .git
+    && microdnf clean all
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
-RUN mkdir /ntl && \
-    curl -so- https://libntl.org/ntl-10.3.0.tar.gz | tar -C /ntl -zxvf- --strip-components=1 && \
-    cp code/NTL_mod/ZZ.h /ntl/include/NTL/ && \
-    cp code/NTL_mod/ZZ.cpp /ntl/src/
+
+WORKDIR /ntl
+RUN curl -so- https://libntl.org/ntl-10.3.0.tar.gz | tar -C /ntl -zxvf- --strip-components=1 && \
+    NTL_MODE_URL="https://raw.githubusercontent.com/hcholab/secure-gwas/refs/heads/master/code/NTL_mod" && \
+    curl -s "${NTL_MODE_URL}/ZZ.h" -o /ntl/include/NTL/ZZ.h && \
+    curl -s "${NTL_MODE_URL}/ZZ.cpp" -o /ntl/src/ZZ.cpp
 
 ARG MARCH=native
 
@@ -107,12 +104,38 @@ RUN ./configure NTL_THREAD_BOOST=on CXXFLAGS="-g -O2 -march=${MARCH}" && \
     make "-j$(nproc)" all && \
     make install
 
-WORKDIR /build/code
+WORKDIR /build
+
+
+# -------------------- secure-dti -------------------- #
+
+FROM cpp AS secure-dti
+
+RUN git clone --depth 1 https://github.com/brianhie/secure-dti . && \
+    git checkout 9c040f1 && \
+    rm -rf .git
+
+WORKDIR /build/mpc/code
+
 RUN sed -i "s|^CPP.*$|CPP = /usr/bin/clang++|g" Makefile && \
+    sed -i "s|^INCPATHS =$|INCPATHS = -I/usr/local/include|g" Makefile && \
     sed -i "s|-march=native|-march=${MARCH} -maes|g" Makefile && \
-    sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile && \
-    sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
+    sed -i '5i#include <stdint.h>' param.h && \
     make "-j$(nproc)"
+
+
+# -------------------- secure-gwas -------------------- #
+FROM cpp AS secure-gwas
+
+RUN git clone --depth 1 https://github.com/hcholab/secure-gwas . && \
+    git checkout d4c6dbc && \
+    rm -rf .git
+
+WORKDIR /build/code
+RUN sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
+    sed -i "s|-march=native|-march=${MARCH} -maes|g" Makefile && \
+    make "-j$(nproc)"
+
 
 # -------------------- sfkit package -------------------- #
 FROM dev AS sfkit
@@ -147,6 +170,7 @@ ENV OPENSSL_FORCE_FIPS_MODE=1 \
     SFKIT_PROXY_ON=TRUE
 
 COPY --from=plink2      --chown=nonroot /build/plink2   ./
+COPY --from=secure-dti  --chown=nonroot /build          ./secure-dti/
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
 COPY --from=sf-relate   --chown=nonroot /build          ./sf-relate/
