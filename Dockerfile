@@ -93,9 +93,9 @@ SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 WORKDIR /ntl
 RUN curl -so- https://libntl.org/ntl-10.3.0.tar.gz | tar -C /ntl -zxvf- --strip-components=1 && \
-    NTL_MODE_URL="https://raw.githubusercontent.com/hcholab/secure-gwas/refs/heads/master/code/NTL_mod" && \
-    curl -s "${NTL_MODE_URL}/ZZ.h" -o /ntl/include/NTL/ZZ.h && \
-    curl -s "${NTL_MODE_URL}/ZZ.cpp" -o /ntl/src/ZZ.cpp
+    NTL_MOD_URL="https://raw.githubusercontent.com/hcholab/secure-gwas/refs/heads/master/code/NTL_mod" && \
+    curl -s "${NTL_MOD_URL}/ZZ.h" -o /ntl/include/NTL/ZZ.h && \
+    curl -s "${NTL_MOD_URL}/ZZ.cpp" -o /ntl/src/ZZ.cpp
 
 ARG MARCH=native
 
