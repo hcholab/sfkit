@@ -108,7 +108,6 @@ WORKDIR /build
 
 
 # -------------------- secure-dti -------------------- #
-
 FROM cpp AS secure-dti
 
 RUN git clone --depth 1 https://github.com/brianhie/secure-dti . && \
@@ -116,12 +115,14 @@ RUN git clone --depth 1 https://github.com/brianhie/secure-dti . && \
     rm -rf .git
 
 WORKDIR /build/mpc/code
-
 RUN sed -i "s|^CPP.*$|CPP = /usr/bin/clang++|g" Makefile && \
-    sed -i "s|^INCPATHS =$|INCPATHS = -I/usr/local/include|g" Makefile && \
+    sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile && \
+    sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
     sed -i "s|-march=native|-march=${MARCH} -maes|g" Makefile && \
+    sed -i "s|c++11|c++14|g" Makefile && \
     sed -i '5i#include <stdint.h>' param.h && \
-    make "-j$(nproc)"
+    make "-j$(nproc)" && \
+    rm -rf build include lib
 
 
 # -------------------- secure-gwas -------------------- #
@@ -134,7 +135,8 @@ RUN git clone --depth 1 https://github.com/hcholab/secure-gwas . && \
 WORKDIR /build/code
 RUN sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
     sed -i "s|-march=native|-march=${MARCH} -maes|g" Makefile && \
-    make "-j$(nproc)"
+    make "-j$(nproc)" && \
+    rm -rf build
 
 
 # -------------------- sfkit package -------------------- #
