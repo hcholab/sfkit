@@ -56,12 +56,13 @@ mkdir -p ~/.local/bin/ && mv plink2 sfkit-proxy ~/.local/bin/
 mkdir -p ~/.local/lib/ && mv lib/* ~/.local/lib/
 mkdir -p ~/.local/sfgwas && mv sfgwas ~/.local/
 mkdir -p ~/.local/sf-relate && mv sf-relate ~/.local/
+mkdir -p ~/.local/secure-dti && mv secure-dti ~/.local/
 mkdir -p ~/.local/secure-gwas && mv secure-gwas ~/.local/
 echo
 
 if ! ldd --version | grep -q 2.35 ; then
   echo Patching sfkit binaries...
-  for p in ~/.local/bin/sfkit-proxy ~/.local/sfgwas/sfgwas ~/.local/sf-relate/sf-relate ~/.local/secure-gwas/code/bin/* ; do
+  for p in ~/.local/bin/sfkit-proxy ~/.local/sfgwas/sfgwas ~/.local/sf-relate/sf-relate ~/.local/secure-dti/mpc/code/bin/* ~/.local/secure-gwas/code/bin/* ; do
     patchelf --set-interpreter ~/.local/lib/ld-linux-x86-64.so.2 "$p"
   done
   echo
@@ -72,6 +73,7 @@ if ! type sfkit &>/dev/null || ! echo "$PATH" | grep -q "/.local/bin" ; then
   echo "export PATH=\"\$PATH:\$HOME/.local/bin\"" >> ~/.profile || { echo "Failed to update .local/bin"; exit 1; }
   echo "export PATH=\"\$PATH:\$HOME/.local/sfgwas\"" >> ~/.profile || { echo "Failed to update .local/sfgwas"; exit 1; }
   echo "export PATH=\"\$PATH:\$HOME/.local/sf-relate\"" >> ~/.profile || { echo "Failed to update .local/sf-relate"; exit 1; }
+  echo "export PATH=\"\$PATH:\$HOME/.local/secure-dti/mpc/code/bin\"" >> ~/.profile || { echo "Failed to update .local/secure-dti"; exit 1; }
   echo "export PATH=\"\$PATH:\$HOME/.local/secure-gwas/code/bin\"" >> ~/.profile || { echo "Failed to update .local/secure-gwas"; exit 1; }
   echo "export PATH=\"\$PATH:/sbin\"" >> ~/.profile || { echo "Failed to update /sbin"; exit 1; }
   source ~/.profile
