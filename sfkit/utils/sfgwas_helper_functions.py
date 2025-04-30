@@ -58,6 +58,8 @@ def run_sfprotocol_with_task_updates(command_list: list, protocol: str, role: st
         env["PROTOCOL"] = "pca"
 
     with open(f"stdout_party{role}.txt", "w") as outfile:
+        print("Running command: ", command_list)
+        print("Working directory: ", os.getcwd())
         process = subprocess.Popen(
             command_list,
             stdout=subprocess.PIPE,
