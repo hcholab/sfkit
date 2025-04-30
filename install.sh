@@ -60,7 +60,7 @@ mkdir -p ~/.local/secure-dti && mv secure-dti ~/.local/
 mkdir -p ~/.local/secure-gwas && mv secure-gwas ~/.local/
 echo
 
-if ! ldd --version | grep -q 2.35 ; then
+if ! ldd --version | grep -q 2.34 ; then
   echo Patching sfkit binaries...
   for p in ~/.local/bin/sfkit-proxy ~/.local/sfgwas/sfgwas ~/.local/sf-relate/sf-relate ~/.local/secure-dti/mpc/code/bin/* ~/.local/secure-gwas/code/bin/* ; do
     patchelf --set-interpreter ~/.local/lib/ld-linux-x86-64.so.2 "$p"
