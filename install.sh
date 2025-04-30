@@ -79,6 +79,7 @@ fi
 if ! type sfkit &>/dev/null || ! echo "$PATH" | grep -q "/.local/bin" ; then
   echo Updating PATH...
   echo "export PATH=\"\$PATH:\$HOME/.local/bin\"" >> ~/.profile || { echo "Failed to update .local/bin"; exit 1; }
+  echo "export PATH=\"\$PATH:/sfkit/.venv/bin\"" >> ~/.profile || { echo "Failed to update .venv/bin"; exit 1; }
   echo "export PATH=\"\$PATH:\$HOME/.local/sfgwas\"" >> ~/.profile || { echo "Failed to update .local/sfgwas"; exit 1; }
   echo "export PATH=\"\$PATH:\$HOME/.local/sf-relate\"" >> ~/.profile || { echo "Failed to update .local/sf-relate"; exit 1; }
   echo "export PATH=\"\$PATH:\$HOME/.local/secure-dti/mpc/code/bin\"" >> ~/.profile || { echo "Failed to update .local/secure-dti"; exit 1; }
