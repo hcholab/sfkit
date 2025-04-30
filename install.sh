@@ -50,18 +50,26 @@ echo
 
 echo Installing sfkit...
 cd sfkit
-python3 -m pip install -U patchelf ./sfkit*.whl
+if apt -v ; then
+  apt update
+  apt install -y --no-install-recommends python3-venv
+fi
+python3 -m venv .venv
+source .venv/bin/activate
+pip install patchelf ./sfkit*.whl
 rm ./sfkit*.whl
 mkdir -p ~/.local/bin/ && mv plink2 sfkit-proxy ~/.local/bin/
-# mkdir -p ~/.local/lib/ && mv lib/* ~/.local/lib/
 mkdir -p ~/.local/sfgwas && mv sfgwas ~/.local/
 mkdir -p ~/.local/sf-relate && mv sf-relate ~/.local/
 mkdir -p ~/.local/secure-dti && mv secure-dti ~/.local/
 mkdir -p ~/.local/secure-gwas && mv secure-gwas ~/.local/
 echo
 
-if ! ldd --version | grep -q 2.34 ; then
+# check if ldd version is at least 2.34
+glibc_minor_ver=$(ldd --version | awk 'NR==1{print $NF}' | cut -d. -f2)
+if [ "${glibc_minor_ver}" -lt 34 ]; then
   echo Patching sfkit binaries...
+  mkdir -p ~/.local/lib/ && mv lib/* ~/.local/lib/
   for p in ~/.local/bin/sfkit-proxy ~/.local/sfgwas/sfgwas ~/.local/sf-relate/sf-relate ~/.local/secure-dti/mpc/code/bin/* ~/.local/secure-gwas/code/bin/* ; do
     patchelf --set-interpreter ~/.local/lib/ld-linux-x86-64.so.2 "$p"
   done
