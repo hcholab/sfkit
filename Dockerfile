@@ -157,8 +157,6 @@ RUN poetry run pytest
 
 RUN poetry build -f wheel
 
-RUN poetry install --only main --sync
-
 
 # -------------------- final image -------------------- #
 FROM base
@@ -178,8 +176,6 @@ COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
 COPY --from=sf-relate   --chown=nonroot /build          ./sf-relate/
 COPY --from=sfkit-proxy --chown=nonroot /build/*-proxy  ./
 
-COPY --from=sfkit /build/.venv/lib          /usr/lib/
-COPY --from=sfkit /build/.venv/lib64        /usr/lib64/
 COPY --from=sfkit /build/dist/sfkit*.whl    ./
 
 RUN microdnf install -y \
@@ -187,9 +183,11 @@ RUN microdnf install -y \
         proxychains-ng \
         python3 \
         python3-pip \
+        python3-setuptools \
     && \
+    pip install --no-cache-dir --upgrade pip setuptools && \
     pip install --no-cache-dir ./*.whl && \
-    microdnf remove -y python3-pip && \
+    microdnf remove -y python3-pip python3-setuptools && \
     microdnf clean all \
     && \
     adduser nonroot && \
