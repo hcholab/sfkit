@@ -36,6 +36,10 @@ def register_data(geno_binary_file_prefix: str = "", data_path: str = "") -> boo
                 geno_binary_file_prefix, data_path = validate_sfgwas(
                     doc_ref_dict, username, data_path, geno_binary_file_prefix
                 )
+        elif study_type == "SF-GWAS-LMM":
+            geno_binary_file_prefix, data_path = validate_sfgwas_lmm(
+                doc_ref_dict, username, data_path, geno_binary_file_prefix
+            )
         elif study_type == "MPC-GWAS":
             data_path = validate_mpcgwas(doc_ref_dict, username, data_path, role)
         elif study_type == "PCA":
@@ -54,7 +58,7 @@ def register_data(geno_binary_file_prefix: str = "", data_path: str = "") -> boo
             update_firestore(f"update_firestore::DATA_HASH={data_hash}")
 
         with open(os.path.join(constants.SFKIT_DIR, "data_path.txt"), "w") as f:
-            if study_type == "SF-GWAS":
+            if study_type in ["SF-GWAS", "SF-GWAS-LMM"]:
                 f.write(geno_binary_file_prefix + "\n")
             f.write(data_path + "\n")
 
@@ -291,3 +295,82 @@ def find_duplicate_line(filename: str) -> Optional[str]:
                 return prev_line.strip()
             prev_line = line
     return None
+
+
+def validate_sfgwas_lmm(
+    doc_ref_dict: dict, username: str, data_path: str, geno_binary_file_prefix: str
+) -> Tuple[str, str]:
+    """
+    Validate data for SF-GWAS-LMM workflow
+    """
+    geno_binary_file_prefix = validate_geno_binary_file_prefix(geno_binary_file_prefix)
+    data_path = validate_data_path(data_path)
+
+    if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
+        using_demo()
+
+    num_inds_value = doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]
+    num_snps_value = doc_ref_dict["parameters"]["num_snps"]["value"]
+
+    if num_inds_value == "":
+        condition_or_fail(False, "NUM_INDS is not set. Please set it and try again.")
+    if num_snps_value == "":
+        condition_or_fail(False, "num_snps is not set. Please set it and try again.")
+
+    # Validate genotype files (supports both pgen and bed formats)
+    has_pgen = os.path.isfile(geno_binary_file_prefix % 1 + ".pgen")
+    has_bed = os.path.isfile(geno_binary_file_prefix % 1 + ".bed")
+
+    condition_or_fail(
+        has_pgen or has_bed,
+        f"Could not find genotype files at {geno_binary_file_prefix % 1}.pgen/.bed"
+    )
+
+    if has_pgen:
+        for suffix in ["pgen", "pvar", "psam"]:
+            condition_or_fail(
+                os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix),
+                f"Could not find {geno_binary_file_prefix % 1}.{suffix} file.",
+            )
+    else:
+        for suffix in ["bed", "bim", "fam"]:
+            condition_or_fail(
+                os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix),
+                f"Could not find {geno_binary_file_prefix % 1}.{suffix} file.",
+            )
+
+    # Validate required text files
+    rows: int = num_rows(os.path.join(data_path, "pheno.txt"))
+    condition_or_fail(
+        rows == num_rows(os.path.join(data_path, "cov.txt")), 
+        "pheno and cov have different number of rows"
+    )
+    condition_or_fail(
+        rows == num_rows(os.path.join(data_path, "sample_keep.txt")), 
+        "pheno and sample_keep differ in num-rows"
+    )
+
+    # Check for additional SF-GWAS-LMM specific files
+    condition_or_fail(
+        os.path.isfile(os.path.join(data_path, "chrom_sizes.txt")),
+        "chrom_sizes.txt file not found"
+    )
+    condition_or_fail(
+        os.path.isfile(os.path.join(data_path, "all.gcount.transpose.bin")),
+        "all.gcount.transpose.bin file not found"
+    )
+
+    # Validate snp_ids uniqueness
+    duplicate_line = find_duplicate_line(os.path.join(data_path, "snp_ids.txt"))
+    condition_or_fail(duplicate_line is None, f"snp_ids.txt has duplicate line: {duplicate_line}")
+
+    # Validate NUM_INDS matches data
+    condition_or_fail(
+        rows == int(num_inds_value),
+        "NUM_INDS does not match the number of individuals in the data.",
+    )
+
+    # Update NUM_INDS
+    update_firestore(f"update_firestore::NUM_INDS={rows}")
+
+    return geno_binary_file_prefix, data_path

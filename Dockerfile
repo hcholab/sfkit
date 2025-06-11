@@ -34,6 +34,15 @@ RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
     rm -rf .git
 
 
+# -------------------- sfgwas-lmm -------------------- #
+FROM go AS sfgwas-lmm
+
+RUN git clone --depth 1 https://github.com/hhcho/sfgwas-lmm . && \
+    git checkout 5066987 && \
+    go test -c -o scripts/sfgwas-lmm ./lmm && \
+    rm -rf .git
+
+
 # -------------------- sf-relate -------------------- #
 FROM go AS sf-relate
 
@@ -173,6 +182,7 @@ COPY --from=plink2      --chown=nonroot /build/plink2   ./
 COPY --from=secure-dti  --chown=nonroot /build          ./secure-dti/
 COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
+COPY --from=sfgwas-lmm  --chown=nonroot /build          ./sfgwas-lmm/
 COPY --from=sf-relate   --chown=nonroot /build          ./sf-relate/
 COPY --from=sfkit-proxy --chown=nonroot /build/*-proxy  ./
 

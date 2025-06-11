@@ -6,6 +6,7 @@ from sfkit.utils.dti_protocol import run_dti_protocol
 from sfkit.utils.gwas_protocol import run_gwas_protocol
 from sfkit.utils.helper_functions import authenticate_user
 from sfkit.utils.pca_protocol import run_pca_protocol
+from sfkit.utils.sfgwas_lmm_protocol import run_sfgwas_lmm_protocol
 from sfkit.utils.sfgwas_protocol import run_sfgwas_protocol
 from sfkit.utils.sfrelate_protocol import run_sfrelate_protocol
 
@@ -66,6 +67,8 @@ def run_protocol(
             run_gwas_protocol(role, demo)
         elif study_type == "SF-GWAS":
             run_sfgwas_protocol(role, phase, demo)
+        elif study_type == "SF-GWAS-LMM":
+            run_sfgwas_lmm_protocol(role, phase, demo)
         elif study_type == "PCA":
             run_pca_protocol(role, demo)
         elif study_type == "SF-RELATE":
