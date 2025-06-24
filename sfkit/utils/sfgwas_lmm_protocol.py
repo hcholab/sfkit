@@ -80,7 +80,7 @@ def update_data_file_paths(data: dict) -> None:
     data["snp_position_file"] = f"{data_path}/snp_pos.txt"
     data["sample_keep_file"] = f"{data_path}/sample_keep.txt"
     data["snp_ids_file"] = f"{data_path}/snp_ids.txt"
-    data["geno_count_file"] = f"{data_path}/all.gcount.transpose.bin"
+    data["geno_count_file"] = f"{data_path}/geno/all.gcount.transpose.bin"
     data["chrom_sizes_file"] = f"{data_path}/chrom_sizes.txt"
 
     data["block_sizes_file"] = f"{data_path}/blockSizes.txt"
@@ -149,8 +149,7 @@ def start_sfgwas_lmm(role: str, demo: bool) -> None:
 
     run_command(
         command,
-        fail_message="Failed SF-GWAS-LMM protocol",
-        env=env
+        fail_message="Failed SF-GWAS-LMM protocol"
     )
 
     os.chdir(cwd)

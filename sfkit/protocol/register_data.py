@@ -342,11 +342,11 @@ def validate_sfgwas_lmm(
     # Validate required text files
     rows: int = num_rows(os.path.join(data_path, "pheno.txt"))
     condition_or_fail(
-        rows == num_rows(os.path.join(data_path, "cov.txt")), 
+        rows == num_rows(os.path.join(data_path, "cov.txt")),
         "pheno and cov have different number of rows"
     )
     condition_or_fail(
-        rows == num_rows(os.path.join(data_path, "sample_keep.txt")), 
+        rows == num_rows(os.path.join(data_path, "sample_keep.txt")),
         "pheno and sample_keep differ in num-rows"
     )
 
@@ -356,7 +356,7 @@ def validate_sfgwas_lmm(
         "chrom_sizes.txt file not found"
     )
     condition_or_fail(
-        os.path.isfile(os.path.join(data_path, "all.gcount.transpose.bin")),
+        os.path.isfile(os.path.join(data_path, "geno", "all.gcount.transpose.bin")),
         "all.gcount.transpose.bin file not found"
     )
 
