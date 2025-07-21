@@ -4,12 +4,16 @@ import shutil
 import time
 
 import tomlkit
-from sfgwas_protocol import sync_with_other_vms
 
-from sfkit.api import get_doc_ref_dict, update_firestore, website_send_file
+from sfkit.api import get_doc_ref_dict, update_firestore
 from sfkit.utils import constants
-from sfkit.utils.helper_functions import run_command
-from sfkit.utils.sfgwas_helper_functions import boot_sfkit_proxy, get_file_paths
+from sfkit.utils.helper_functions import condition_or_fail, run_command
+from sfkit.utils.sfgwas_helper_functions import (
+    boot_sfkit_proxy,
+    get_file_paths,
+    to_float_int_or_bool,
+)
+from sfkit.utils.sfgwas_protocol import sync_with_other_vms
 
 
 def run_sfgwas_lmm_protocol(role: str, phase: str = "", demo: bool = False) -> None:
@@ -90,7 +94,7 @@ def update_config_global() -> None:
     print("Updating configGlobal.toml")
     doc_ref_dict: dict = get_doc_ref_dict()
     config_file_path = (
-        f"{constants.EXECUTABLES_PREFIX}sfgwas-lmm/config/{protocol}/configGlobal.toml"
+        f"{constants.EXECUTABLES_PREFIX}sfgwas-lmm/config/configGlobal.toml"
     )
     with open(config_file_path, "r") as f:
         data = tomlkit.parse(f.read())
@@ -132,11 +136,7 @@ def update_config_global() -> None:
             i == 0 or data.get(row_name, [])[i] > 0,
             f"{row_name} must be greater than 0",
         )
-    data[col_name] = (
-        int(doc_ref_dict["parameters"]["num_snps"]["value"])
-        if protocol == "gwas"
-        else int(doc_ref_dict["parameters"]["num_columns"]["value"])
-    )
+    data[col_name] = int(doc_ref_dict["parameters"]["num_snps"]["value"])
     print(f"{col_name} is {data[col_name]}")
     condition_or_fail(data.get(col_name, 0) > 0, f"{col_name} must be greater than 0")
 
