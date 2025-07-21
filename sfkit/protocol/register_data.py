@@ -3,8 +3,12 @@ from typing import Optional, Tuple
 
 import checksumdir
 
-from sfkit.api import (get_doc_ref_dict, get_username, update_firestore,
-                       website_send_file)
+from sfkit.api import (
+    get_doc_ref_dict,
+    get_username,
+    update_firestore,
+    website_send_file,
+)
 from sfkit.encryption.mpc.encrypt_data import encrypt_data
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import authenticate_user, condition_or_fail
@@ -113,7 +117,90 @@ def validate_sfgwas(
     return geno_binary_file_prefix, data_path
 
 
-def validate_mpcgwas(doc_ref_dict: dict, username: str, data_path: str, role: str) -> str:
+def validate_sfgwas_lmm(
+    doc_ref_dict: dict, username: str, data_path: str, geno_binary_file_prefix: str
+) -> Tuple[str, str]:
+    """
+    Validate data for SF-GWAS-LMM workflow
+    """
+    geno_binary_file_prefix = validate_geno_binary_file_prefix(geno_binary_file_prefix)
+    data_path = validate_data_path(data_path)
+
+    if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
+        using_demo()
+
+    num_inds_value = doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]
+    num_snps_value = doc_ref_dict["parameters"]["num_snps"]["value"]
+
+    if num_inds_value == "":
+        condition_or_fail(False, "NUM_INDS is not set. Please set it and try again.")
+    if num_snps_value == "":
+        condition_or_fail(False, "num_snps is not set. Please set it and try again.")
+
+    # Validate genotype files (supports both pgen and bed formats)
+    has_pgen = os.path.isfile(geno_binary_file_prefix % 1 + ".pgen")
+    has_bed = os.path.isfile(geno_binary_file_prefix % 1 + ".bed")
+
+    condition_or_fail(
+        has_pgen or has_bed,
+        f"Could not find genotype files at {geno_binary_file_prefix % 1}.pgen/.bed",
+    )
+
+    if has_pgen:
+        for suffix in ["pgen", "pvar", "psam"]:
+            condition_or_fail(
+                os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix),
+                f"Could not find {geno_binary_file_prefix % 1}.{suffix} file.",
+            )
+    else:
+        for suffix in ["bed", "bim", "fam"]:
+            condition_or_fail(
+                os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix),
+                f"Could not find {geno_binary_file_prefix % 1}.{suffix} file.",
+            )
+
+    # Validate required text files
+    rows: int = num_rows(os.path.join(data_path, "pheno.txt"))
+    condition_or_fail(
+        rows == num_rows(os.path.join(data_path, "cov.txt")),
+        "pheno and cov have different number of rows",
+    )
+    condition_or_fail(
+        rows == num_rows(os.path.join(data_path, "sample_keep.txt")),
+        "pheno and sample_keep differ in num-rows",
+    )
+
+    # Check for additional SF-GWAS-LMM specific files
+    condition_or_fail(
+        os.path.isfile(os.path.join(data_path, "chrom_sizes.txt")),
+        "chrom_sizes.txt file not found",
+    )
+    condition_or_fail(
+        os.path.isfile(os.path.join(data_path, "geno", "all.gcount.transpose.bin")),
+        "all.gcount.transpose.bin file not found",
+    )
+
+    # Validate snp_ids uniqueness
+    duplicate_line = find_duplicate_line(os.path.join(data_path, "snp_ids.txt"))
+    condition_or_fail(
+        duplicate_line is None, f"snp_ids.txt has duplicate line: {duplicate_line}"
+    )
+
+    # Validate NUM_INDS matches data
+    condition_or_fail(
+        rows == int(num_inds_value),
+        "NUM_INDS does not match the number of individuals in the data.",
+    )
+
+    # Update NUM_INDS
+    update_firestore(f"update_firestore::NUM_INDS={rows}")
+
+    return geno_binary_file_prefix, data_path
+
+
+def validate_mpcgwas(
+    doc_ref_dict: dict, username: str, data_path: str, role: str
+) -> str:
     data_path = validate_data_path(data_path)
 
     if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
@@ -174,7 +261,9 @@ def validate_pca(doc_ref_dict: dict, username: str, data_path: str) -> str:
     return data_path
 
 
-def validate_sfrelate(doc_ref_dict: dict, username: str, data_path: str, role: str) -> str:
+def validate_sfrelate(
+    doc_ref_dict: dict, username: str, data_path: str, role: str
+) -> str:
     if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
         using_demo()
 
@@ -193,7 +282,9 @@ def validate_dti(doc_ref_dict: dict, username: str, data_path: str, role: str) -
     feature_rank_value = doc_ref_dict["parameters"]["FEATURE_RANK"]["value"]
 
     if feature_rank_value == "":
-        condition_or_fail(False, "FEATURE_RANK is not set. Please set it and try again.")
+        condition_or_fail(
+            False, "FEATURE_RANK is not set. Please set it and try again."
+        )
 
     # feature_rank = validate_dti_data(data_path)
     # condition_or_fail(
@@ -211,7 +302,9 @@ def validate_geno_binary_file_prefix(geno_binary_file_prefix: str) -> str:
     if not geno_binary_file_prefix:
         if constants.IS_DOCKER and os.path.exists("/app/data/geno"):
             geno_binary_file_prefix = f"/app/data/geno/ch%d"
-            print(f"Using default geno_binary_file_prefix for docker: {geno_binary_file_prefix}")
+            print(
+                f"Using default geno_binary_file_prefix for docker: {geno_binary_file_prefix}"
+            )
         else:
             geno_binary_file_prefix = input(
                 f"Enter absolute path to geno binary file prefix (e.g. '/home/username/for_sfgwas/geno/ch%d'): "
@@ -228,7 +321,9 @@ def validate_data_path(data_path: str) -> str:
             data_path = "/app/data"
             print(f"Using default data_path for docker: {data_path}")
         else:
-            data_path = input("Enter the (absolute) path to your data files (e.g. /home/username/for_sfgwas): ")
+            data_path = input(
+                "Enter the (absolute) path to your data files (e.g. /home/username/for_sfgwas): "
+            )
     if data_path != "demo" and not os.path.isabs(data_path):
         print("I need an ABSOLUTE path for the data_path.")
         exit(1)
@@ -244,14 +339,18 @@ def validate_sfgwas_data(geno_binary_file_prefix: str, data_path: str) -> int:
 
     rows: int = num_rows(os.path.join(data_path, "pheno.txt"))
     condition_or_fail(
-        rows == num_rows(os.path.join(data_path, "cov.txt")), "pheno and cov have different number of rows"
+        rows == num_rows(os.path.join(data_path, "cov.txt")),
+        "pheno and cov have different number of rows",
     )
     condition_or_fail(
-        rows == num_rows(os.path.join(data_path, "sample_keep.txt")), "pheno and sample_keep differ in num-rows"
+        rows == num_rows(os.path.join(data_path, "sample_keep.txt")),
+        "pheno and sample_keep differ in num-rows",
     )
 
     duplicate_line = find_duplicate_line(os.path.join(data_path, "snp_ids.txt"))
-    condition_or_fail(duplicate_line is None, f"snp_ids.txt has duplicate line: {duplicate_line}")
+    condition_or_fail(
+        duplicate_line is None, f"snp_ids.txt has duplicate line: {duplicate_line}"
+    )
 
     return rows
 
@@ -259,15 +358,19 @@ def validate_sfgwas_data(geno_binary_file_prefix: str, data_path: str) -> int:
 def validate_mpcgwas_data(data_path: str) -> Tuple[int, int]:
     rows = num_rows(os.path.join(data_path, "cov.txt"))
     condition_or_fail(
-        rows == num_rows(os.path.join(data_path, "geno.txt")), "cov and geno have different number of rows"
+        rows == num_rows(os.path.join(data_path, "geno.txt")),
+        "cov and geno have different number of rows",
     )
     condition_or_fail(
-        rows == num_rows(os.path.join(data_path, "pheno.txt")), "cov and pheno have different number of rows"
+        rows == num_rows(os.path.join(data_path, "pheno.txt")),
+        "cov and pheno have different number of rows",
     )
     num_covs = num_cols(os.path.join(data_path, "cov.txt"))
 
     duplicate_line = find_duplicate_line(os.path.join(data_path, "pos.txt"))
-    condition_or_fail(duplicate_line is None, f"pos.txt has duplicate line: {duplicate_line}")
+    condition_or_fail(
+        duplicate_line is None, f"pos.txt has duplicate line: {duplicate_line}"
+    )
 
     return rows, num_covs
 
@@ -295,82 +398,3 @@ def find_duplicate_line(filename: str) -> Optional[str]:
                 return prev_line.strip()
             prev_line = line
     return None
-
-
-def validate_sfgwas_lmm(
-    doc_ref_dict: dict, username: str, data_path: str, geno_binary_file_prefix: str
-) -> Tuple[str, str]:
-    """
-    Validate data for SF-GWAS-LMM workflow
-    """
-    geno_binary_file_prefix = validate_geno_binary_file_prefix(geno_binary_file_prefix)
-    data_path = validate_data_path(data_path)
-
-    if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
-        using_demo()
-
-    num_inds_value = doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]
-    num_snps_value = doc_ref_dict["parameters"]["num_snps"]["value"]
-
-    if num_inds_value == "":
-        condition_or_fail(False, "NUM_INDS is not set. Please set it and try again.")
-    if num_snps_value == "":
-        condition_or_fail(False, "num_snps is not set. Please set it and try again.")
-
-    # Validate genotype files (supports both pgen and bed formats)
-    has_pgen = os.path.isfile(geno_binary_file_prefix % 1 + ".pgen")
-    has_bed = os.path.isfile(geno_binary_file_prefix % 1 + ".bed")
-
-    condition_or_fail(
-        has_pgen or has_bed,
-        f"Could not find genotype files at {geno_binary_file_prefix % 1}.pgen/.bed"
-    )
-
-    if has_pgen:
-        for suffix in ["pgen", "pvar", "psam"]:
-            condition_or_fail(
-                os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix),
-                f"Could not find {geno_binary_file_prefix % 1}.{suffix} file.",
-            )
-    else:
-        for suffix in ["bed", "bim", "fam"]:
-            condition_or_fail(
-                os.path.isfile(geno_binary_file_prefix % 1 + "." + suffix),
-                f"Could not find {geno_binary_file_prefix % 1}.{suffix} file.",
-            )
-
-    # Validate required text files
-    rows: int = num_rows(os.path.join(data_path, "pheno.txt"))
-    condition_or_fail(
-        rows == num_rows(os.path.join(data_path, "cov.txt")),
-        "pheno and cov have different number of rows"
-    )
-    condition_or_fail(
-        rows == num_rows(os.path.join(data_path, "sample_keep.txt")),
-        "pheno and sample_keep differ in num-rows"
-    )
-
-    # Check for additional SF-GWAS-LMM specific files
-    condition_or_fail(
-        os.path.isfile(os.path.join(data_path, "chrom_sizes.txt")),
-        "chrom_sizes.txt file not found"
-    )
-    condition_or_fail(
-        os.path.isfile(os.path.join(data_path, "geno", "all.gcount.transpose.bin")),
-        "all.gcount.transpose.bin file not found"
-    )
-
-    # Validate snp_ids uniqueness
-    duplicate_line = find_duplicate_line(os.path.join(data_path, "snp_ids.txt"))
-    condition_or_fail(duplicate_line is None, f"snp_ids.txt has duplicate line: {duplicate_line}")
-
-    # Validate NUM_INDS matches data
-    condition_or_fail(
-        rows == int(num_inds_value),
-        "NUM_INDS does not match the number of individuals in the data.",
-    )
-
-    # Update NUM_INDS
-    update_firestore(f"update_firestore::NUM_INDS={rows}")
-
-    return geno_binary_file_prefix, data_path

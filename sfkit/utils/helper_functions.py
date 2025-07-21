@@ -19,12 +19,15 @@ def authenticate_user() -> None:
         exit(1)
 
 
-def run_command(command_list: list, fail_message: str = "") -> None:
+def run_command(command_list: list, fail_message: str = "", role: str = "") -> None:
+    env = dict(constants.ENV.copy(), PYTHONUNBUFFERED="1")
+    if role:
+        env["PID"] = role
     with subprocess.Popen(
         command_list,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        env=dict(constants.ENV.copy(), PYTHONUNBUFFERED="1"),
+        env=env,
         text=True,
         bufsize=1,
     ) as process:

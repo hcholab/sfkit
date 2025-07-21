@@ -38,7 +38,7 @@ RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
 FROM go AS sfgwas-lmm
 
 RUN git clone --depth 1 https://github.com/hhcho/sfgwas-lmm . && \
-    git checkout 5066987 && \
+    git checkout 1c34055 && \
     go test -c -o scripts/sfgwas-lmm ./lmm && \
     rm -rf .git
 
