@@ -1,7 +1,7 @@
 # hadolint global ignore=DL3006,DL3013,DL3018,DL3041,DL3059
 
 # -------------------- base -------------------- #
-FROM redhat/ubi9-minimal AS base
+FROM redhat/ubi10-minimal AS base
 
 RUN echo install_weak_deps=0 >> /etc/dnf/dnf.conf && \
     curl -O https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
