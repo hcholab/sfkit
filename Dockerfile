@@ -1,7 +1,10 @@
 # hadolint global ignore=DL3006,DL3013,DL3018,DL3041,DL3059
 
 # -------------------- base -------------------- #
-FROM redhat/ubi10-minimal AS base
+FROM registry.access.redhat.com/ubi9/python-312-minimal AS base
+
+# hadolint ignore=DL3002
+USER root
 
 RUN echo install_weak_deps=0 >> /etc/dnf/dnf.conf && \
     curl -O https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
@@ -153,7 +156,7 @@ FROM dev AS sfkit
 
 ENV PIP_NO_CACHE_DIR=1
 
-RUN microdnf install -y python3-pip && \
+RUN microdnf install -y gcc g++ python3.12-devel zlib-devel && \
     microdnf clean all && \
     pip install poetry
 
@@ -190,14 +193,14 @@ COPY --from=sfkit /build/dist/sfkit*.whl    ./
 
 RUN microdnf install -y \
         findutils \
+        gcc \
+        g++ \
         proxychains-ng \
-        python3 \
-        python3-pip \
-        python3-setuptools \
+        python3.12-devel \
+        zlib-devel \
     && \
-    pip install --no-cache-dir --upgrade pip setuptools && \
     pip install --no-cache-dir ./*.whl && \
-    microdnf remove -y python3-pip python3-setuptools && \
+    microdnf remove -y gcc g++ python3.12-devel zlib-devel && \
     microdnf clean all \
     && \
     adduser nonroot && \
