@@ -76,8 +76,8 @@ FROM base AS dev
 
 WORKDIR /build
 
-# -------------------- plink2 -------------------- #
-FROM dev AS plink2
+# -------------------- plink -------------------- #
+FROM dev AS plink
 
 ARG MARCH=native
 
@@ -85,7 +85,10 @@ RUN microdnf install -y unzip && \
     microdnf clean all && \
     ARCH=$(grep -q avx2 /proc/cpuinfo && [ "${MARCH}" = "native" ] || [ "${MARCH}" = "x86-64-v3" ] && echo "avx2" || echo "x86_64") && \
     curl -so plink2.zip "https://s3.amazonaws.com/plink2-assets/plink2_linux_${ARCH}_latest.zip" && \
-    unzip plink2.zip
+    unzip plink2.zip plink2 && \
+    curl -so plink.zip "https://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_latest.zip" && \
+    unzip plink.zip plink && \
+    rm ./*.zip
 
 
 # -------------------- c++ & ntl -------------------- #
@@ -200,7 +203,7 @@ RUN microdnf install -y \
     && \
     chown -R $USER:$USER .
 
-COPY --from=plink2      --chown=$USER /build/plink2   ./
+COPY --from=plink       --chown=$USER /build/plink*   ./
 COPY --from=secure-dti  --chown=$USER /build          ./secure-dti/
 COPY --from=secure-gwas --chown=$USER /build          ./secure-gwas/
 COPY --from=sfgwas      --chown=$USER /build          ./sfgwas/
