@@ -203,16 +203,16 @@ def process_output_files(role: str) -> None:
     doc_ref_dict: dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
 
-    send_results: str = (
+    _send_results: str = (
         doc_ref_dict["personal_parameters"][user_id]
         .get("SEND_RESULTS", {})
         .get("value")
     )
 
-    if send_results == "Yes":
-        output_dir = f"{constants.EXECUTABLES_PREFIX}sfgwas-lmm/out/party{role}"
+    # if send_results == "Yes":
+    #     output_dir = f"{constants.EXECUTABLES_PREFIX}sfgwas-lmm/out/party{role}"
 
-        # assoc_file = os.path.join(output_dir, "assoc_results.txt")
-        # if os.path.exists(assoc_file):
-        #     with open(assoc_file, "rb") as f:
-        #         website_send_file(f, "assoc_results.txt")
+    #     assoc_file = os.path.join(output_dir, "assoc_results.txt")
+    #     if os.path.exists(assoc_file):
+    #         with open(assoc_file, "rb") as f:
+    #             website_send_file(f, "assoc_results.txt")

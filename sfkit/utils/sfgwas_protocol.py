@@ -2,7 +2,6 @@
 Run the sfgwas protocol
 """
 
-import copy
 import fileinput
 import os
 import random
@@ -59,11 +58,15 @@ def install_sfgwas() -> None:
     update_firestore("update_firestore::task=Installing dependencies")
     print("Begin installing dependencies")
 
-    plink2_download_link = "https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_latest.zip"
+    plink2_download_link = (
+        "https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_latest.zip"
+    )
     plink2_zip_file = plink2_download_link.split("/")[-1]
 
     run_command(["sudo", "apt-get", "update", "-y"])
-    run_command(["sudo", "apt-get", "install", "wget", "git", "zip", "unzip", "snapd", "-y"])
+    run_command(
+        ["sudo", "apt-get", "install", "wget", "git", "zip", "unzip", "snapd", "-y"]
+    )
 
     install_go()
 
@@ -119,7 +122,9 @@ def generate_shared_keys(role: int, skip_cp0: bool = False) -> None:
             continue
         if skip_cp0 and i == 0:
             continue
-        other_public_key_str: str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
+        other_public_key_str: str = doc_ref_dict["personal_parameters"][other_username][
+            "PUBLIC_KEY"
+        ]["value"]
         while not other_public_key_str:
             if i == 0:  # Broad/cp0
                 print("Waiting for the Broad (CP0) to set up...")
@@ -127,11 +132,18 @@ def generate_shared_keys(role: int, skip_cp0: bool = False) -> None:
                 print(f"No public key found for {other_username}.  Waiting...")
             time.sleep(5)
             doc_ref_dict = get_doc_ref_dict()
-            other_public_key_str = doc_ref_dict["personal_parameters"][other_username]["PUBLIC_KEY"]["value"]
+            other_public_key_str = doc_ref_dict["personal_parameters"][other_username][
+                "PUBLIC_KEY"
+            ]["value"]
         other_public_key = PublicKey(other_public_key_str.encode(), encoder=HexEncoder)
-        condition_or_fail(my_private_key != other_public_key, "Private and public keys must be different")
+        condition_or_fail(
+            my_private_key != other_public_key,
+            "Private and public keys must be different",
+        )
         shared_key = Box(my_private_key, other_public_key).shared_key()
-        shared_key_path = os.path.join(constants.SFKIT_DIR, f"shared_key_{min(role, i)}_{max(role, i)}.bin")
+        shared_key_path = os.path.join(
+            constants.SFKIT_DIR, f"shared_key_{min(role, i)}_{max(role, i)}.bin"
+        )
         with open(shared_key_path, "wb") as f:
             f.write(shared_key)
 
@@ -170,7 +182,8 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
         print(f"File {config_file_path} not found.")
         print("Creating it...")
         shutil.copyfile(
-            f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configLocal.Party2.toml", config_file_path
+            f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configLocal.Party2.toml",
+            config_file_path,
         )
         with open(config_file_path, "r") as f:
             data = tomlkit.parse(f.read())
@@ -183,9 +196,13 @@ def update_config_local(role: str, protocol: str = "gwas") -> None:
 
     doc_ref_dict = get_doc_ref_dict()
     user_id: str = doc_ref_dict["participants"][int(role)]
-    data["local_num_threads"] = int(doc_ref_dict["personal_parameters"][user_id]["NUM_CPUS"]["value"])
+    data["local_num_threads"] = int(
+        doc_ref_dict["personal_parameters"][user_id]["NUM_CPUS"]["value"]
+    )
     data["assoc_num_blocks_parallel"] = int(data.get("local_num_threads", 16)) // 8
-    data["memory_limit"] = int(int(data.get("local_num_threads", 16)) * 8 * 1_000_000_000)
+    data["memory_limit"] = int(
+        int(data.get("local_num_threads", 16)) * 8 * 1_000_000_000
+    )
 
     with open(config_file_path, "w") as f:
         f.write(tomlkit.dumps(data))
@@ -212,7 +229,9 @@ def update_config_global(protocol: str = "gwas", network_only: bool = False) -> 
     """
     print("Updating configGlobal.toml")
     doc_ref_dict: dict = get_doc_ref_dict()
-    config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml"
+    config_file_path = (
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml"
+    )
     with open(config_file_path, "r") as f:
         data = tomlkit.parse(f.read())
 
@@ -225,10 +244,13 @@ def update_config_global(protocol: str = "gwas", network_only: bool = False) -> 
             servers[f"party{i}"] = {}
         party = servers[f"party{i}"]
 
-        party["ipaddr"] = \
-            doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
+        party["ipaddr"] = doc_ref_dict["personal_parameters"][participant][
+            "IP_ADDRESS"
+        ]["value"]
 
-        ports: list = doc_ref_dict["personal_parameters"][participant]["PORTS"]["value"].split(",")
+        ports: list = doc_ref_dict["personal_parameters"][participant]["PORTS"][
+            "value"
+        ].split(",")
         if "ports" not in party:
             party["ports"] = {}
         for j, port in enumerate(ports):
@@ -242,16 +264,27 @@ def update_config_global(protocol: str = "gwas", network_only: bool = False) -> 
         col_name = "num_columns" if protocol == "pca" else "num_snps"
         data[row_name] = []
         for i, participant in enumerate(doc_ref_dict["participants"]):
-            data.get(row_name, []).append(int(doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"]))
+            data.get(row_name, []).append(
+                int(
+                    doc_ref_dict["personal_parameters"][participant]["NUM_INDS"][
+                        "value"
+                    ]
+                )
+            )
             print(f"{row_name} for {participant} is {data.get(row_name, [])[i]}")
-            condition_or_fail(i == 0 or data.get(row_name, [])[i] > 0, f"{row_name} must be greater than 0")
+            condition_or_fail(
+                i == 0 or data.get(row_name, [])[i] > 0,
+                f"{row_name} must be greater than 0",
+            )
         data[col_name] = (
             int(doc_ref_dict["parameters"]["num_snps"]["value"])
             if protocol == "gwas"
             else int(doc_ref_dict["parameters"]["num_columns"]["value"])
         )
         print(f"{col_name} is {data[col_name]}")
-        condition_or_fail(data.get(col_name, 0) > 0, f"{col_name} must be greater than 0")
+        condition_or_fail(
+            data.get(col_name, 0) > 0, f"{col_name} must be greater than 0"
+        )
 
         # shared and advanced parameters
         pars = {**doc_ref_dict["parameters"], **doc_ref_dict["advanced_parameters"]}
@@ -268,7 +301,9 @@ def update_config_global_phase(phase: str, demo: bool, protocol: str = "gwas") -
     Update based on phase in configGlobal.toml
     :param phase: "1", "2", "3"
     """
-    config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml"
+    config_file_path = (
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml"
+    )
     with open(config_file_path, "r") as f:
         data = tomlkit.parse(f.read())
 
@@ -292,7 +327,9 @@ def update_sfgwas_go(protocol: str = "gwas") -> None:
     """
     Update sfgwas.go
     """
-    for line in fileinput.input(f"{constants.EXECUTABLES_PREFIX}sfgwas/sfgwas.go", inplace=True):
+    for line in fileinput.input(
+        f"{constants.EXECUTABLES_PREFIX}sfgwas/sfgwas.go", inplace=True
+    ):
         if "CONFIG_PATH = " in line:
             print(f'var CONFIG_PATH = "config/{protocol}"')
         else:
@@ -360,7 +397,10 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
     if demo and (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         threads = []
         for r in range(3):
-            thread = threading.Thread(target=run_sfprotocol_with_task_updates, args=(["sfgwas"], protocol, str(r)))
+            thread = threading.Thread(
+                target=run_sfprotocol_with_task_updates,
+                args=(["sfgwas"], protocol, str(r)),
+            )
             threads.append(thread)
             thread.start()
 

@@ -23,8 +23,13 @@ def test_get_file_paths(tmp_path: Path):
     assert data_path == "path/to/data"
 
 
-def test_use_existing_config(mocker: Callable[..., Generator[MockerFixture, None, None]]):
-    mocker.patch("sfkit.utils.sfgwas_helper_functions.get_file_paths", return_value=("prefix", "/data/path"))
+def test_use_existing_config(
+    mocker: Callable[..., Generator[MockerFixture, None, None]]
+):
+    mocker.patch(
+        "sfkit.utils.sfgwas_helper_functions.get_file_paths",
+        return_value=("prefix", "/data/path"),
+    )
     mocker.patch("sfkit.utils.sfgwas_helper_functions.move", return_value=None)
 
     doc_ref_dict = {"description": "usingblocks-config"}
@@ -42,14 +47,18 @@ def test_move(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     sfgwas_helper_functions.move(source, destination)
 
 
-def test_run_sfprotocol_with_task_updates(mocker: Callable[..., Generator[MockerFixture, None, None]]) -> None:
+def test_run_sfprotocol_with_task_updates(
+    mocker: Callable[..., Generator[MockerFixture, None, None]]
+) -> None:
     mocker.patch("sfkit.utils.sfgwas_helper_functions.condition_or_fail")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.update_firestore")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.check_for_failure")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.open")
 
     sfgwas_helper_functions.run_sfprotocol_with_task_updates(["true"], "SF-GWAS", "1")
-    sfgwas_helper_functions.run_sfprotocol_with_task_updates(["echo", "sfkit: hi"], "PCA", "1")
+    sfgwas_helper_functions.run_sfprotocol_with_task_updates(
+        ["echo", "sfkit: hi"], "PCA", "1"
+    )
     sfgwas_helper_functions.run_sfprotocol_with_task_updates(
         ["echo", "Output collectively decrypted and saved to"], "", "1"
     )
@@ -79,24 +88,38 @@ def test_check_for_failure(mocker: Callable[..., Generator[MockerFixture, None, 
     process.stderr = stream
     line = "my error message"
 
-    sfgwas_helper_functions.check_for_failure(command_list, protocol, process, stream, line)
+    sfgwas_helper_functions.check_for_failure(
+        command_list, protocol, process, stream, line
+    )
 
-    sfgwas_helper_functions.check_for_failure(command_list, protocol, process, stream, "warning: my warning message")
+    sfgwas_helper_functions.check_for_failure(
+        command_list, protocol, process, stream, "warning: my warning message"
+    )
 
 
-def test_post_process_results(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+def test_post_process_results(
+    mocker: Callable[..., Generator[MockerFixture, None, None]]
+):
     # Mock external functions
     mocker.patch(
         "sfkit.utils.sfgwas_helper_functions.get_doc_ref_dict",
         return_value={
             "participants": {1: "user_id_1", 2: "user_id_2"},
             "personal_parameters": {
-                "user_id_1": {"RESULTS_PATH": {"value": "results_path_1"}, "SEND_RESULTS": {"value": "Yes"}},
-                "user_id_2": {"RESULTS_PATH": {"value": "results_path_2"}, "SEND_RESULTS": {"value": "Yes"}},
+                "user_id_1": {
+                    "RESULTS_PATH": {"value": "results_path_1"},
+                    "SEND_RESULTS": {"value": "Yes"},
+                },
+                "user_id_2": {
+                    "RESULTS_PATH": {"value": "results_path_2"},
+                    "SEND_RESULTS": {"value": "Yes"},
+                },
             },
         },
     )
-    mocker.patch("sfkit.utils.sfgwas_helper_functions.make_new_assoc_and_manhattan_plot")
+    mocker.patch(
+        "sfkit.utils.sfgwas_helper_functions.make_new_assoc_and_manhattan_plot"
+    )
     mocker.patch("sfkit.utils.sfgwas_helper_functions.make_pca_plot")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.copy_results_to_cloud_storage")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.website_send_file")
@@ -111,15 +134,23 @@ def test_post_process_results(mocker: Callable[..., Generator[MockerFixture, Non
         return_value={
             "participants": {1: "user_id_1", 2: "user_id_2"},
             "personal_parameters": {
-                "user_id_1": {"RESULTS_PATH": {"value": ""}, "SEND_RESULTS": {"value": "Yes"}},
-                "user_id_2": {"RESULTS_PATH": {"value": ""}, "SEND_RESULTS": {"value": "Yes"}},
+                "user_id_1": {
+                    "RESULTS_PATH": {"value": ""},
+                    "SEND_RESULTS": {"value": "Yes"},
+                },
+                "user_id_2": {
+                    "RESULTS_PATH": {"value": ""},
+                    "SEND_RESULTS": {"value": "Yes"},
+                },
             },
         },
     )
     sfgwas_helper_functions.post_process_results("1", True, "Other")
 
 
-def test_make_pca_plot(tmp_path: Path, mocker: Callable[..., Generator[MockerFixture, None, None]]):
+def test_make_pca_plot(
+    tmp_path: Path, mocker: Callable[..., Generator[MockerFixture, None, None]]
+):
     mocker.patch("numpy.loadtxt")
     mocker.patch("matplotlib.pyplot.scatter")
     mocker.patch("matplotlib.pyplot.xlabel")
@@ -130,7 +161,9 @@ def test_make_pca_plot(tmp_path: Path, mocker: Callable[..., Generator[MockerFix
     sfgwas_helper_functions.make_pca_plot("1")
 
 
-def test_make_new_assoc_and_manhattan_plot(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+def test_make_new_assoc_and_manhattan_plot(
+    mocker: Callable[..., Generator[MockerFixture, None, None]]
+):
     mocker.patch("sfkit.utils.sfgwas_helper_functions.postprocess_assoc")
     mocker.patch("sfkit.utils.sfgwas_helper_functions.plot_assoc")
 
@@ -143,14 +176,18 @@ def test_make_new_assoc_and_manhattan_plot(mocker: Callable[..., Generator[Mocke
         "parameters": {"num_covs": {"value": "3"}},
         "participants": ["user1", "user2"],
     }
-    sfgwas_helper_functions.make_new_assoc_and_manhattan_plot(doc_ref_dict, demo=False, role="test")
-    sfgwas_helper_functions.make_new_assoc_and_manhattan_plot(doc_ref_dict, demo=True, role="test")
+    sfgwas_helper_functions.make_new_assoc_and_manhattan_plot(
+        doc_ref_dict, demo=False, role="test"
+    )
+    sfgwas_helper_functions.make_new_assoc_and_manhattan_plot(
+        doc_ref_dict, demo=True, role="test"
+    )
 
 
 def test_to_float_int_or_bool():
     # Test conversion of boolean values
-    assert sfgwas_helper_functions.to_float_int_or_bool("true") == True
-    assert sfgwas_helper_functions.to_float_int_or_bool("false") == False
+    assert sfgwas_helper_functions.to_float_int_or_bool("true") is True
+    assert sfgwas_helper_functions.to_float_int_or_bool("false") is False
 
     # Test conversion of integer values
     assert sfgwas_helper_functions.to_float_int_or_bool("42") == 42

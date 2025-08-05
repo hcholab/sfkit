@@ -10,8 +10,7 @@ def test_website_send_file(mocker):
     mocker.patch("sfkit.api.open")
     mocker.patch("sfkit.api.get_service_account_headers", return_value={})
 
-    res = api.website_send_file(StringIO("web"), "msg")
-    assert res == True
+    assert api.website_send_file(StringIO("web"), "msg") is True
 
 
 def test_website_get(mocker):
@@ -39,14 +38,12 @@ def test_get_username(mocker):
 
 def test_update_firestore(mocker):
     mocker.patch("sfkit.api.send_request", mock_send_request)
-    res = api.update_firestore("msg")
-    assert res == True
+    assert api.update_firestore("msg") is True
 
 
 def test_create_cp0(mocker):
     mocker.patch("sfkit.api.send_request", mock_send_request)
-    res = api.create_cp0()
-    assert res == True
+    assert api.create_cp0() is True
 
 
 def mock_get_post(url, headers, params=None, files=None):
@@ -58,5 +55,7 @@ def mock_get_post(url, headers, params=None, files=None):
     return res
 
 
-def mock_send_request(request_type: str, params: dict = dict(), method: str = "GET") -> Response:
+def mock_send_request(
+    request_type: str, params: dict = dict(), method: str = "GET"
+) -> Response:
     return mock_get_post(request_type, {}, params)
