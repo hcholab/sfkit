@@ -41,7 +41,7 @@ def auth(study_id: str, **kwargs) -> None:
     if auth_key is None:
         try:
             get_service_account_headers()
-        except Exception as error:
+        except Exception:
             print("auth_key.txt not found.")
             auth_key_path = input("Enter the path to your auth_key.txt file: ")
             auth_key = read_auth_key(auth_key_path)

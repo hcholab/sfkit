@@ -180,6 +180,6 @@ def process_output_files(role: str, demo: bool) -> None:
         .get("value")
     )
     if send_results == "Yes":
-        fname = f"roc_pr.png"
+        fname = "roc_pr.png"
         with open(f"{data_path}/{fname}", "rb") as f:
             website_send_file(f, fname)

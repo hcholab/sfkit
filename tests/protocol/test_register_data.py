@@ -147,7 +147,7 @@ def test_validate_geno_binary_file_prefix(
     mocker.patch("sfkit.protocol.register_data.constants.IS_DOCKER", True)
     mocker.patch("sfkit.protocol.register_data.os.path.isabs", return_value=True)
     mocker.patch("os.path.exists", return_value=True)
-    assert register_data.validate_geno_binary_file_prefix("") == f"/data/geno/chr%d"
+    assert register_data.validate_geno_binary_file_prefix("") == "/data/geno/chr%d"
 
 
 def test_validate_data_path(

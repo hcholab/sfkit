@@ -1,7 +1,5 @@
-import fileinput
 import os
 import shutil
-import time
 
 import tomlkit
 
