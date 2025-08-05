@@ -28,7 +28,7 @@ def test_register_data(mocker: Callable[..., Generator[MockerFixture, None, None
 
     local_mock_doc_ref_dict = {
         "status": {"user@example.com": "start"},
-        "participants": ["user@example.com"],
+        "participants": ["cp0@example.com", "user@example.com"],
         "study_type": "SF-GWAS",
         "description": "",
     }
