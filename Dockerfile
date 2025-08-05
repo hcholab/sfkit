@@ -181,10 +181,10 @@ ENV OPENSSL_FORCE_FIPS_MODE=1 \
     SFKIT_DIR="/sfkit/.sfkit" \
     SFKIT_PROXY_ON=TRUE
 
-COPY --from=sfkit /build/dist/sfkit*.whl    ./
-
 ARG USER=nonroot
+RUN adduser $USER
 
+COPY --from=sfkit --chown=$USER /build/dist/sfkit*.whl ./
 RUN microdnf install -y \
         findutils \
         gcc \
@@ -197,7 +197,6 @@ RUN microdnf install -y \
     microdnf remove -y gcc g++ python3.12-devel zlib-devel && \
     microdnf clean all \
     && \
-    adduser $USER && \
     chown -R $USER:$USER .
 
 COPY --from=plink2      --chown=$USER /build/plink2   ./
