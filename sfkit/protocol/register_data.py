@@ -300,8 +300,8 @@ def validate_dti(doc_ref_dict: dict, username: str, data_path: str, role: str) -
 
 def validate_geno_binary_file_prefix(geno_binary_file_prefix: str) -> str:
     if not geno_binary_file_prefix:
-        if constants.IS_DOCKER and os.path.exists("/app/data/geno"):
-            geno_binary_file_prefix = f"/app/data/geno/ch%d"
+        if constants.IS_DOCKER and os.path.exists("/data/geno"):
+            geno_binary_file_prefix = f"/data/geno/chr%d"
             print(
                 f"Using default geno_binary_file_prefix for docker: {geno_binary_file_prefix}"
             )
@@ -317,8 +317,8 @@ def validate_geno_binary_file_prefix(geno_binary_file_prefix: str) -> str:
 
 def validate_data_path(data_path: str) -> str:
     if not data_path:
-        if constants.IS_DOCKER and os.path.exists("/app/data"):
-            data_path = "/app/data"
+        if constants.IS_DOCKER and os.path.exists("/data"):
+            data_path = "/data"
             print(f"Using default data_path for docker: {data_path}")
         else:
             data_path = input(
