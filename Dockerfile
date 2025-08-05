@@ -183,6 +183,8 @@ ENV OPENSSL_FORCE_FIPS_MODE=1 \
 
 COPY --from=sfkit /build/dist/sfkit*.whl    ./
 
+ARG USER=nonroot
+
 RUN microdnf install -y \
         findutils \
         gcc \
@@ -195,17 +197,17 @@ RUN microdnf install -y \
     microdnf remove -y gcc g++ python3.12-devel zlib-devel && \
     microdnf clean all \
     && \
-    adduser nonroot && \
-    chown -R nonroot:nonroot .
+    adduser $USER && \
+    chown -R $USER:$USER .
 
-COPY --from=plink2      --chown=nonroot /build/plink2   ./
-COPY --from=secure-dti  --chown=nonroot /build          ./secure-dti/
-COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
-COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
-COPY --from=sfgwas-lmm  --chown=nonroot /build          ./sfgwas-lmm/
-COPY --from=sf-relate   --chown=nonroot /build          ./sf-relate/
-COPY --from=sfkit-proxy --chown=nonroot /build/*-proxy  ./
+COPY --from=plink2      --chown=$USER /build/plink2   ./
+COPY --from=secure-dti  --chown=$USER /build          ./secure-dti/
+COPY --from=secure-gwas --chown=$USER /build          ./secure-gwas/
+COPY --from=sfgwas      --chown=$USER /build          ./sfgwas/
+COPY --from=sfgwas-lmm  --chown=$USER /build          ./sfgwas-lmm/
+COPY --from=sf-relate   --chown=$USER /build          ./sf-relate/
+COPY --from=sfkit-proxy --chown=$USER /build/*-proxy  ./
 
-USER nonroot
+USER $USER
 
 ENTRYPOINT ["sfkit"]
