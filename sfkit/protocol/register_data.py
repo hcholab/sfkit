@@ -31,6 +31,10 @@ def register_data(geno_binary_file_prefix: str = "", data_path: str = "") -> boo
     role: str = str(doc_ref_dict["participants"].index(username))
     study_type: str = doc_ref_dict["study_type"]
 
+    if role == "0":
+        print("Skipping data registration for CP0")
+        return
+
     validated = "validated" in doc_ref_dict["status"][username]
     if not validated:
         update_firestore("update_firestore::task=Validating Data Format")
