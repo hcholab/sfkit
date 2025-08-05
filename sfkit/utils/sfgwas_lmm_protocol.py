@@ -164,7 +164,7 @@ def start_sfgwas_lmm(role: str, demo: bool) -> None:
 
     if int(role) > 0:
         run_command(
-            ["data_prep.sh", role, data_path],
+            ["./data_prep.sh", role, data_path],
             fail_message="Failed data prep",
         )
 
@@ -177,7 +177,7 @@ def start_sfgwas_lmm(role: str, demo: bool) -> None:
     for test in ["TestLevel0", "TestLevel1", "TestAssoc"]:
         update_firestore(f"update_firestore::task={test}")
         run_command(
-            ["sfgwas-lmm", "-test.run", test, "-test.timeout", "96h"],
+            ["./sfgwas-lmm", "-test.run", test, "-test.timeout", "96h"],
             fail_message=f"Failed SF-GWAS-LMM {test}",
             role=role,
         )
