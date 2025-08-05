@@ -1,5 +1,7 @@
 import argparse
 
+from sfkit.utils import constants
+
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -9,6 +11,7 @@ def get_parser() -> argparse.ArgumentParser:
     auth = subparsers.add_parser("auth", help="Authenticate with the CLI")
     auth.add_argument(
         "--study_id",
+        default=constants.SFKIT_STUDY_ID,
         help="Study ID to authenticate with (for usage on Terra).  If not provided, you will be prompted to select from a list of available studies.",
     )
     networking = subparsers.add_parser(
@@ -76,7 +79,11 @@ def get_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("server", help="Start the sfkit server.")
     client = subparsers.add_parser("client", help="Start the sfkit client.")
-    client.add_argument("--study_id", help="Study ID for the client to use.")
+    client.add_argument(
+        "--study_id",
+        default=constants.SFKIT_STUDY_ID,
+        help="Study ID for the client to use.",
+    )
     client.add_argument(
         "--data_path", help="Path to the data directory for the client."
     )
@@ -87,7 +94,9 @@ def get_parser() -> argparse.ArgumentParser:
         help="All-in-one command to set up and run the protocol.",
     )
     run_all.add_argument(
-        "--study_id", default="", help="Study ID for the client to use."
+        "--study_id",
+        default=constants.SFKIT_STUDY_ID,
+        help="Study ID for the client to use.",
     )
     run_all.add_argument(
         "--data_path", default="", help="Path to the data directory for the client."

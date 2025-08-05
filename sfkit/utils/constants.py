@@ -40,6 +40,8 @@ SOCK_PATH = os.getenv("SFKIT_SOCK", os.path.join(SFKIT_DIR, "server.sock"))
 SAFE_DATA_PATH = os.environ.get("SAFE_DATA_PATH", "/data")
 SAFE_DATA_PATH = os.path.join(os.path.realpath(SAFE_DATA_PATH), "")
 
+SFKIT_STUDY_ID = os.getenv("SFKIT_STUDY_ID", "")
+
 ENV = os.environ.copy()
 SFKIT_PROXY_PORT = os.environ.get("SFKIT_PROXY_PORT", "7080")
 if SFKIT_PROXY_ON:
