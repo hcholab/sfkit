@@ -1,5 +1,8 @@
-from sfkit import cli
+from dataclasses import dataclass
+
 from pytest_mock import MockFixture
+
+from sfkit import cli
 
 
 def test_main(mocker: MockFixture) -> None:
@@ -34,6 +37,7 @@ def mock_get_parser():
     return Parser()
 
 
+@dataclass
 class MockArgs:
     command: str = "auth"
     study_id: str = ""

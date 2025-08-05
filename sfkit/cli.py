@@ -11,12 +11,12 @@ from sfkit.utils import constants
 
 def main() -> None:
     parser = get_parser()
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
-    if args.command not in (None, "client"):
+    if args["command"] not in (None, "client"):
         print(f"SFKIT_API_URL: {constants.SFKIT_API_URL}")
 
-    match args.command:
+    match args["command"]:
         case "server":
             server_command()
         case "client":
