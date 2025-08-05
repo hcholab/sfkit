@@ -177,7 +177,7 @@ FROM base
 WORKDIR /sfkit
 
 ENV OPENSSL_FORCE_FIPS_MODE=1 \
-    PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate" \
+    PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/sfkit/sfgwas-lmm/scripts" \
     PYTHONUNBUFFERED=TRUE \
     SFKIT_DIR="/sfkit/.sfkit" \
     SFKIT_PROXY_ON=TRUE
