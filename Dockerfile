@@ -160,13 +160,14 @@ RUN microdnf install -y gcc g++ python3.12-devel zlib-devel && \
     microdnf clean all && \
     pip install poetry
 
+COPY poetry.lock pyproject.toml ./
+RUN poetry install --only main,dev --no-root
+
 COPY . .
 RUN poetry install --only main,dev
-
 RUN poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude .venv
 RUN poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude .venv
 RUN poetry run pytest
-
 RUN poetry build -f wheel
 
 
