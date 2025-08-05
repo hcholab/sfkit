@@ -16,38 +16,26 @@ def main() -> None:
     if args.command not in (None, "client"):
         print(f"SFKIT_API_URL: {constants.SFKIT_API_URL}")
 
-    if args.command == "server":
-        server_command()
-    elif args.command == "client":
-        client_command(args.study_id, args.data_path)
-    elif args.command == "auth":
-        study_id: str = args.study_id or ""
-        auth(study_id)
-    elif args.command == "networking":
-        ports = args.ports or ""
-        ip_address = args.ip_address or ""
-        setup_networking(ports, ip_address)
-    elif args.command == "generate_keys":
-        generate_personal_keys()
-    elif args.command == "register_data":
-        geno_binary_file_prefix = args.geno_binary_file_prefix or ""
-        data_path = args.data_path or ""
-        register_data(geno_binary_file_prefix, data_path)
-    elif args.command == "run_protocol":
-        phase: str = ""  # args.phase or ""
-        demo: bool = args.demo or False
-        visualize_results: str = args.visualize_results or ""
-        results_path: str = args.results_path or ""
-        retry: bool = args.retry or False
-        skip_cp0: bool = args.skip_cp0 or False
-        run_protocol(phase, demo, visualize_results, results_path, retry, skip_cp0)
-    elif args.command in ("run", "all"):
-        study_id: str = args.study_id or ""
-        data_path: str = args.data_path or ""
-        auth(study_id)
-        setup_networking()
-        generate_personal_keys()
-        register_data(data_path=data_path)
-        run_protocol()
-    else:
-        parser.print_help()
+    match args.command:
+        case "server":
+            server_command()
+        case "client":
+            client_command(**args)
+        case "auth":
+            auth(**args)
+        case "networking":
+            setup_networking(**args)
+        case "generate_keys":
+            generate_personal_keys()
+        case "register_data":
+            register_data(**args)
+        case "run_protocol":
+            run_protocol(**args)
+        case "run" | "all":
+            auth(**args)
+            setup_networking()
+            generate_personal_keys()
+            register_data(**args)
+            run_protocol()
+        case _:
+            parser.print_help()

@@ -12,26 +12,35 @@ def get_parser() -> argparse.ArgumentParser:
         help="Study ID to authenticate with (for usage on Terra).  If not provided, you will be prompted to select from a list of available studies.",
     )
     networking = subparsers.add_parser(
-        "networking", help="Set up the networking, including your IP address and any relevant ports"
+        "networking",
+        help="Set up the networking, including your IP address and any relevant ports",
     )
     networking.add_argument(
         "--ports",
+        default="",
         help="Comma-separated list of ports you want to use for communication for each other User respectively. In a two-party study, you only need to provide one port (e.g. 8100). For each port provided, you should be sure to open that port and the next few ports (for faster communication) in your firewall. If not provided, you may be prompted to enter a port for each participant.",
     )
     networking.add_argument(
         "--ip_address",
+        default="",
         help="IP address you want to use for communication.  If not provided, your external IP address will be determined automatically.",
     )
-    subparsers.add_parser("generate_keys", help="Generate your public and private cryptographic keys")
+    subparsers.add_parser(
+        "generate_keys", help="Generate your public and private cryptographic keys"
+    )
     registerdataparser = subparsers.add_parser(
-        "register_data", help="Register and validate your data.", description="Register and validate your data."
+        "register_data",
+        help="Register and validate your data.",
+        description="Register and validate your data.",
     )
     registerdataparser.add_argument(
         "--geno_binary_file_prefix",
+        default="",
         help="Absolute path to the genotype binary file prefix for SF-GWAS (e.g. ``/home/username/for_sfgwas/geno/ch%d``).  See https://sfkit.org/instructions#data_preparation for more details on the files you need.",
     )
     registerdataparser.add_argument(
         "--data_path",
+        default="",
         help="Absolute path to the data directory (files like ``pheno.txt`` and ``cov.txt`` for GWAS and ``data.txt`` for PCA) (e.g. ``/home/username/for_sfgwas``). See https://sfkit.org/instructions#data_preparation for more details on the files you need.",
     )
     runprotocol = subparsers.add_parser(
@@ -42,24 +51,46 @@ def get_parser() -> argparse.ArgumentParser:
     #     "--phase",
     #     help="Phase of the protocol to run (e.g. '1' for QC, 2 for PCA, 3 for Association Statistics)",
     # )
-    runprotocol.add_argument("--skip_cp0", help="Skip the creation of cp0 for party 1", action="store_true")
-    runprotocol.add_argument("--demo", help="Run the demo protocol", action="store_true")
     runprotocol.add_argument(
-        "--visualize_results", help="Visualize the results in the UI (``Yes`` or ``No``) (default is ``No``)"
+        "--skip_cp0",
+        default=False,
+        help="Skip the creation of cp0 for party 1",
+        action="store_true",
+    )
+    runprotocol.add_argument(
+        "--demo", default=False, help="Run the demo protocol", action="store_true"
+    )
+    runprotocol.add_argument(
+        "--visualize_results",
+        default="",
+        help="Visualize the results in the UI (``Yes`` or ``No``) (default is ``No``)",
     )
     runprotocol.add_argument(
         "--results_path",
+        default="",
         help="The path in a GCP bucket (you have access to) where you would like to send the results of the protocol (e.g. ``<bucket>/<path>``).",
     )
-    runprotocol.add_argument("--retry", help="Retry the protocol", action="store_true")
+    runprotocol.add_argument(
+        "--retry", default=False, help="Retry the protocol", action="store_true"
+    )
 
     subparsers.add_parser("server", help="Start the sfkit server.")
     client = subparsers.add_parser("client", help="Start the sfkit client.")
     client.add_argument("--study_id", help="Study ID for the client to use.")
-    client.add_argument("--data_path", help="Path to the data directory for the client.")
+    client.add_argument(
+        "--data_path", help="Path to the data directory for the client."
+    )
 
-    run_all = subparsers.add_parser("run", aliases=["all"], help="All-in-one command to set up and run the protocol.")
-    run_all.add_argument("--study_id", help="Study ID for the client to use.")
-    run_all.add_argument("--data_path", help="Path to the data directory for the client.")
+    run_all = subparsers.add_parser(
+        "run",
+        aliases=["all"],
+        help="All-in-one command to set up and run the protocol.",
+    )
+    run_all.add_argument(
+        "--study_id", default="", help="Study ID for the client to use."
+    )
+    run_all.add_argument(
+        "--data_path", default="", help="Path to the data directory for the client."
+    )
 
     return parser
