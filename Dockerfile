@@ -181,14 +181,6 @@ ENV OPENSSL_FORCE_FIPS_MODE=1 \
     SFKIT_DIR="/sfkit/.sfkit" \
     SFKIT_PROXY_ON=TRUE
 
-COPY --from=plink2      --chown=nonroot /build/plink2   ./
-COPY --from=secure-dti  --chown=nonroot /build          ./secure-dti/
-COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
-COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
-COPY --from=sfgwas-lmm  --chown=nonroot /build          ./sfgwas-lmm/
-COPY --from=sf-relate   --chown=nonroot /build          ./sf-relate/
-COPY --from=sfkit-proxy --chown=nonroot /build/*-proxy  ./
-
 COPY --from=sfkit /build/dist/sfkit*.whl    ./
 
 RUN microdnf install -y \
@@ -205,6 +197,14 @@ RUN microdnf install -y \
     && \
     adduser nonroot && \
     chown -R nonroot:nonroot .
+
+COPY --from=plink2      --chown=nonroot /build/plink2   ./
+COPY --from=secure-dti  --chown=nonroot /build          ./secure-dti/
+COPY --from=secure-gwas --chown=nonroot /build          ./secure-gwas/
+COPY --from=sfgwas      --chown=nonroot /build          ./sfgwas/
+COPY --from=sfgwas-lmm  --chown=nonroot /build          ./sfgwas-lmm/
+COPY --from=sf-relate   --chown=nonroot /build          ./sf-relate/
+COPY --from=sfkit-proxy --chown=nonroot /build/*-proxy  ./
 
 USER nonroot
 
