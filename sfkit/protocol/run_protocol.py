@@ -1,7 +1,6 @@
 import time
 
-from sfkit.api import (create_cp0, get_doc_ref_dict, get_username,
-                       update_firestore)
+from sfkit.api import create_cp0, get_doc_ref_dict, get_username, update_firestore
 from sfkit.utils.dti_protocol import run_dti_protocol
 from sfkit.utils.gwas_protocol import run_gwas_protocol
 from sfkit.utils.helper_functions import authenticate_user
@@ -18,6 +17,7 @@ def run_protocol(
     results_path: str = "",
     retry: bool = False,
     skip_cp0: bool = False,
+    **kwargs,
 ) -> None:
     authenticate_user()
 
@@ -49,17 +49,28 @@ def run_protocol(
 
     if statuses[username] == "ready to begin protocol":
         while not demo and other_participant_not_ready(list(statuses.values())):
-            print("Other participant(s) not yet ready.  Waiting... (press CTRL-C to cancel)")
-            update_firestore("update_firestore::task=Waiting for other participant(s) to be ready")
+            print(
+                "Other participant(s) not yet ready.  Waiting... (press CTRL-C to cancel)"
+            )
+            update_firestore(
+                "update_firestore::task=Waiting for other participant(s) to be ready"
+            )
             time.sleep(5)
             doc_ref_dict = get_doc_ref_dict()
             statuses = doc_ref_dict["status"]
 
-        if not demo and role == "1" and not skip_cp0 and study_type not in ["SF-RELATE", "Secure-DTI"]:
+        if (
+            not demo
+            and role == "1"
+            and not skip_cp0
+            and study_type not in ["SF-RELATE", "Secure-DTI"]
+        ):
             create_cp0()
 
         if phase:
-            update_firestore(f"update_firestore::status=running phase {phase} of {study_type} protocol")
+            update_firestore(
+                f"update_firestore::status=running phase {phase} of {study_type} protocol"
+            )
         else:
             update_firestore(f"update_firestore::status=running {study_type} protocol")
 

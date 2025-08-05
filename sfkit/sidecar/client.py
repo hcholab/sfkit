@@ -4,7 +4,7 @@ import socket
 from sfkit.sidecar.utils import get_sock_path
 
 
-def client_command(study_id: str, data_path: str):
+def client_command(study_id: str, data_path: str, **kwargs):
     sock_path = get_sock_path()
     client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     client.connect(sock_path)

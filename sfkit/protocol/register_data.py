@@ -14,7 +14,9 @@ from sfkit.utils import constants
 from sfkit.utils.helper_functions import authenticate_user, condition_or_fail
 
 
-def register_data(geno_binary_file_prefix: str = "", data_path: str = "") -> bool:
+def register_data(
+    geno_binary_file_prefix: str = "", data_path: str = "", **kwargs
+) -> bool:
     """
     Register data with the server and validate that the data formatting looks correct.
     """

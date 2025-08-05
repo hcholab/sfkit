@@ -32,7 +32,7 @@ def get_study_index(study_options, study_id):
             print("That input was invalid. Please try again.")
 
 
-def auth(study_id: str) -> None:
+def auth(study_id: str, **kwargs) -> None:
     """
     Authenticate a GCP service account from the study with the sfkit CLI.
     """
@@ -46,7 +46,9 @@ def auth(study_id: str) -> None:
             auth_key_path = input("Enter the path to your auth_key.txt file: ")
             auth_key = read_auth_key(auth_key_path)
             if auth_key is None:
-                print("auth_key.txt not found.  Please download the auth_key.txt file from the sfkit website.")
+                print(
+                    "auth_key.txt not found.  Please download the auth_key.txt file from the sfkit website."
+                )
                 exit(1)
         else:
             study_options = get_study_options().get("options")
