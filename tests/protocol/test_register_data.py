@@ -1,9 +1,10 @@
 # sourcery skip: no-wildcard-imports
+import copy
 from pathlib import Path
 from typing import Callable, Generator
 
 import pytest
-from helper_functions_and_constants import *
+from helper_functions_and_constants import mock_doc_ref_dict
 from pytest_mock import MockerFixture
 
 from sfkit.protocol import register_data

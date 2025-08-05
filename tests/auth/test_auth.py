@@ -1,6 +1,5 @@
 import io
 from typing import Callable, Generator
-import pytest
 from pytest_mock import MockerFixture
 from sfkit.auth import auth
 
@@ -17,7 +16,8 @@ def test_auth(mocker: Callable[..., Generator[MockerFixture, None, None]]):
         },
     )
     mocker.patch(
-        "sfkit.auth.auth.get_study_options", return_value={"options": [{"study_id": "123", "title": "Test Study"}]}
+        "sfkit.auth.auth.get_study_options",
+        return_value={"options": [{"study_id": "123", "title": "Test Study"}]},
     )
     mocker.patch("sfkit.auth.auth.condition_or_fail")
     mocker.patch("sfkit.auth.auth.os.makedirs")
