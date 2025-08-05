@@ -176,22 +176,6 @@ def validate_sfgwas_lmm(
         "pheno and sample_keep differ in num-rows",
     )
 
-    # Check for additional SF-GWAS-LMM specific files
-    condition_or_fail(
-        os.path.isfile(os.path.join(data_path, "chrom_sizes.txt")),
-        "chrom_sizes.txt file not found",
-    )
-    condition_or_fail(
-        os.path.isfile(os.path.join(data_path, "geno", "all.gcount.transpose.bin")),
-        "all.gcount.transpose.bin file not found",
-    )
-
-    # Validate snp_ids uniqueness
-    duplicate_line = find_duplicate_line(os.path.join(data_path, "snp_ids.txt"))
-    condition_or_fail(
-        duplicate_line is None, f"snp_ids.txt has duplicate line: {duplicate_line}"
-    )
-
     # Validate NUM_INDS matches data
     condition_or_fail(
         rows == int(num_inds_value),
