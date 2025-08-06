@@ -163,9 +163,6 @@ RUN sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
 # -------------------- sfkit package -------------------- #
 FROM dev AS sfkit
 
-ARG WORK
-WORKDIR ${WORK}
-
 ENV PIP_NO_CACHE_DIR=1
 
 RUN microdnf install -y gcc g++ python3.12-devel zlib-devel && \
@@ -190,10 +187,10 @@ RUN .venv/bin/pip install --no-deps --no-index dist/*.whl
 # -------------------- final image -------------------- #
 FROM base
 
-ARG WORK
-WORKDIR ${WORK}
+ARG USER=sfkit \
+    WORK
 
-ARG USER=sfkit
+WORKDIR ${WORK}
 
 RUN microdnf install -y proxychains-ng && \
     microdnf clean all && \
