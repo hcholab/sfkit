@@ -157,21 +157,27 @@ RUN sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
 # -------------------- sfkit package -------------------- #
 FROM dev AS sfkit
 
+WORKDIR /sfkit
+
 ENV PIP_NO_CACHE_DIR=1
 
 RUN microdnf install -y gcc g++ python3.12-devel zlib-devel && \
     microdnf clean all && \
     pip install poetry
 
-COPY poetry.lock pyproject.toml ./
+COPY poetry.* pyproject.toml ./
 RUN poetry install --only main,dev --no-root
 
 COPY . .
-RUN poetry install --only main,dev
+RUN poetry install --only-root
+
 RUN poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude .venv
 RUN poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude .venv
 RUN poetry run pytest
+
+RUN poetry sync --only main
 RUN poetry build -f wheel
+RUN .venv/bin/pip install --no-deps --no-index dist/*.whl
 
 
 # -------------------- final image -------------------- #
@@ -180,28 +186,23 @@ FROM base
 WORKDIR /sfkit
 
 ENV OPENSSL_FORCE_FIPS_MODE=1 \
-    PATH="$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/sfkit/sfgwas-lmm/scripts" \
+    PATH="$PATH:/sfkit:/sfkit/.venv/bin:/sfkit/sfgwas:/sfkit/sf-relate:/sfkit/sfgwas-lmm/scripts" \
     PYTHONUNBUFFERED=TRUE \
     SFKIT_DIR="/sfkit/.sfkit" \
     SFKIT_PROXY_ON=TRUE
 
-ARG USER=nonroot
-RUN adduser $USER
+ARG USER=sfkit
 
-COPY --from=sfkit --chown=$USER /build/dist/sfkit*.whl ./
 RUN microdnf install -y \
         findutils \
-        gcc \
-        g++ \
         proxychains-ng \
-        python3.12-devel \
-        zlib-devel \
+        python3.12 \
+    && microdnf clean all \
     && \
-    pip install --no-cache-dir ./*.whl && \
-    microdnf remove -y gcc g++ python3.12-devel zlib-devel && \
-    microdnf clean all \
-    && \
+    adduser $USER && \
     chown -R $USER:$USER .
+
+USER $USER
 
 COPY --from=plink       --chown=$USER /build/plink*   ./
 COPY --from=secure-dti  --chown=$USER /build          ./secure-dti/
@@ -211,6 +212,7 @@ COPY --from=sfgwas-lmm  --chown=$USER /build          ./sfgwas-lmm/
 COPY --from=sf-relate   --chown=$USER /build          ./sf-relate/
 COPY --from=sfkit-proxy --chown=$USER /build/*-proxy  ./
 
-USER $USER
+COPY --from=sfkit       --chown=$USER /sfkit/dist/sfkit*.whl ./
+COPY --from=sfkit       --chown=$USER /sfkit/.venv/   .venv/
 
 ENTRYPOINT ["sfkit"]
