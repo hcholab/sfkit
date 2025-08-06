@@ -187,7 +187,7 @@ WORKDIR /sfkit
 
 ENV HOME=/sfkit \
     OPENSSL_FORCE_FIPS_MODE=1 \
-    PATH="$PATH:/sfkit:/sfkit/.venv/bin:/sfkit/sfgwas:/sfkit/sf-relate:/sfkit/sfgwas-lmm/scripts" \
+    PATH="/sfkit/.venv/bin:$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/sfkit/sfgwas-lmm/scripts" \
     PYTHONUNBUFFERED=TRUE \
     PYTHONWARNINGS="ignore:pkg_resources is deprecated as an API:UserWarning" \
     SFKIT_DIR="/sfkit/.sfkit" \
@@ -198,7 +198,6 @@ ARG USER=sfkit
 RUN microdnf install -y \
         findutils \
         proxychains-ng \
-        python3.12 \
     && microdnf clean all \
     && \
     adduser $USER && \
