@@ -189,6 +189,7 @@ ENV HOME=/sfkit \
     OPENSSL_FORCE_FIPS_MODE=1 \
     PATH="$PATH:/sfkit:/sfkit/.venv/bin:/sfkit/sfgwas:/sfkit/sf-relate:/sfkit/sfgwas-lmm/scripts" \
     PYTHONUNBUFFERED=TRUE \
+    PYTHONWARNINGS="ignore:pkg_resources is deprecated as an API:UserWarning" \
     SFKIT_DIR="/sfkit/.sfkit" \
     SFKIT_PROXY_ON=TRUE
 
