@@ -1,5 +1,5 @@
 # hadolint global ignore=DL3006,DL3013,DL3018,DL3041,DL3059
-ARG HOME=/sfkit
+ARG WORK=/sfkit
 
 # -------------------- base -------------------- #
 FROM registry.access.redhat.com/ubi9/python-312-minimal AS base
@@ -25,7 +25,8 @@ RUN microdnf install -y \
         go-toolset \
     && microdnf clean all
 
-WORKDIR /build
+ARG WORK
+WORKDIR ${WORK}
 
 
 # -------------------- sfgwas -------------------- #
@@ -75,7 +76,8 @@ RUN git clone https://github.com/hcholab/sfkit-proxy . && \
 # -------------------- dev -------------------- #
 FROM base AS dev
 
-WORKDIR /build
+ARG WORK
+WORKDIR ${WORK}
 
 # -------------------- plink -------------------- #
 FROM dev AS plink
@@ -120,7 +122,8 @@ RUN ./configure NTL_THREAD_BOOST=on CXXFLAGS="-g -O2 -march=${MARCH}" && \
     make "-j$(nproc)" all && \
     make install
 
-WORKDIR /build
+ARG WORK
+WORKDIR ${WORK}
 
 
 # -------------------- secure-dti -------------------- #
@@ -130,7 +133,8 @@ RUN git clone --depth 1 -b cp-only https://github.com/hcholab/secure-dti . && \
     git checkout 8a49bdf3 && \
     rm -rf .git
 
-WORKDIR /build/mpc/code
+ARG WORK
+WORKDIR ${WORK}/mpc/code
 RUN sed -i "s|^CPP.*$|CPP = /usr/bin/clang++|g" Makefile && \
     sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile && \
     sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
@@ -148,7 +152,8 @@ RUN git clone --depth 1 https://github.com/hcholab/secure-gwas . && \
     git checkout d4c6dbc && \
     rm -rf .git
 
-WORKDIR /build/code
+ARG WORK
+WORKDIR ${WORK}/code
 RUN sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
     sed -i "s|-march=native|-march=${MARCH} -maes|g" Makefile && \
     make "-j$(nproc)" && \
@@ -158,8 +163,8 @@ RUN sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
 # -------------------- sfkit package -------------------- #
 FROM dev AS sfkit
 
-ARG HOME
-WORKDIR ${HOME}
+ARG WORK
+WORKDIR ${WORK}
 
 ENV PIP_NO_CACHE_DIR=1
 
@@ -185,8 +190,8 @@ RUN .venv/bin/pip install --no-deps --no-index dist/*.whl
 # -------------------- final image -------------------- #
 FROM base
 
-ARG HOME
-WORKDIR ${HOME}
+ARG WORK
+WORKDIR ${WORK}
 
 ARG USER=sfkit
 
@@ -195,25 +200,25 @@ RUN microdnf install -y proxychains-ng && \
     adduser $USER && \
     chown -R $USER:$USER .
 
-ENV HOME=${HOME} \
+ENV HOME=${WORK} \
     OPENSSL_FORCE_FIPS_MODE=1 \
-    PATH="${HOME}/.venv/bin:$PATH:${HOME}:${HOME}/sfgwas:${HOME}/sf-relate:${HOME}/sfgwas-lmm/scripts" \
+    PATH="${WORK}/.venv/bin:$PATH:${WORK}:${WORK}/sfgwas:${WORK}/sf-relate:${WORK}/sfgwas-lmm/scripts" \
     PYTHONUNBUFFERED=TRUE \
     PYTHONWARNINGS="ignore:pkg_resources is deprecated as an API:UserWarning" \
-    SFKIT_DIR="${HOME}/.sfkit" \
+    SFKIT_DIR="${WORK}/.sfkit" \
     SFKIT_PROXY_ON=TRUE
 
 USER $USER
 
-COPY --from=plink       --chown=$USER /build/plink*   ./
-COPY --from=secure-dti  --chown=$USER /build          ./secure-dti/
-COPY --from=secure-gwas --chown=$USER /build          ./secure-gwas/
-COPY --from=sfgwas      --chown=$USER /build          ./sfgwas/
-COPY --from=sfgwas-lmm  --chown=$USER /build          ./sfgwas-lmm/
-COPY --from=sf-relate   --chown=$USER /build          ./sf-relate/
-COPY --from=sfkit-proxy --chown=$USER /build/*-proxy  ./
+COPY --from=plink       --chown=$USER ${WORK}/plink*        ./
+COPY --from=secure-dti  --chown=$USER ${WORK}/secure-dti    ./secure-dti/
+COPY --from=secure-gwas --chown=$USER ${WORK}/secure-gwas   ./secure-gwas/
+COPY --from=sfgwas      --chown=$USER ${WORK}/sfgwas        ./sfgwas/
+COPY --from=sfgwas-lmm  --chown=$USER ${WORK}/sfgwas-lmm    ./sfgwas-lmm/
+COPY --from=sf-relate   --chown=$USER ${WORK}/sf-relate     ./sf-relate/
+COPY --from=sfkit-proxy --chown=$USER ${WORK}/build/*-proxy ./
 
-COPY --from=sfkit --chown=$USER ${HOME}/dist/sfkit*.whl ./
-COPY --from=sfkit --chown=$USER ${HOME}/.venv/ .venv/
+COPY --from=sfkit --chown=$USER ${WORK}/dist/sfkit*.whl ./
+COPY --from=sfkit --chown=$USER ${WORK}/.venv/ .venv/
 
 ENTRYPOINT ["sfkit"]
