@@ -1,4 +1,5 @@
 # hadolint global ignore=DL3006,DL3013,DL3018,DL3041,DL3059
+ARG HOME=/sfkit
 
 # -------------------- base -------------------- #
 FROM registry.access.redhat.com/ubi9/python-312-minimal AS base
@@ -157,7 +158,8 @@ RUN sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile && \
 # -------------------- sfkit package -------------------- #
 FROM dev AS sfkit
 
-WORKDIR /sfkit
+ARG HOME
+WORKDIR ${HOME}
 
 ENV PIP_NO_CACHE_DIR=1
 
@@ -183,7 +185,8 @@ RUN .venv/bin/pip install --no-deps --no-index dist/*.whl
 # -------------------- final image -------------------- #
 FROM base
 
-WORKDIR /sfkit
+ARG HOME
+WORKDIR ${HOME}
 
 ARG USER=sfkit
 
@@ -192,12 +195,12 @@ RUN microdnf install -y proxychains-ng && \
     adduser $USER && \
     chown -R $USER:$USER .
 
-ENV HOME=/sfkit \
+ENV HOME=${HOME} \
     OPENSSL_FORCE_FIPS_MODE=1 \
-    PATH="/sfkit/.venv/bin:$PATH:/sfkit:/sfkit/sfgwas:/sfkit/sf-relate:/sfkit/sfgwas-lmm/scripts" \
+    PATH="${HOME}/.venv/bin:$PATH:${HOME}:${HOME}/sfgwas:${HOME}/sf-relate:${HOME}/sfgwas-lmm/scripts" \
     PYTHONUNBUFFERED=TRUE \
     PYTHONWARNINGS="ignore:pkg_resources is deprecated as an API:UserWarning" \
-    SFKIT_DIR="/sfkit/.sfkit" \
+    SFKIT_DIR="${HOME}/.sfkit" \
     SFKIT_PROXY_ON=TRUE
 
 USER $USER
@@ -210,7 +213,7 @@ COPY --from=sfgwas-lmm  --chown=$USER /build          ./sfgwas-lmm/
 COPY --from=sf-relate   --chown=$USER /build          ./sf-relate/
 COPY --from=sfkit-proxy --chown=$USER /build/*-proxy  ./
 
-COPY --from=sfkit --chown=$USER /sfkit/dist/sfkit*.whl ./
-COPY --from=sfkit --chown=$USER /sfkit/.venv/ .venv/
+COPY --from=sfkit --chown=$USER ${HOME}/dist/sfkit*.whl ./
+COPY --from=sfkit --chown=$USER ${HOME}/.venv/ .venv/
 
 ENTRYPOINT ["sfkit"]
