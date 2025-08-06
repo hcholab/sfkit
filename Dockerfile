@@ -210,13 +210,13 @@ ENV HOME=${WORK} \
 
 USER $USER
 
-COPY --from=plink       --chown=$USER ${WORK}/plink*        ./
-COPY --from=secure-dti  --chown=$USER ${WORK}/secure-dti    ./secure-dti/
-COPY --from=secure-gwas --chown=$USER ${WORK}/secure-gwas   ./secure-gwas/
-COPY --from=sfgwas      --chown=$USER ${WORK}/sfgwas        ./sfgwas/
-COPY --from=sfgwas-lmm  --chown=$USER ${WORK}/sfgwas-lmm    ./sfgwas-lmm/
-COPY --from=sf-relate   --chown=$USER ${WORK}/sf-relate     ./sf-relate/
-COPY --from=sfkit-proxy --chown=$USER ${WORK}/build/*-proxy ./
+COPY --from=plink       --chown=$USER ${WORK}/plink*    ./
+COPY --from=secure-dti  --chown=$USER ${WORK}           ./secure-dti/
+COPY --from=secure-gwas --chown=$USER ${WORK}           ./secure-gwas/
+COPY --from=sfgwas      --chown=$USER ${WORK}           ./sfgwas/
+COPY --from=sfgwas-lmm  --chown=$USER ${WORK}           ./sfgwas-lmm/
+COPY --from=sf-relate   --chown=$USER ${WORK}           ./sf-relate/
+COPY --from=sfkit-proxy --chown=$USER ${WORK}/*-proxy   ./
 
 COPY --from=sfkit --chown=$USER ${WORK}/dist/sfkit*.whl ./
 COPY --from=sfkit --chown=$USER ${WORK}/.venv/ .venv/
