@@ -214,7 +214,7 @@ COPY --from=sfgwas-lmm  --chown=$USER /build          ./sfgwas-lmm/
 COPY --from=sf-relate   --chown=$USER /build          ./sf-relate/
 COPY --from=sfkit-proxy --chown=$USER /build/*-proxy  ./
 
-COPY --from=sfkit       --chown=$USER /sfkit/dist/sfkit*.whl ./
-COPY --from=sfkit       --chown=$USER /sfkit/.venv/   .venv/
+COPY --from=sfkit --chown=$USER /sfkit/dist/sfkit*.whl ./
+COPY --from=sfkit --chown=$USER /sfkit/.venv/ .venv/
 
 ENTRYPOINT ["sfkit"]
