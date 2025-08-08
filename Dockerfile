@@ -200,6 +200,7 @@ RUN microdnf install -y proxychains-ng && \
 ENV HOME=${WORK} \
     OPENSSL_FORCE_FIPS_MODE=1 \
     PATH="${WORK}/.venv/bin:$PATH:${WORK}:${WORK}/sfgwas:${WORK}/sf-relate:${WORK}/sfgwas-lmm/scripts" \
+    PYTHONPATH="${WORK}/.venv/lib/python3.12/site-packages:${WORK}/.venv/lib64/python3.12/site-packages" \
     PYTHONUNBUFFERED=TRUE \
     PYTHONWARNINGS="ignore:pkg_resources is deprecated as an API:UserWarning" \
     SFKIT_DIR="${WORK}/.sfkit" \
