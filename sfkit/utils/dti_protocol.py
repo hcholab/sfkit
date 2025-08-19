@@ -142,7 +142,10 @@ def start_dti(role: str, demo: bool) -> None:
     cwd = os.getcwd()
     command = []
     if constants.SFKIT_PROXY_ON:
-        boot_sfkit_proxy(role=role)
+        boot_sfkit_proxy(
+            role,
+            f"{constants.EXECUTABLES_PREFIX}sfgwas/config/gwas/configGlobal.toml",  # TODO FIX
+        )
 
         proxychains_conf = os.path.join(cwd, "proxychains.conf")
         command += ["proxychains", "-f", proxychains_conf]

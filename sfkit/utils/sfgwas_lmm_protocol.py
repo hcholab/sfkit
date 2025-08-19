@@ -156,7 +156,10 @@ def start_sfgwas_lmm(role: str, demo: bool) -> None:
     sfkit_proxy = None
 
     if constants.SFKIT_PROXY_ON:
-        sfkit_proxy = boot_sfkit_proxy(role=role)
+        sfkit_proxy = boot_sfkit_proxy(
+            role,
+            f"{constants.EXECUTABLES_PREFIX}sfgwas-lmm/config/configGlobal.toml",
+        )
 
     os.chdir(f"{constants.EXECUTABLES_PREFIX}sfgwas-lmm/scripts")
 

@@ -389,7 +389,10 @@ def start_sfgwas(role: str, demo: bool = False, protocol: str = "gwas") -> None:
     print("Begin SF-GWAS protocol")
 
     if constants.SFKIT_PROXY_ON:
-        boot_sfkit_proxy(role=role, protocol=protocol)
+        boot_sfkit_proxy(
+            role,
+            f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml",
+        )
 
     cwd = os.getcwd()
     os.chdir(f"{constants.EXECUTABLES_PREFIX}sfgwas")

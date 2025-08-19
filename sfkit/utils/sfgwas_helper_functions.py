@@ -199,11 +199,10 @@ def to_float_int_or_bool(value) -> Union[float, int, bool, str]:
             return value
 
 
-def boot_sfkit_proxy(role: str, protocol: str = "gwas") -> subprocess.Popen:
+def boot_sfkit_proxy(role: str, config_path: str) -> subprocess.Popen:
     print("Booting up sfkit-proxy")
     doc_ref_dict: dict = get_doc_ref_dict()
     study_id: str = doc_ref_dict["study_id"]
-    config_file_path = f"{constants.EXECUTABLES_PREFIX}sfgwas/config/{protocol}/configGlobal.toml"
     with open(constants.AUTH_KEY, "r") as f:
         auth_key = f.readline().rstrip()
 
@@ -226,7 +225,7 @@ def boot_sfkit_proxy(role: str, protocol: str = "gwas") -> subprocess.Popen:
         "-pid",
         role,
         "-mpc",
-        config_file_path,
+        config_path,
         "-socks",
         constants.ENV["ALL_PROXY"],
     ]
