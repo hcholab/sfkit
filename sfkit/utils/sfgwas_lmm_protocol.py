@@ -46,9 +46,6 @@ def update_config_local(role: str) -> None:
         with open(config_file_path, "r") as f:
             data = tomlkit.parse(f.read())
 
-    if role != "0":
-        update_data_file_paths(data)
-
     data["shared_keys_path"] = constants.SFKIT_DIR
     data["output_dir"] = f"out/party{role}"
     data["cache_dir"] = f"cache/party{role}"
@@ -61,30 +58,6 @@ def update_config_local(role: str) -> None:
 
     with open(config_file_path, "w") as f:
         f.write(tomlkit.dumps(data))
-
-
-def update_data_file_paths(data: dict) -> None:
-    """
-    Update data file paths in config for SF-GWAS-LMM
-    """
-    geno_file_prefix, data_path = get_file_paths()
-
-    data["geno_fold_size_file"] = f"{data_path}/foldSizes.txt"
-
-    data["geno_binary_file_prefix"] = f"{geno_file_prefix}"
-    data["geno_block_size_file"] = f"{data_path}/blockSizes.txt"
-    data["geno_block_to_chrom_file"] = f"{data_path}/blockToChrom.txt"
-    data["geno_count_file"] = f"{data_path}/geno/all.gcount.transpose.bin"
-    data["snp_position_file"] = f"{data_path}/snp_pos.txt"
-
-    data["step_2_geno_binary_file_prefix"] = f"{geno_file_prefix}"
-    data["step_2_geno_block_size_file"] = f"{data_path}/blockSizes.txt"
-    data["step_2_geno_block_to_chrom_file"] = f"{data_path}/blockToChrom.txt"
-    data["step_2_geno_count_file"] = f"{data_path}/geno/all.gcount.transpose.bin"
-    data["step_2_snp_position_file"] = f"{data_path}/snp_pos.txt"
-
-    data["pheno_file"] = f"{data_path}/pheno.txt"
-    data["covar_file"] = f"{data_path}/cov.txt"
 
 
 def update_config_global() -> None:
