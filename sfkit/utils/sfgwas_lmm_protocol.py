@@ -11,12 +11,13 @@ from sfkit.utils.sfgwas_helper_functions import (
     get_file_paths,
     to_float_int_or_bool,
 )
-from sfkit.utils.sfgwas_protocol import sync_with_other_vms
+from sfkit.utils.sfgwas_protocol import generate_shared_keys, sync_with_other_vms
 
 
 def run_sfgwas_lmm_protocol(role: str, phase: str = "", demo: bool = False) -> None:
     print("\n\n Begin running SF-GWAS-LMM protocol \n\n")
     if not demo:
+        generate_shared_keys(int(role))
         print("Begin updating config files")
         update_config_local(role)
         update_config_global()
