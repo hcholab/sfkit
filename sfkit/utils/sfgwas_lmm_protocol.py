@@ -49,6 +49,7 @@ def update_config_local(role: str) -> None:
     if role != "0":
         update_data_file_paths(data)
 
+    data["shared_keys_path"] = constants.SFKIT_DIR
     data["output_dir"] = f"out/party{role}"
     data["cache_dir"] = f"cache/party{role}"
 
