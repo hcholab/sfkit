@@ -101,5 +101,11 @@ def get_parser() -> argparse.ArgumentParser:
     run_all.add_argument(
         "--data_path", default="", help="Path to the data directory for the client."
     )
+    run_all.add_argument(
+        "--skip_cp0",
+        default=False,
+        help="Skip the creation of cp0 for party 1",
+        action="store_true",
+    )
 
     return parser

@@ -36,6 +36,6 @@ def main() -> None:
             setup_networking()
             generate_personal_keys()
             register_data(**args)
-            run_protocol()
+            run_protocol(**args)
         case _:
             parser.print_help()
