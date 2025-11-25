@@ -54,7 +54,7 @@ cd sfkit
 #  apt update
 #  apt install -y --no-install-recommends python3-venv
 #fi
-python3 -m venv .venv
+python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 pip install patchelf ./sfkit*.whl
 rm ./sfkit*.whl
