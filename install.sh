@@ -50,10 +50,10 @@ echo
 
 echo Installing sfkit...
 cd sfkit
-if apt -v ; then
-  apt update
-  apt install -y --no-install-recommends python3-venv
-fi
+#if apt -v ; then
+#  apt update
+#  apt install -y --no-install-recommends python3-venv
+#fi
 python3 -m venv .venv
 source .venv/bin/activate
 pip install patchelf ./sfkit*.whl
