@@ -11,7 +11,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.14"
+python = ">=3.11"
 checksumdir = "^1.2.0"
 google-auth = "^2.23.4"
 google-cloud-storage = "^2.13.0"
