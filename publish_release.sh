@@ -25,6 +25,7 @@ for p in ${platforms} ; do
         pushd "${tmp_dir}"
 
         crane export "${IMAGE}" - --platform "$p" | tar -xf - "${sfkit_dir}"
+        rm -rf "${sfkit_dir}/.venv"
         tar -czf "${archive_base}${p//\//_}.tar.gz" "${sfkit_dir}"
 
         popd
@@ -33,11 +34,8 @@ for p in ${platforms} ; do
 done
 wait
 
-last_release=$(gh release list -L 1 | awk '{print $3}')
-next_release=$(perl -pe 's/(\d+)$/($1+1)/e' <<< "${last_release}")
-
 gh release create --generate-notes \
     -n "To install **sfkit**, please run:<br/>\`bash <(curl -sL https://github.com/hcholab/sfkit/releases/latest/download/install.sh)\`<br/>" \
-    --notes-start-tag "${last_release}" "${next_release}" "install.sh" "${archive_base}"*
+    "${IMAGE##*:}" "install.sh" "${archive_base}"*
 
 rm -rf "${dist_dir}"
