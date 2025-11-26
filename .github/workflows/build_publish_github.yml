@@ -166,7 +166,7 @@ jobs:
     if: needs.prepare.outputs.push == 'true'
     env:
       IMAGE: ${{ format('{0}:{1}', needs.prepare.outputs.image, needs.prepare.outputs.meta-version) }}
-      RELEASE: ${{ github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/dev' }}
+      RELEASE: ${{ github.ref == 'refs/heads/prod' }}
 
     steps:
       - name: Checkout
