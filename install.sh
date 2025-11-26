@@ -56,7 +56,7 @@ cd sfkit
 #fi
 python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
-pip install patchelf ./sfkit*.whl
+pip install --no-user patchelf ./sfkit*.whl
 rm ./sfkit*.whl
 mkdir -p ~/.local/bin/ && mv plink2 sfkit-proxy ~/.local/bin/
 mkdir -p ~/.local/sfgwas && mv sfgwas ~/.local/
