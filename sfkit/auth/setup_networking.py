@@ -21,7 +21,7 @@ def setup_networking(ports_str: str = "", ip_address: str = "", **kwargs) -> Non
     # Test NAT connectivity
     if not ip_address:
         while not ip_address:
-            nat_type, ip_address, _ = get_ip_info()
+            nat_type, ip_address, _ = get_ip_info(stun_host="stun.l.google.com", stun_port=19302) # from sfkit-proxy
             time.sleep(1)
 
         if constants.SFKIT_PROXY_ON:
