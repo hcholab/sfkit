@@ -25,6 +25,7 @@ for p in ${platforms} ; do
         pushd "${tmp_dir}"
 
         crane export "${IMAGE}" - --platform "$p" | tar -xf - "${sfkit_dir}"
+        rm -rf "${sfkit_dir}/.venv"
         tar -czf "${archive_base}${p//\//_}.tar.gz" "${sfkit_dir}"
 
         popd
