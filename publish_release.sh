@@ -7,6 +7,7 @@
 set -euxo pipefail
 
 IMAGE=$1
+VERSION=$2
 
 dist_dir="$(pwd)/dist"
 rm -rf "${dist_dir}"
@@ -36,6 +37,6 @@ wait
 
 gh release create --generate-notes \
     -n "To install **sfkit**, please run:<br/>\`curl -sL https://github.com/hcholab/sfkit/releases/latest/download/install.sh | bash\`<br/>" \
-    "${IMAGE##*:}" "install.sh" "${archive_base}"*
+    "${VERSION}" "install.sh" "${archive_base}"*
 
 rm -rf "${dist_dir}"

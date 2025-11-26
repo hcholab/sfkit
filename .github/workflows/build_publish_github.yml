@@ -204,7 +204,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          ./publish_release.sh "${{ env.IMAGE }}"
+          ./publish_release.sh "${{ env.IMAGE }}" "${{ needs.prepare.outputs.meta-version }}"
 
       - name: Delete old packages
         uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
