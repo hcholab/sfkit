@@ -35,7 +35,7 @@ done
 wait
 
 gh release create --generate-notes \
-    -n "To install **sfkit**, please run:<br/>\`bash <(curl -sL https://github.com/hcholab/sfkit/releases/latest/download/install.sh)\`<br/>" \
+    -n "To install **sfkit**, please run:<br/>\`curl -sL https://github.com/hcholab/sfkit/releases/latest/download/install.sh | bash\`<br/>" \
     "${IMAGE##*:}" "install.sh" "${archive_base}"*
 
 rm -rf "${dist_dir}"
