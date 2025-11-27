@@ -12,7 +12,7 @@ SFKIT_API_URL = os.environ.get(
     (
         f"https://sfkit.dsde-{TERRA_DEPLOYMENT_ENV}.broadinstitute.org/api"
         if TERRA_DEPLOYMENT_ENV
-        else "https://sfkit-website-bhj5a4wkqa-uc.a.run.app/api"
+        else "https://sfkit-website-419003787216.us-central1.run.app/api"
     ),
 )
 METADATA_VM_IDENTITY_URL = (
