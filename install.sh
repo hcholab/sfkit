@@ -100,4 +100,3 @@ fi
 echo Installation is complete.
 echo
 sfkit -h
-exec $SHELL
