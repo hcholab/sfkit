@@ -44,6 +44,7 @@ else
 fi
 
 echo Downloading and unpacking sfkit...
+rm -rf sfkit
 url="https://github.com/hcholab/sfkit/releases/latest/download/sfkit_linux_amd64${microarch}.tar.gz"
 { curl -sLo- "${url}" || wget -qO- "${url}" ; } | tar -xzf-
 echo
@@ -58,11 +59,12 @@ python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 pip install --no-user patchelf ./sfkit*.whl
 rm ./sfkit*.whl
-mkdir -p ~/.local/bin/ && mv plink2 sfkit-proxy ~/.local/bin/
-mkdir -p ~/.local/sfgwas && mv sfgwas ~/.local/
-mkdir -p ~/.local/sf-relate && mv sf-relate ~/.local/
-mkdir -p ~/.local/secure-dti && mv secure-dti ~/.local/
-mkdir -p ~/.local/secure-gwas && mv secure-gwas ~/.local/
+mkdir -p ~/.local/bin/ && mv plink plink2 sfkit-proxy ~/.local/bin/
+rm -rf ~/.local/sfgwas && mv sfgwas ~/.local/
+rm -rf ~/.local/sf-relate && mv sf-relate ~/.local/
+rm -rf ~/.local/secure-dti && mv secure-dti ~/.local/
+rm -rf ~/.local/secure-gwas && mv secure-gwas ~/.local/
+rm -rf ~/.local/sfgwas-lmm && mv sfgwas-lmm ~/.local/
 echo
 
 # check if ldd version is at least 2.34
