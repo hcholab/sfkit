@@ -51,9 +51,6 @@ echo
 
 echo Installing sfkit...
 cd sfkit
-if apt -v ; then
-  sudo apt update && sudo apt install -y --no-install-recommends python3-venv || true
-fi
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --no-user patchelf ./sfkit*.whl
