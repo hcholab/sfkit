@@ -75,17 +75,25 @@ if [ "${glibc_minor_ver}" -lt 34 ]; then
 fi
 
 deactivate
-if ! type sfkit &>/dev/null || ! echo "$PATH" | grep -q "/.local/bin" ; then
+if ! type sfkit &>/dev/null || ! echo "${PATH}" | grep -q "$PWD/.venv/bin" ; then
   echo Updating PATH...
-  echo "export PATH=\"\$PATH:\$HOME/.local/bin\"" >> ~/.profile || { echo "Failed to update PATH for .local/bin"; exit 1; }
-  echo "export PATH=\"\$PATH:$PWD/.venv/bin\"" >> ~/.profile || { echo "Failed to update PATH for .venv/bin"; exit 1; }
-  echo "export PATH=\"\$PATH:\$HOME/.local/sfgwas\"" >> ~/.profile || { echo "Failed to update PATH for .local/sfgwas"; exit 1; }
-  echo "export PATH=\"\$PATH:\$HOME/.local/sf-relate\"" >> ~/.profile || { echo "Failed to update PATH for .local/sf-relate"; exit 1; }
-  echo "export PATH=\"\$PATH:\$HOME/.local/secure-dti/mpc/code/bin\"" >> ~/.profile || { echo "Failed to update PATH for .local/secure-dti"; exit 1; }
-  echo "export PATH=\"\$PATH:\$HOME/.local/secure-gwas/code/bin\"" >> ~/.profile || { echo "Failed to update PATH for .local/secure-gwas"; exit 1; }
-  echo "export PATH=\"\$PATH:\$HOME/.local/sfgwas-lmm\"" >> ~/.profile || { echo "Failed to update PATH for .local/sfgwas-lmm"; exit 1; }
-  echo "export PATH=\"\$PATH:/sbin\"" >> ~/.profile || { echo "Failed to update PATH for /sbin"; exit 1; }
-  source ~/.profile
+
+  rc="${HOME}/.${SHELL##*/}rc"
+  if [ -z "${SHELL:-}" ] ; then
+    rc="$HOME/.profile"
+  fi
+
+  echo "export PATH=\"\$PATH:\
+\$HOME/.local/bin:\
+$PWD/.venv/bin:\
+\$HOME/.local/sfgwas:\
+\$HOME/.local/sfgwas-lmm:\
+\$HOME/.local/sf-relate:\
+\$HOME/.local/secure-dti/mpc/code/bin:\
+\$HOME/.local/secure-gwas/code/bin\
+\"" >> "$rc"
+
+  source "$rc"
   echo
 fi
 
