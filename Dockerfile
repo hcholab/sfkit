@@ -203,8 +203,7 @@ ENV HOME=${WORK} \
     PYTHONPATH="${WORK}/.venv/lib/python3.12/site-packages:${WORK}/.venv/lib64/python3.12/site-packages" \
     PYTHONUNBUFFERED=TRUE \
     PYTHONWARNINGS="ignore:pkg_resources is deprecated as an API:UserWarning" \
-    SFKIT_DIR="${WORK}/.sfkit" \
-    SFKIT_PROXY_ON=TRUE
+    SFKIT_DIR="${WORK}/.sfkit"
 
 USER $USER
 
