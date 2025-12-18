@@ -72,7 +72,9 @@ def test_update_config_local(mocker):
 
 
 def test_update_data_file_paths(mocker):
-    mocker.patch("sfkit.utils.sfgwas_protocol.get_file_paths", return_value=["hi", "hello"])
+    mocker.patch(
+        "sfkit.utils.sfgwas_protocol.get_file_paths", return_value=["hi", "hello"]
+    )
 
     sfgwas_protocol.update_data_file_paths(mock_toml_data)
 
@@ -116,6 +118,7 @@ def test_build_sfgwas(mocker):
 
 
 def test_start_sfgwas(mocker):
+    mocker.patch("sfkit.utils.sfgwas_protocol.boot_sfkit_proxy")
     mocker.patch("sfkit.utils.sfgwas_protocol.update_firestore")
     mocker.patch("sfkit.utils.sfgwas_protocol.run_sfprotocol_with_task_updates")
     mocker.patch("sfkit.utils.sfgwas_protocol.post_process_results")

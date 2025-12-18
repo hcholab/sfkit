@@ -144,6 +144,7 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           severity: "CRITICAL,HIGH"
+          trivyignores: .trivyignore
 
       - name: Export digest
         run: |
@@ -211,4 +212,4 @@ jobs:
           package-name: sfkit
           package-type: container
           delete-only-untagged-versions: true
-          min-versions-to-keep: 100
+          min-versions-to-keep: 1000

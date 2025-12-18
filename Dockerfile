@@ -20,6 +20,8 @@ RUN echo install_weak_deps=0 >> /etc/dnf/dnf.conf && \
 # -------------------- go -------------------- #
 FROM base AS go
 
+ARG GO_VERSION=1.25.5
+
 RUN microdnf install -y \
         git-core \
         go-toolset \
@@ -65,7 +67,7 @@ FROM go AS sfkit-proxy
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
-    git checkout 3530114 && \
+    git checkout 8c99a59 && \
     go build && \
     # ensure FIPS is enabled, fail if not
     go get github.com/acardace/fips-detect && \
@@ -203,8 +205,7 @@ ENV HOME=${WORK} \
     PYTHONPATH="${WORK}/.venv/lib/python3.12/site-packages:${WORK}/.venv/lib64/python3.12/site-packages" \
     PYTHONUNBUFFERED=TRUE \
     PYTHONWARNINGS="ignore:pkg_resources is deprecated as an API:UserWarning" \
-    SFKIT_DIR="${WORK}/.sfkit" \
-    SFKIT_PROXY_ON=TRUE
+    SFKIT_DIR="${WORK}/.sfkit"
 
 USER $USER
 

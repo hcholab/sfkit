@@ -133,7 +133,7 @@ def test_validate_pca(mocker: Callable[..., Generator[MockerFixture, None, None]
 
 
 def test_validate_geno_binary_file_prefix(
-    mocker: Callable[..., Generator[MockerFixture, None, None]]
+    mocker: Callable[..., Generator[MockerFixture, None, None]],
 ):
     # sourcery skip: remove-redundant-fstring
     mocker.patch("sfkit.protocol.register_data.input", return_value="demo")
@@ -148,11 +148,11 @@ def test_validate_geno_binary_file_prefix(
     mocker.patch("sfkit.protocol.register_data.constants.IS_DOCKER", True)
     mocker.patch("sfkit.protocol.register_data.os.path.isabs", return_value=True)
     mocker.patch("os.path.exists", return_value=True)
-    assert register_data.validate_geno_binary_file_prefix("") == "/data/geno/chr%d"
+    assert register_data.validate_geno_binary_file_prefix("") == "/data/geno/ch%d"
 
 
 def test_validate_data_path(
-    mocker: Callable[..., Generator[MockerFixture, None, None]]
+    mocker: Callable[..., Generator[MockerFixture, None, None]],
 ):
     mocker.patch("sfkit.protocol.register_data.input", return_value="demo")
     mocker.patch("sfkit.protocol.register_data.os.path.isabs", return_value=False)
@@ -170,7 +170,7 @@ def test_validate_data_path(
 
 
 def test_validate_sfgwas_data(
-    mocker: Callable[..., Generator[MockerFixture, None, None]]
+    mocker: Callable[..., Generator[MockerFixture, None, None]],
 ):
     mocker.patch("sfkit.protocol.register_data.condition_or_fail")
     mocker.patch("sfkit.protocol.register_data.os.path.isfile", return_value=True)
@@ -184,7 +184,7 @@ def test_validate_sfgwas_data(
 
 
 def test_validate_mpcgwas_data(
-    mocker: Callable[..., Generator[MockerFixture, None, None]]
+    mocker: Callable[..., Generator[MockerFixture, None, None]],
 ):
     mocker.patch("sfkit.protocol.register_data.num_rows", return_value=1)
     mocker.patch("sfkit.protocol.register_data.num_cols", return_value=1)
