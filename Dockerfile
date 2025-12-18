@@ -20,10 +20,15 @@ RUN echo install_weak_deps=0 >> /etc/dnf/dnf.conf && \
 # -------------------- go -------------------- #
 FROM base AS go
 
+ARG GO_VERSION=1.25.5
+
 RUN microdnf install -y \
         git-core \
-        go-toolset \
-    && microdnf clean all
+        tar \
+    && microdnf clean all \
+    && curl -sL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xzf - \
+    && ln -s /usr/local/go/bin/go /usr/bin/go \
+    && ln -s /usr/local/go/bin/gofmt /usr/bin/gofmt
 
 ARG WORK
 WORKDIR ${WORK}
