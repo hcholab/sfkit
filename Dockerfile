@@ -34,7 +34,7 @@ WORKDIR ${WORK}
 # -------------------- sfgwas -------------------- #
 FROM go AS sfgwas
 
-RUN git clone --depth 1 https://github.com/hcholab/sfgwas . && \
+RUN git clone https://github.com/hcholab/sfgwas . && \
     git checkout effd2b2 && \
     go build && \
     mkdir cache && \
