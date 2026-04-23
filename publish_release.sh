@@ -35,8 +35,11 @@ for p in ${platforms} ; do
 done
 wait
 
+sed "s|^VERSION=\"latest/download\"|VERSION=\"download/${VERSION}\"|" \
+    install.sh > "${dist_dir}/install.sh"
+
 gh release create --generate-notes \
     -n "To install **sfkit**, please run:<br/>\`source <(curl -sL https://github.com/hcholab/sfkit/releases/download/${VERSION}/install.sh)\`<br/>" \
-    "${VERSION}" "install.sh" "${archive_base}"*
+    "${VERSION}" "${dist_dir}/install.sh" "${archive_base}"*
 
 rm -rf "${dist_dir}"

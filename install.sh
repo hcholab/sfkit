@@ -45,7 +45,8 @@ fi
 
 echo Downloading and unpacking sfkit...
 rm -rf sfkit
-url="https://github.com/hcholab/sfkit/releases/latest/download/sfkit_linux_amd64${microarch}.tar.gz"
+VERSION="latest/download"
+url="https://github.com/hcholab/sfkit/releases/${VERSION}/sfkit_linux_amd64${microarch}.tar.gz"
 { curl -sLo- "${url}" || wget -qO- "${url}" ; } | tar -xzf-
 echo
 
