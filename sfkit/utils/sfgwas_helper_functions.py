@@ -217,7 +217,6 @@ def boot_sfkit_proxy(role: str, config_path: str) -> subprocess.Popen:
     # instead of waiting (indefinitely) on the proxy process to complete
     command = [
         "sfkit-proxy",
-        "-v",
         "-api",
         api_url,
         "-study",
@@ -228,6 +227,7 @@ def boot_sfkit_proxy(role: str, config_path: str) -> subprocess.Popen:
         config_path,
         "-socks",
         constants.ENV["ALL_PROXY"],
+        *constants.SFKIT_PROXY_ARGS.split(),
     ]
     print_cmd = command.copy()
     if not auth_key.startswith("study_id:"):
