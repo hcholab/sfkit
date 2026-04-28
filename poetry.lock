@@ -1530,18 +1530,6 @@ files = [
 ]
 
 [[package]]
-name = "pystun3"
-version = "2.0.0"
-description = "A Python STUN client for getting NAT type and external IP (RFC 3489)"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "pystun3-2.0.0-py3-none-any.whl", hash = "sha256:4824c72d2c8c0297df92dbdf7cc57b346d6cf0de4e5a428c3be12d28a8bce0f3"},
-    {file = "pystun3-2.0.0.tar.gz", hash = "sha256:99abfe83df69fd0f6278e9be1456827fafb9e4e25efed8074d15b754ac9b1fee"},
-]
-
-[[package]]
 name = "pytest"
 version = "9.0.3"
 description = "pytest: simple powerful testing with Python"
@@ -2253,4 +2241,4 @@ zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "39a2b89174a65edad3a92b52d8710ca6722d10d787ed6fcb00b969f08ee77984"
+content-hash = "4932732b5083a16962e9e69523af3160febad0ab62b6d084d3874cbb09f93aad"
