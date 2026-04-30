@@ -20,8 +20,11 @@ def setup_networking(ports_str: str = "", ip_address: str = "", **kwargs) -> Non
 
     # Test NAT connectivity
     if not ip_address:
+        filtering = "Unknown"
         while not ip_address:
-            nat_type, ip_address, _ = get_ip_info(stun_host="stun.l.google.com", stun_port=19302) # from sfkit-proxy
+            nat_type, ip_address, _, filtering = get_ip_info(
+                stun_host="stun.l.google.com", stun_port=19302
+            )  # from sfkit-proxy
             time.sleep(1)
 
         if constants.SFKIT_PROXY_ON:
@@ -34,6 +37,7 @@ def setup_networking(ports_str: str = "", ip_address: str = "", **kwargs) -> Non
                 )
                 sys.exit(1)
             print(f"NAT type: {nat_type}")
+            print(f"NAT filtering: {filtering}")
 
             # internal ip address
             ip_address = socket.gethostbyname(socket.gethostname())
@@ -88,6 +92,12 @@ _STUN_BINDING_REQUEST = 0x0001
 _ATTR_MAPPED_ADDRESS = 0x0001
 _ATTR_XOR_MAPPED_ADDRESS = 0x0020
 
+# RFC 5780 NAT behavior discovery
+_ATTR_CHANGE_REQUEST = 0x0003
+_ATTR_OTHER_ADDRESS = 0x802C
+_CHANGE_IP = 0x04
+_CHANGE_PORT = 0x02
+
 # Secondary STUN servers used to probe NAT mapping behavior. The primary server
 # (caller-supplied stun_host) plus these are queried on the SAME socket; if all
 # return the same external (ip, port), the NAT does Endpoint-Independent Mapping
@@ -100,10 +110,15 @@ _SECONDARY_STUN_SERVERS = (
 )
 
 
-def _stun_query(sock: socket.socket, server: tuple) -> tuple | None:
-    """Send a STUN Binding Request and return the reflexive (ip, port), or None on failure."""
+def _stun_query(
+    sock: socket.socket, server: tuple, change_flags: int = 0
+) -> tuple | None:
+    """Send a STUN Binding Request. Returns ((mapped_ip, mapped_port), other_addr_or_None) or None."""
     txid = os.urandom(12)
-    req = struct.pack(">HHI12s", _STUN_BINDING_REQUEST, 0, _STUN_MAGIC, txid)
+    attrs = (
+        struct.pack(">HHI", _ATTR_CHANGE_REQUEST, 4, change_flags) if change_flags else b""
+    )
+    req = struct.pack(">HHI12s", _STUN_BINDING_REQUEST, len(attrs), _STUN_MAGIC, txid) + attrs
     try:
         sock.sendto(req, server)
         data, _ = sock.recvfrom(1500)
@@ -112,22 +127,36 @@ def _stun_query(sock: socket.socket, server: tuple) -> tuple | None:
     if len(data) < 20:
         return None
     _, mlen, _, _ = struct.unpack(">HHI12s", data[:20])
-    pos = 20
-    while pos + 4 <= 20 + mlen and pos + 4 <= len(data):
+    mapped = other = None
+    pos, end = 20, min(20 + mlen, len(data))
+    while pos + 4 <= end:
         atype, alen = struct.unpack(">HH", data[pos : pos + 4])
         val = data[pos + 4 : pos + 4 + alen]
         pos += 4 + ((alen + 3) & ~3)
-        if atype == _ATTR_XOR_MAPPED_ADDRESS and len(val) >= 8 and val[1] == 0x01:
+        if len(val) < 8 or val[1] != 0x01:
+            continue
+        if atype == _ATTR_XOR_MAPPED_ADDRESS:
             port = struct.unpack(">H", val[2:4])[0] ^ (_STUN_MAGIC >> 16)
             ip = socket.inet_ntoa(
                 struct.pack(">I", struct.unpack(">I", val[4:8])[0] ^ _STUN_MAGIC)
             )
-            return (ip, port)
-        if atype == _ATTR_MAPPED_ADDRESS and len(val) >= 8 and val[1] == 0x01:
-            port = struct.unpack(">H", val[2:4])[0]
-            ip = socket.inet_ntoa(val[4:8])
-            return (ip, port)
-    return None
+            mapped = (ip, port)
+        elif atype == _ATTR_MAPPED_ADDRESS and mapped is None:
+            mapped = (socket.inet_ntoa(val[4:8]), struct.unpack(">H", val[2:4])[0])
+        elif atype == _ATTR_OTHER_ADDRESS:
+            other = (socket.inet_ntoa(val[4:8]), struct.unpack(">H", val[2:4])[0])
+    return (mapped, other) if mapped else None
+
+
+def _probe_filtering(sock: socket.socket, server: tuple) -> str:
+    """RFC 5780 §4.4 filtering tests. Server must support OTHER-ADDRESS.
+    Returns: 'Endpoint-Independent' | 'Address-Dependent' | 'Address-and-Port-Dependent'."""
+    sock.settimeout(2)
+    if _stun_query(sock, server, _CHANGE_IP | _CHANGE_PORT) is not None:
+        return "Endpoint-Independent"
+    if _stun_query(sock, server, _CHANGE_PORT) is not None:
+        return "Address-Dependent"
+    return "Address-and-Port-Dependent"
 
 
 def get_ip_info(
@@ -136,15 +165,12 @@ def get_ip_info(
     stun_host: str | None = None,
     stun_port: int = 3478,
 ) -> tuple:
-    """Determine NAT mapping behavior using RFC 5389 STUN Binding Requests on a single socket.
+    """Determine NAT mapping and filtering behavior via RFC 5389/5780 STUN probes.
 
-    Returns (nat_type, external_ip, external_port) where nat_type is one of:
-      - "Blocked"                       primary STUN server unreachable
-      - "Symmetric NAT"                 mapping differs across destinations (no EIM)
-      - "Endpoint-Independent Mapping"  same external (ip, port) across all responding secondaries
-      - "Inconclusive"                  primary worked but no secondary responded
-
-    Only mapping behavior (RFC 4787 §4.1) is tested; filtering behavior is not.
+    Returns (nat_type, external_ip, external_port, filtering) where:
+      nat_type  : 'Blocked' | 'Symmetric NAT' | 'Endpoint-Independent Mapping' | 'Inconclusive'
+      filtering : 'Endpoint-Independent' | 'Address-Dependent'
+                | 'Address-and-Port-Dependent' | 'Unknown'
     """
     primary = (stun_host or "stun.l.google.com", stun_port)
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -154,20 +180,32 @@ def get_ip_info(
         s.bind((source_ip, source_port))
         primary_result = _stun_query(s, primary)
         if primary_result is None:
-            return ("Blocked", None, None)
-        ext_ip, ext_port = primary_result
+            return ("Blocked", None, None, "Unknown")
+        primary_mapped, _ = primary_result
+        ext_ip, ext_port = primary_mapped
         confirmations = 0
+        filter_server = None  # first secondary that advertises OTHER-ADDRESS
+        nat_type = "Inconclusive"
         for srv in _SECONDARY_STUN_SERVERS:
             r = _stun_query(s, srv)
             if r is None:
                 continue
-            if r != primary_result:
-                return ("Symmetric NAT", ext_ip, ext_port)
+            mapped, other = r
+            if mapped != primary_mapped:
+                nat_type = "Symmetric NAT"
+                break
             confirmations += 1
+            if filter_server is None and other is not None:
+                filter_server = srv
             if confirmations >= 2:
-                return ("Endpoint-Independent Mapping", ext_ip, ext_port)
-        if confirmations == 0:
-            return ("Inconclusive", ext_ip, ext_port)
-        return ("Endpoint-Independent Mapping", ext_ip, ext_port)
+                nat_type = "Endpoint-Independent Mapping"
+                if filter_server is not None:
+                    break
+        filtering = (
+            _probe_filtering(s, filter_server)
+            if filter_server and nat_type == "Endpoint-Independent Mapping"
+            else "Unknown"
+        )
+        return (nat_type, ext_ip, ext_port, filtering)
     finally:
         s.close()
