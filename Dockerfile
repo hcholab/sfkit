@@ -169,7 +169,7 @@ ENV PIP_NO_CACHE_DIR=1
 
 RUN microdnf install -y gcc g++ python3.12-devel zlib-devel && \
     microdnf clean all && \
-    pip install poetry
+    pip install poetry==2.4.1
 
 COPY poetry.* pyproject.toml ./
 RUN poetry install --only main,dev --no-root

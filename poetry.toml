@@ -1,1 +1,4 @@
 virtualenvs.in-project = true
+
+[solver]
+min-release-age = 14
