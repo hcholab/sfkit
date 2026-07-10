@@ -88,7 +88,7 @@ def run_sfprotocol_with_task_updates(command_list: list, protocol: str, role: st
                     update_firestore(f"update_firestore::task={line.split(constants.SFKIT_PREFIX)[1]}")
                 elif "Output collectively decrypted and saved to" in line or (
                     protocol == "pca" and f"Saved data to cache/party{role}/Qpc.txt" in line
-                ):
+                ) or constants.FORCE_QUIT_MAGIC in line:
                     timeout = 30
 
                 check_for_failure(command_list, protocol, process, stream, line)
