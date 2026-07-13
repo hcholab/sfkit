@@ -35,7 +35,7 @@ WORKDIR ${WORK}
 FROM go AS sfgwas
 
 RUN git clone https://github.com/hcholab/sfgwas . && \
-    git checkout f1f10b7 && \
+    git checkout 656eba6 && \
     go build && \
     mkdir cache && \
     rm -rf .git
