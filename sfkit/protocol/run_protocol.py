@@ -1,4 +1,5 @@
 import time
+import tomlkit
 
 from sfkit.api import create_cp0, get_doc_ref_dict, get_username, update_firestore
 from sfkit.utils.dti_protocol import run_dti_protocol
@@ -74,10 +75,16 @@ def run_protocol(
         else:
             update_firestore(f"update_firestore::status=running {study_type} protocol")
 
+        cli_defined_params = None
+        config_toml_path = kwargs.get("config_toml_path")
+        if config_toml_path:
+            with open(config_toml_path) as f:
+                cli_defined_params = tomlkit.parse(f.read())
+
         if study_type == "MPC-GWAS":
             run_gwas_protocol(role, demo)
         elif study_type == "SF-GWAS":
-            run_sfgwas_protocol(role, phase, demo)
+            run_sfgwas_protocol(role, phase, demo, cli_defined_params)
         elif study_type == "SF-GWAS-LMM":
             run_sfgwas_lmm_protocol(role, phase, demo)
         elif study_type == "PCA":

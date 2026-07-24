@@ -76,6 +76,11 @@ def get_parser() -> argparse.ArgumentParser:
     runprotocol.add_argument(
         "--retry", default=False, help="Retry the protocol", action="store_true"
     )
+    runprotocol.add_argument(
+        "--config_toml_path",
+        default="",
+        help="Absolute path to the config TOML file (e.g. ``/home/username/for_sfgwas/config.toml``).",
+    )
 
     subparsers.add_parser("server", help="Start the sfkit server.")
     client = subparsers.add_parser("client", help="Start the sfkit client.")
@@ -106,6 +111,11 @@ def get_parser() -> argparse.ArgumentParser:
         default=False,
         help="Skip the creation of cp0 for party 1",
         action="store_true",
+    )
+    run_all.add_argument(
+        "--config_toml_path",
+        default="",
+        help="Absolute path to the config TOML file (e.g. ``/home/username/for_sfgwas/config.toml``).",
     )
 
     return parser
