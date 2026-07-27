@@ -43,7 +43,7 @@ def run_sfgwas_protocol(role: str, phase: str = "", demo: bool = False, cli_defi
         generate_shared_keys(int(role))
         print("Begin updating config files")
         update_config_local(role, cli_defined_params=cli_defined_params)
-        update_config_global(cli_defined_params=cli_defined_params)
+        update_config_global()
     update_config_global_phase(phase, demo)
     if not (constants.IS_DOCKER or constants.IS_INSTALLED_VIA_SCRIPT):
         build_sfgwas()
@@ -199,6 +199,12 @@ def update_config_local(role: str, protocol: str = "gwas", cli_defined_params: d
     data["local_num_threads"] = int(
         doc_ref_dict["personal_parameters"][user_id]["NUM_CPUS"]["value"]
     )
+
+    if cli_defined_params:
+        for key, value in cli_defined_params.items():
+            if key in data:
+                data[key] = to_float_int_or_bool(value)
+
     data["assoc_num_blocks_parallel"] = int(data.get("local_num_threads", 16)) // 8
     data["memory_limit"] = int(
         int(data.get("local_num_threads", 16)) * 8 * 1_000_000_000
@@ -207,13 +213,6 @@ def update_config_local(role: str, protocol: str = "gwas", cli_defined_params: d
     with open(config_file_path, "w") as f:
         f.write(tomlkit.dumps(data))
 
-    if cli_defined_params:
-        for key, value in cli_defined_params.items():
-            if key in data:
-                data[key] = to_float_int_or_bool(value)
-
-        with open(config_file_path, "w") as f:
-            f.write(tomlkit.dumps(data))
 
 def update_data_file_paths(data: dict) -> None:
     geno_file_prefix, data_path = get_file_paths()
@@ -230,7 +229,7 @@ def update_data_file_paths(data: dict) -> None:
     # don't need to return anything because data is a mutable object
 
 
-def update_config_global(protocol: str = "gwas", network_only: bool = False, cli_defined_params: dict = None) -> None:
+def update_config_global(protocol: str = "gwas", network_only: bool = False) -> None:
     """
     Update configGlobal.toml
     """
@@ -302,13 +301,6 @@ def update_config_global(protocol: str = "gwas", network_only: bool = False, cli
     with open(config_file_path, "w") as f:
         f.write(tomlkit.dumps(data))
 
-    if cli_defined_params:
-        for key, value in cli_defined_params.items():
-            if key in data:
-                data[key] = to_float_int_or_bool(value)
-
-        with open(config_file_path, "w") as f:
-            f.write(tomlkit.dumps(data))
 
 def update_config_global_phase(phase: str, demo: bool, protocol: str = "gwas") -> None:
     """
