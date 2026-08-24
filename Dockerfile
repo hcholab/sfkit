@@ -67,7 +67,7 @@ FROM go AS sfkit-proxy
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
-    git checkout 14eba92 && \
+    git checkout 5849d50 && \
     go build && \
     # ensure FIPS is enabled, fail if not
     go get github.com/acardace/fips-detect && \
