@@ -233,6 +233,9 @@ def boot_sfkit_proxy(role: str, config_path: str) -> subprocess.Popen:
     if not auth_key.startswith("study_id:"):
         command.extend(["-auth-key", auth_key])
         print_cmd.extend(["-auth-key", "*" * len(auth_key)])
+    for i, arg in enumerate(print_cmd):
+        if arg == "-stun-user" and i + 1 < len(print_cmd):
+            print_cmd[i + 1] = "*" * len(print_cmd[i + 1])
     print(f"Running command: {print_cmd}")
     p = subprocess.Popen(command)
 
