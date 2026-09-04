@@ -61,6 +61,15 @@ RUN git clone https://github.com/froelich/sf-relate . && \
     rm -rf .git
 
 
+# -------------------- sf-skat -------------------- #
+FROM go AS sf-skat
+
+RUN git clone https://github.com/swanhong/secure-skat . && \
+    git checkout b79ed20 && \
+    go build -o secure-rvas secure-rvas.go && \
+    rm -rf .git
+
+
 # -------------------- sfkit-proxy -------------------- #
 FROM go AS sfkit-proxy
 
@@ -201,7 +210,7 @@ RUN microdnf install -y proxychains-ng && \
 
 ENV HOME=${WORK} \
     OPENSSL_FORCE_FIPS_MODE=1 \
-    PATH="${WORK}/.venv/bin:$PATH:${WORK}:${WORK}/sfgwas:${WORK}/sf-relate:${WORK}/sfgwas-lmm/scripts" \
+    PATH="${WORK}/.venv/bin:$PATH:${WORK}:${WORK}/sfgwas:${WORK}/sf-relate:${WORK}/sfgwas-lmm/scripts:${WORK}/sf-skat" \
     PYTHONPATH="${WORK}/.venv/lib/python3.12/site-packages:${WORK}/.venv/lib64/python3.12/site-packages" \
     PYTHONUNBUFFERED=TRUE \
     PYTHONWARNINGS="ignore:pkg_resources is deprecated as an API:UserWarning" \
@@ -215,6 +224,7 @@ COPY --from=secure-gwas --chown=$USER ${WORK}           ./secure-gwas/
 COPY --from=sfgwas      --chown=$USER ${WORK}           ./sfgwas/
 COPY --from=sfgwas-lmm  --chown=$USER ${WORK}           ./sfgwas-lmm/
 COPY --from=sf-relate   --chown=$USER ${WORK}           ./sf-relate/
+COPY --from=sf-skat     --chown=$USER ${WORK}/secure-rvas ./sf-skat/secure-rvas
 COPY --from=sfkit-proxy --chown=$USER ${WORK}/*-proxy   ./
 
 COPY --from=sfkit --chown=$USER ${WORK}/dist/sfkit*.whl ./

@@ -58,6 +58,8 @@ def register_data(
             data_path = validate_sfrelate(doc_ref_dict, username, data_path, role)
         elif study_type == "Secure-DTI":
             data_path = validate_dti(doc_ref_dict, username, data_path, role)
+        elif study_type == "SF-SKAT":
+            data_path = validate_skat(doc_ref_dict, username, data_path, role)
         else:
             raise ValueError(f"Unknown study type: {study_type}")
 
@@ -284,6 +286,61 @@ def validate_dti(doc_ref_dict: dict, username: str, data_path: str, role: str) -
 
     # if role == "1":
     #     website_send_file(open(os.path.join(data_path, "pos.txt"), "r"), "pos.txt")
+
+    return data_path
+
+
+def validate_skat(
+    doc_ref_dict: dict, username: str, data_path: str, role: str
+) -> str:
+    """
+    Validate data for the SF-SKAT workflow.
+
+    SF-SKAT does not run data preparation itself: data_path must already contain
+    a `prepared/` directory tree produced by running `secure-rvas prepare`
+    out-of-band (see https://github.com/swanhong/secure-skat). data_path is the
+    directory that *contains* `prepared/` (i.e. secure-rvas's `run_dir`).
+
+    Only called for roles 1 (Cohort A) and 2 (Cohort B) -- role 0 (auxiliary)
+    holds no data and never reaches this function.
+    """
+    data_path = validate_data_path(data_path)
+
+    if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
+        using_demo()
+
+    ancestries = [
+        a.strip()
+        for a in doc_ref_dict["parameters"]["ancestries"]["value"].split(",")
+        if a.strip()
+    ]
+    chromosomes = [
+        c.strip()
+        for c in doc_ref_dict["parameters"]["chromosomes"]["value"].split(",")
+        if c.strip()
+    ]
+    cohort = "A" if role == "1" else "B"
+
+    for ancestry in ancestries:
+        for chromosome in chromosomes:
+            chr_dir = os.path.join(data_path, "prepared", ancestry, f"chr{chromosome}")
+            condition_or_fail(
+                os.path.isfile(os.path.join(chr_dir, "genes.txt")),
+                f"Could not find {chr_dir}/genes.txt",
+            )
+            condition_or_fail(
+                os.path.isfile(os.path.join(chr_dir, "block_sizes.txt")),
+                f"Could not find {chr_dir}/block_sizes.txt",
+            )
+            cohort_dir = os.path.join(chr_dir, cohort)
+            condition_or_fail(
+                os.path.isfile(os.path.join(cohort_dir, "cov.txt")),
+                f"Could not find {cohort_dir}/cov.txt",
+            )
+            condition_or_fail(
+                os.path.isfile(os.path.join(cohort_dir, "pheno.txt")),
+                f"Could not find {cohort_dir}/pheno.txt",
+            )
 
     return data_path
 

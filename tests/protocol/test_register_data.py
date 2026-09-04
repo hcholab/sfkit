@@ -21,6 +21,7 @@ def test_register_data(mocker: Callable[..., Generator[MockerFixture, None, None
     )
     mocker.patch("sfkit.protocol.register_data.validate_mpcgwas")
     mocker.patch("sfkit.protocol.register_data.validate_pca")
+    mocker.patch("sfkit.protocol.register_data.validate_skat", return_value="data_path")
     mocker.patch("sfkit.protocol.register_data.encrypt_mpcgwas")
     mocker.patch(
         "sfkit.protocol.register_data.checksumdir.dirhash", return_value="sha1hash"
@@ -48,6 +49,10 @@ def test_register_data(mocker: Callable[..., Generator[MockerFixture, None, None
 
     # Test PCA
     local_mock_doc_ref_dict["study_type"] = "PCA"
+    register_data.register_data("geno_binary_file_prefix", "data_path")
+
+    # Test SF-SKAT
+    local_mock_doc_ref_dict["study_type"] = "SF-SKAT"
     register_data.register_data("geno_binary_file_prefix", "data_path")
 
     # Test unknown study type
