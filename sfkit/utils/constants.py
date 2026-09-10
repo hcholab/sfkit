@@ -39,7 +39,7 @@ if IS_INSTALLED_VIA_SCRIPT:
     if os.environ.get("PATH"):
         os.environ[
             "PATH"
-        ] += f":{EXECUTABLES_PREFIX}bin:{EXECUTABLES_PREFIX}sfgwas:{EXECUTABLES_PREFIX}sf-relate:{EXECUTABLES_PREFIX}secure-gwas/code/bin"
+        ] += f":{EXECUTABLES_PREFIX}bin:{EXECUTABLES_PREFIX}sfgwas:{EXECUTABLES_PREFIX}sf-relate:{EXECUTABLES_PREFIX}sf-skat:{EXECUTABLES_PREFIX}secure-gwas/code/bin"
 
 SFKIT_PREFIX = "sfkit: "
 OUT_FOLDER = os.path.join(os.environ.get("SFKIT_DIR", ""), "out")
