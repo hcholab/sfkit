@@ -224,7 +224,7 @@ COPY --from=secure-gwas --chown=$USER ${WORK}           ./secure-gwas/
 COPY --from=sfgwas      --chown=$USER ${WORK}           ./sfgwas/
 COPY --from=sfgwas-lmm  --chown=$USER ${WORK}           ./sfgwas-lmm/
 COPY --from=sf-relate   --chown=$USER ${WORK}           ./sf-relate/
-COPY --from=sf-skat     --chown=$USER ${WORK}/secure-rvas ./sf-skat/secure-rvas
+COPY --from=sf-skat     --chown=$USER ${WORK}/*-rvas     ./sf-skat/
 COPY --from=sfkit-proxy --chown=$USER ${WORK}/*-proxy   ./
 
 COPY --from=sfkit --chown=$USER ${WORK}/dist/sfkit*.whl ./
