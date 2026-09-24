@@ -9,6 +9,7 @@ from sfkit.utils.pca_protocol import run_pca_protocol
 from sfkit.utils.sfgwas_lmm_protocol import run_sfgwas_lmm_protocol
 from sfkit.utils.sfgwas_protocol import run_sfgwas_protocol
 from sfkit.utils.sfrelate_protocol import run_sfrelate_protocol
+from sfkit.utils.sfskat_protocol import run_sfskat_protocol
 
 
 def run_protocol(
@@ -93,6 +94,8 @@ def run_protocol(
             run_sfrelate_protocol(role, demo)
         elif study_type == "Secure-DTI":
             run_dti_protocol(role, demo)
+        elif study_type == "SF-SKAT":
+            run_sfskat_protocol(role, demo)
         else:
             raise ValueError(f"Unknown study type: {study_type}")
     else:
