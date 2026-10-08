@@ -2,10 +2,10 @@
 Run the SF-SKAT protocol
 
 SF-SKAT (https://github.com/swanhong/secure-skat) does not perform data preparation
-itself: participants must have already run ``secure-rvas prepare`` out-of-band to
-produce a ``prepared/`` directory tree, and register that directory's parent (the
-tool's ``run_dir``) with sfkit. Role 0 is an auxiliary, data-free compute party
-(like CP0 in SF-GWAS); role 1 is Cohort A; role 2 is Cohort B.
+itself: participants must have already run ``secure-rvas prepare --party <1|2>``
+out-of-band to produce a ``prepared/`` directory tree, and register that directory's
+parent (the tool's ``run_dir``) with sfkit. Role 0 is an auxiliary, data-free compute
+party (like CP0 in SF-GWAS); role 1 is Cohort A; role 2 is Cohort B.
 """
 
 import hashlib
@@ -29,6 +29,8 @@ from sfkit.utils.helper_functions import (
 from sfkit.utils.sfgwas_helper_functions import boot_sfkit_proxy, to_float_int_or_bool
 from sfkit.utils.sfgwas_protocol import sync_with_other_vms
 
+GLOBAL_CONFIG_FILENAME = "configGlobal.toml"
+
 
 def run_sfskat_protocol(role: str, demo: bool = False) -> None:
     print("\n\n Begin running SF-SKAT protocol \n\n")
@@ -36,16 +38,16 @@ def run_sfskat_protocol(role: str, demo: bool = False) -> None:
         install_sfskat()
 
     doc_ref_dict: dict = get_doc_ref_dict()
-    ancestries = parse_list_param(doc_ref_dict["parameters"]["ancestries"]["value"], ["EUR"])
+    ancestries = parse_ancestries(doc_ref_dict["parameters"]["ancestries"]["value"])
 
     if not demo:
         generate_shared_keys(int(role), ancestries)
 
     print("Begin updating config files")
-    config_path = update_config(role)
+    config_dir = update_config(role)
 
     sync_with_other_vms(role, demo)
-    start_sfskat(role, config_path)
+    start_sfskat(role, config_dir)
 
 
 def install_sfskat() -> None:
@@ -74,6 +76,12 @@ def parse_list_param(value, default: list) -> list:
     return items or default
 
 
+def parse_ancestries(value) -> list:
+    # secure-rvas upper-cases ancestry labels, both when `prepare` names the
+    # prepared/<ancestry> directories and when `party` looks up keys and inputs.
+    return [ancestry.upper() for ancestry in parse_list_param(value, ["EUR"])]
+
+
 def get_registered_data_path() -> str:
     data_path_file = os.path.join(constants.SFKIT_DIR, "data_path.txt")
     with open(data_path_file, "r") as f:
@@ -96,6 +104,10 @@ def shared_keys_root() -> str:
     return os.path.join(constants.SFKIT_DIR, "skat_shared_keys")
 
 
+def config_dir_path() -> str:
+    return os.path.join(constants.SFKIT_DIR, "skat_config")
+
+
 def generate_shared_keys(role: int, ancestries: list) -> None:
     """
     Derive the per-ancestry shared PRG keys secure-rvas expects
@@ -104,6 +116,8 @@ def generate_shared_keys(role: int, ancestries: list) -> None:
     key is a Diffie-Hellman shared secret (deriving identically on both
     ends via NaCl Box), and the global key is deterministically seeded
     from CP0's public key, exactly as sfkit already does for SF-GWAS.
+    This stands in for ``secure-rvas keygen``, which needs all three
+    parties' config directories on one machine.
     """
     doc_ref_dict: dict = get_doc_ref_dict()
     update_firestore("update_firestore::task=Generating cryptographic keys")
@@ -154,10 +168,12 @@ def generate_shared_keys(role: int, ancestries: list) -> None:
 
 def update_config(role: str) -> str:
     """
-    Build the flat run_config.toml that secure-rvas's ``party`` subcommand expects.
-    Only fields that matter at MPC runtime (as opposed to ``prepare``, which sfkit
-    does not invoke) are driven by study parameters; the rest are unused
-    placeholders kept just to satisfy secure-rvas's config validation.
+    Write the config directory that secure-rvas's ``party`` subcommand expects:
+    configGlobal.toml (study parameters and networking, the same for every party
+    apart from run_dir) and configLocal.Party{role}.toml (this party's keys,
+    thread count and prepared input paths). Settings that only matter to
+    ``secure-rvas prepare``, which sfkit does not invoke (participants must
+    already have run it out-of-band), are left out.
     """
     doc_ref_dict: dict = get_doc_ref_dict()
     pars = {**doc_ref_dict["parameters"], **doc_ref_dict["advanced_parameters"]}
@@ -166,45 +182,20 @@ def update_config(role: str) -> str:
         raw = pars.get(key, {}).get("value", "")
         return to_float_int_or_bool(raw) if raw != "" else default
 
-    ancestries = parse_list_param(pars.get("ancestries", {}).get("value"), ["EUR"])
-    chromosomes = [int(c) for c in parse_list_param(pars.get("chromosomes", {}).get("value"), ["21", "22"])]
-    masks = parse_list_param(pars.get("masks", {}).get("value"), ["LoF=HC"])
-    phenotype_columns = parse_list_param(pars.get("phenotype_columns", {}).get("value"), ["phenotype1"])
+    run_dir = get_run_dir(role)
 
-    data = {
-        "run_dir": get_run_dir(role),
-        "chromosomes": chromosomes,
-        # The following fields are only used by `secure-rvas prepare`, which sfkit
-        # does not invoke (participants must already have run it out-of-band).
-        # They're set to placeholders solely to satisfy config validation.
-        "genotype": "unused",
-        "gene_panel": "unused",
-        "annotation": "unused",
-        "phenotype": "unused",
-        "covariate": "unused",
-        "ancestry": "unused",
-        "phenotype_id_column": "IID",
-        "covariate_id_column": "IID",
-        "covariate_column": "unused",
-        "ancestry_id_column": "IID",
-        "ancestry_column": "unused",
-        "samples_per_cohort": 0,
-        "sample_seed": 42,
-        "role_seed": 42,
-        "gene_selection": {"mode": "all"},
-        # Operative fields, driven by study parameters.
-        "phenotype_columns": phenotype_columns,
-        "ancestries": ancestries,
+    global_config = {
+        "run_dir": run_dir,
+        "chromosomes": [int(c) for c in parse_list_param(pars.get("chromosomes", {}).get("value"), ["21", "22"])],
+        "phenotype_columns": parse_list_param(pars.get("phenotype_columns", {}).get("value"), ["phenotype1"]),
+        "ancestries": parse_ancestries(pars.get("ancestries", {}).get("value")),
         "num_cov": scalar("num_cov", 16),
-        "masks": masks,
-        "max_maf": scalar("max_maf", 0.01),
         "ckks": scalar("ckks", "PN14QP436S45"),
         "mpc_num_threads": scalar("mpc_num_threads", 2),
         "data_bits": scalar("data_bits", 60),
         "fractional_bits": scalar("fractional_bits", 30),
         "probes": scalar("probes", 30),
         "seed": scalar("seed", 42),
-        "plink2_bin": "plink2",
         "binding_ipaddr": "0.0.0.0",
         "servers": {},
     }
@@ -220,22 +211,43 @@ def update_config(role: str) -> str:
         for j, port in enumerate(ports):
             if port != "null" and i != j:
                 server["ports"][f"party{j}"] = port
-        data["servers"][f"party{i}"] = server
+        global_config["servers"][f"party{i}"] = server
 
-    config_path = os.path.join(constants.SFKIT_DIR, "skat_config.toml")
-    with open(config_path, "w") as f:
-        f.write(tomlkit.dumps(data))
+    local_config = {
+        "shared_keys_path": shared_keys_root(),
+        "local_num_threads": os.cpu_count() or 1,
+    }
+    if role != "0":
+        cohort = "A" if role == "1" else "B"
+        # secure-rvas itself expands {ancestry} and {chromosome} in these paths
+        chr_dir = os.path.join(run_dir, "prepared", "{ancestry}", "chr{chromosome}")
+        local_config["genotype_dir"] = os.path.join(chr_dir, cohort, "geno")
+        if role == "2":
+            local_config["private_genotype_dir"] = os.path.join(chr_dir, cohort, "private")
+        local_config["phenotype_file"] = os.path.join(chr_dir, cohort, "pheno.txt")
+        local_config["covariate_file"] = os.path.join(chr_dir, cohort, "cov.txt")
+        local_config["genes_file"] = os.path.join(chr_dir, "genes.txt")
+        local_config["variant_counts_file"] = os.path.join(chr_dir, "block_sizes.txt")
 
-    return config_path
+    config_dir = config_dir_path()
+    os.makedirs(config_dir, exist_ok=True)
+    for filename, data in (
+        (GLOBAL_CONFIG_FILENAME, global_config),
+        (f"configLocal.Party{role}.toml", local_config),
+    ):
+        with open(os.path.join(config_dir, filename), "w") as f:
+            f.write(tomlkit.dumps(data))
+
+    return config_dir
 
 
-def start_sfskat(role: str, config_path: str) -> None:
+def start_sfskat(role: str, config_dir: str) -> None:
     update_firestore("update_firestore::task=Performing SF-SKAT protocol")
     print("\n\n starting SF-SKAT \n\n")
 
     sfkit_proxy = None
     if constants.SFKIT_PROXY_ON:
-        sfkit_proxy = boot_sfkit_proxy(role, config_path)
+        sfkit_proxy = boot_sfkit_proxy(role, os.path.join(config_dir, GLOBAL_CONFIG_FILENAME))
 
     binary = (
         "secure-rvas"
@@ -247,9 +259,8 @@ def start_sfskat(role: str, config_path: str) -> None:
         [
             binary,
             "party",
-            "--config", config_path,
+            "--config", config_dir,
             "--party", role,
-            "--shared-keys", shared_keys_root(),
         ],
         fail_message="Failed SF-SKAT protocol",
         role=role,
@@ -285,8 +296,7 @@ def process_output_files(role: str) -> None:
     send_results: str = doc_ref_dict["personal_parameters"][user_id].get("SEND_RESULTS", {}).get("value")
     if send_results == "Yes":
         pars = {**doc_ref_dict["parameters"], **doc_ref_dict["advanced_parameters"]}
-        ancestries = parse_list_param(pars.get("ancestries", {}).get("value"), ["EUR"])
-        for ancestry in ancestries:
+        for ancestry in parse_ancestries(pars.get("ancestries", {}).get("value")):
             results_file = os.path.join(secure_dir, ancestry, "all_secure_results.tsv")
             if os.path.exists(results_file):
                 with open(results_file, "rb") as f:

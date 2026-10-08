@@ -65,7 +65,15 @@ RUN git clone https://github.com/froelich/sf-relate . && \
 FROM go AS sf-skat
 
 RUN git clone https://github.com/swanhong/secure-skat . && \
-    git checkout b79ed20 && \
+    git checkout 1d94279 && \
+    # dial peers via the SOCKS proxy from the environment (as sfgwas does),
+    # which sfkit-proxy relies on; fail if the patch no longer applies
+    go get golang.org/x/net@v0.20.0 && \
+    sed -i \
+        -e 's|"github.com/hhcho/frand"|"github.com/hhcho/frand"; "golang.org/x/net/proxy"|' \
+        -e 's|net\.Dial("tcp", addr)|proxy.FromEnvironment().Dial("tcp", addr)|' \
+        mpc/netconnect.go && \
+    grep -q 'proxy.FromEnvironment().Dial' mpc/netconnect.go && \
     go build -o secure-rvas secure-rvas.go && \
     rm -rf .git
 

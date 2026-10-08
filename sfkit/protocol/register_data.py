@@ -297,9 +297,11 @@ def validate_skat(
     Validate data for the SF-SKAT workflow.
 
     SF-SKAT does not run data preparation itself: data_path must already contain
-    a `prepared/` directory tree produced by running `secure-rvas prepare`
-    out-of-band (see https://github.com/swanhong/secure-skat). data_path is the
-    directory that *contains* `prepared/` (i.e. secure-rvas's `run_dir`).
+    a `prepared/` directory tree produced by running `secure-rvas prepare --party 1`
+    (Cohort A) or `secure-rvas prepare --party 2` (Cohort B, using Cohort A's
+    public variant lists) out-of-band (see https://github.com/swanhong/secure-skat).
+    data_path is the directory that *contains* `prepared/` (i.e. secure-rvas's
+    `run_dir`); results are written next to it, so it must be writable.
 
     Only called for roles 1 (Cohort A) and 2 (Cohort B) -- role 0 (auxiliary)
     holds no data and never reaches this function.
@@ -309,37 +311,81 @@ def validate_skat(
     if data_path == "demo" or (constants.IS_DOCKER and doc_ref_dict["demo"]):
         using_demo()
 
+    parameters = doc_ref_dict["parameters"]
+    # secure-rvas upper-cases ancestry labels when naming prepared/<ancestry>
     ancestries = [
-        a.strip()
-        for a in doc_ref_dict["parameters"]["ancestries"]["value"].split(",")
+        a.strip().upper()
+        for a in parameters["ancestries"]["value"].split(",")
         if a.strip()
     ]
     chromosomes = [
-        c.strip()
-        for c in doc_ref_dict["parameters"]["chromosomes"]["value"].split(",")
-        if c.strip()
+        c.strip() for c in parameters["chromosomes"]["value"].split(",") if c.strip()
     ]
+    num_phenotypes = len(
+        [p for p in parameters["phenotype_columns"]["value"].split(",") if p.strip()]
+    )
+    num_cov = int(parameters["num_cov"]["value"])
     cohort = "A" if role == "1" else "B"
 
     for ancestry in ancestries:
         for chromosome in chromosomes:
             chr_dir = os.path.join(data_path, "prepared", ancestry, f"chr{chromosome}")
+            # `secure-rvas prepare` links chr_dir into prepared_cache_dir when that is
+            # set, and such a link dangles if the cache isn't visible at the same path
+            # (e.g. when only data_path is mounted into a container)
             condition_or_fail(
-                os.path.isfile(os.path.join(chr_dir, "genes.txt")),
-                f"Could not find {chr_dir}/genes.txt",
-            )
-            condition_or_fail(
-                os.path.isfile(os.path.join(chr_dir, "block_sizes.txt")),
-                f"Could not find {chr_dir}/block_sizes.txt",
+                os.path.isdir(chr_dir),
+                (
+                    f"{chr_dir} is a broken link (is prepared_cache_dir accessible?)"
+                    if os.path.islink(chr_dir)
+                    else f"Could not find {chr_dir}"
+                ),
             )
             cohort_dir = os.path.join(chr_dir, cohort)
+            genotype_dirs = ["geno", "private"] if role == "2" else ["geno"]
+            for genotype_dir in genotype_dirs:
+                condition_or_fail(
+                    os.path.isdir(os.path.join(cohort_dir, genotype_dir)),
+                    f"Could not find {cohort_dir}/{genotype_dir}",
+                )
+            for path in [
+                os.path.join(chr_dir, "genes.txt"),
+                os.path.join(chr_dir, "block_sizes.txt"),
+                os.path.join(cohort_dir, "cov.txt"),
+                os.path.join(cohort_dir, "pheno.txt"),
+            ]:
+                condition_or_fail(os.path.isfile(path), f"Could not find {path}")
+
             condition_or_fail(
-                os.path.isfile(os.path.join(cohort_dir, "cov.txt")),
-                f"Could not find {cohort_dir}/cov.txt",
+                num_rows(os.path.join(chr_dir, "genes.txt"))
+                == num_rows(os.path.join(chr_dir, "block_sizes.txt")),
+                f"genes.txt and block_sizes.txt in {chr_dir} have different number of rows",
+            )
+            # secure-rvas reshapes these files by the configured column counts, so a
+            # mismatch would crash it or, worse, silently scramble the data
+            condition_or_fail(
+                num_cols(os.path.join(cohort_dir, "cov.txt")) == num_cov,
+                f"num_cov does not match the number of columns in {cohort_dir}/cov.txt",
             )
             condition_or_fail(
-                os.path.isfile(os.path.join(cohort_dir, "pheno.txt")),
-                f"Could not find {cohort_dir}/pheno.txt",
+                num_cols(os.path.join(cohort_dir, "pheno.txt")) == num_phenotypes,
+                f"phenotype_columns does not match the number of columns in {cohort_dir}/pheno.txt",
+            )
+            condition_or_fail(
+                num_rows(os.path.join(cohort_dir, "cov.txt"))
+                == num_rows(os.path.join(cohort_dir, "pheno.txt")),
+                f"cov.txt and pheno.txt in {cohort_dir} have different number of rows",
+            )
+
+        # secure-rvas only writes its results and metrics under data_path once the
+        # whole protocol has finished, so make sure up front that it will be able to
+        for output in ["secure", "metrics"]:
+            output_dir = os.path.join(data_path, output, ancestry)
+            while not os.path.isdir(output_dir):
+                output_dir = os.path.dirname(output_dir)
+            condition_or_fail(
+                os.access(output_dir, os.W_OK),
+                f"{output_dir} must be writable to store SF-SKAT results",
             )
 
     return data_path

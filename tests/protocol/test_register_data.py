@@ -137,6 +137,101 @@ def test_validate_pca(mocker: Callable[..., Generator[MockerFixture, None, None]
     register_data.validate_pca(mock_doc_ref_dict, "a@a.com", "demo")
 
 
+def test_validate_skat(
+    mocker: Callable[..., Generator[MockerFixture, None, None]], tmp_path: Path
+):
+    def fail(condition: bool, message: str = "") -> None:
+        if not condition:
+            raise AssertionError(message)
+
+    mocker.patch("sfkit.protocol.register_data.condition_or_fail", fail)
+    doc_ref_dict = {
+        "demo": False,
+        "parameters": {
+            "ancestries": {"value": "eur"},
+            "chromosomes": {"value": "21,22"},
+            "phenotype_columns": {"value": "phenotype1,phenotype2"},
+            "num_cov": {"value": 3},
+        },
+    }
+
+    # the layout written by `secure-rvas prepare --party 1` (A) and `--party 2` (B)
+    def prepare(run_dir: Path, cohort: str, chromosome: int) -> Path:
+        chr_dir = run_dir / "prepared" / "EUR" / f"chr{chromosome}"
+        (chr_dir / cohort / "geno").mkdir(parents=True)
+        if cohort == "B":
+            (chr_dir / cohort / "private").mkdir()
+        (chr_dir / "genes.txt").write_text("gene1\ngene2\n")
+        (chr_dir / "block_sizes.txt").write_text("4\n0\n")
+        (chr_dir / cohort / "cov.txt").write_text("1\t2\t3\n4\t5\t6\n")
+        (chr_dir / cohort / "pheno.txt").write_text("1\t2\n3\t4\n")
+        return chr_dir
+
+    run_a, run_b = tmp_path / "a", tmp_path / "b"
+    for chromosome in (21, 22):
+        prepare(run_a, "A", chromosome)
+        prepare(run_b, "B", chromosome)
+
+    assert register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_a), "1") == str(
+        run_a
+    )
+    assert register_data.validate_skat(doc_ref_dict, "b@b.com", str(run_b), "2") == str(
+        run_b
+    )
+
+    # Cohort A's directory has neither B/ nor private genotypes
+    with pytest.raises(AssertionError, match="Could not find .*/chr21/B/geno"):
+        register_data.validate_skat(doc_ref_dict, "b@b.com", str(run_a), "2")
+
+    (run_b / "prepared" / "EUR" / "chr22" / "B" / "private").rmdir()
+    with pytest.raises(AssertionError, match="Could not find .*/chr22/B/private"):
+        register_data.validate_skat(doc_ref_dict, "b@b.com", str(run_b), "2")
+
+    wrong_parameters = copy.deepcopy(doc_ref_dict)
+    wrong_parameters["parameters"]["num_cov"]["value"] = 16
+    with pytest.raises(AssertionError, match="num_cov does not match"):
+        register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
+
+    wrong_parameters = copy.deepcopy(doc_ref_dict)
+    wrong_parameters["parameters"]["phenotype_columns"]["value"] = "phenotype1"
+    with pytest.raises(AssertionError, match="phenotype_columns does not match"):
+        register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
+
+    (run_a / "prepared" / "EUR" / "chr21" / "A" / "pheno.txt").write_text("1\t2\n")
+    with pytest.raises(AssertionError, match="different number of rows"):
+        register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_a), "1")
+
+    # prepared_cache_dir links that dangle (e.g. cache not mounted in the container)
+    run_c = tmp_path / "c"
+    (run_c / "prepared" / "EUR").mkdir(parents=True)
+    (run_c / "prepared" / "EUR" / "chr21").symlink_to(tmp_path / "missing_cache")
+    with pytest.raises(AssertionError, match="broken link"):
+        register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_c), "1")
+
+    with pytest.raises(AssertionError, match="Could not find .*/chr21$"):
+        register_data.validate_skat(doc_ref_dict, "a@a.com", str(tmp_path), "1")
+
+    # results and metrics land in data_path, in whichever directories already exist
+    run_d = tmp_path / "d"
+    for chromosome in (21, 22):
+        prepare(run_d, "A", chromosome)
+    (run_d / "secure").mkdir()
+    unwritable = [str(run_d / "secure")]
+    mocker.patch(
+        "sfkit.protocol.register_data.os.access",
+        side_effect=lambda path, mode: path not in unwritable,
+    )
+    with pytest.raises(AssertionError, match="/d/secure must be writable"):
+        register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_d), "1")
+    unwritable[:] = [str(run_d)]
+    with pytest.raises(AssertionError, match="/d must be writable"):
+        register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_d), "1")
+    unwritable.clear()
+    assert register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_d), "1") == str(
+        run_d
+    )
+
+
 def test_validate_geno_binary_file_prefix(
     mocker: Callable[..., Generator[MockerFixture, None, None]],
 ):
