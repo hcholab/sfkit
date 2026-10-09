@@ -30,6 +30,11 @@ from sfkit.utils.sfgwas_helper_functions import boot_sfkit_proxy, to_float_int_o
 from sfkit.utils.sfgwas_protocol import sync_with_other_vms
 
 GLOBAL_CONFIG_FILENAME = "configGlobal.toml"
+LOCAL_CONFIG_FILENAME = "configLocal.toml"
+# Set once this party's secure-rvas has exited. It must not contain "Finished protocol",
+# which the website takes as the cue to stop the auxiliary party's VM.
+COMPUTATION_DONE_STATUS = "finishing SF-SKAT protocol"
+FINISHED_STATUS = "Finished protocol!"
 
 
 def run_sfskat_protocol(role: str, demo: bool = False) -> None:
@@ -46,7 +51,11 @@ def run_sfskat_protocol(role: str, demo: bool = False) -> None:
     print("Begin updating config files")
     config_dir = update_config(role)
 
-    sync_with_other_vms(role, demo)
+    # Start all parties together instead of staggering them by role: sfkit-proxy sets up its
+    # NAT bindings as soon as it boots, and they expire (after 30s on Google Cloud NAT) while
+    # an early party waits for the later ones. secure-rvas retries its connections, so the
+    # parties do not need to come up in order.
+    sync_with_other_vms(role, demo, stagger=0)
     start_sfskat(role, config_dir)
 
 
@@ -169,11 +178,11 @@ def generate_shared_keys(role: int, ancestries: list) -> None:
 def update_config(role: str) -> str:
     """
     Write the config directory that secure-rvas's ``party`` subcommand expects:
-    configGlobal.toml (study parameters and networking, the same for every party
-    apart from run_dir) and configLocal.Party{role}.toml (this party's keys,
-    thread count and prepared input paths). Settings that only matter to
-    ``secure-rvas prepare``, which sfkit does not invoke (participants must
-    already have run it out-of-band), are left out.
+    configGlobal.toml (study parameters and networking, the same for every party)
+    and configLocal.toml (this party's run directory, keys, thread count and
+    prepared input paths). Settings that only matter to ``secure-rvas prepare``,
+    which sfkit does not invoke (participants must already have run it
+    out-of-band), are left out.
     """
     doc_ref_dict: dict = get_doc_ref_dict()
     pars = {**doc_ref_dict["parameters"], **doc_ref_dict["advanced_parameters"]}
@@ -185,7 +194,6 @@ def update_config(role: str) -> str:
     run_dir = get_run_dir(role)
 
     global_config = {
-        "run_dir": run_dir,
         "chromosomes": [int(c) for c in parse_list_param(pars.get("chromosomes", {}).get("value"), ["21", "22"])],
         "phenotype_columns": parse_list_param(pars.get("phenotype_columns", {}).get("value"), ["phenotype1"]),
         "ancestries": parse_ancestries(pars.get("ancestries", {}).get("value")),
@@ -214,6 +222,7 @@ def update_config(role: str) -> str:
         global_config["servers"][f"party{i}"] = server
 
     local_config = {
+        "run_dir": run_dir,
         "shared_keys_path": shared_keys_root(),
         "local_num_threads": os.cpu_count() or 1,
     }
@@ -233,7 +242,7 @@ def update_config(role: str) -> str:
     os.makedirs(config_dir, exist_ok=True)
     for filename, data in (
         (GLOBAL_CONFIG_FILENAME, global_config),
-        (f"configLocal.Party{role}.toml", local_config),
+        (LOCAL_CONFIG_FILENAME, local_config),
     ):
         with open(os.path.join(config_dir, filename), "w") as f:
             f.write(tomlkit.dumps(data))
@@ -266,15 +275,35 @@ def start_sfskat(role: str, config_dir: str) -> None:
         role=role,
     )
 
+    # secure-rvas exits as soon as it has sent its last message, without waiting for the
+    # other parties to receive it; the auxiliary party in particular is done within seconds
+    # of connecting. So keep sfkit-proxy up, and hold off reporting completion (which makes
+    # the website stop the auxiliary party's VM), until every party's secure-rvas has exited.
+    wait_for_other_parties()
+
     if sfkit_proxy:
         sfkit_proxy.terminate()
 
     print("\n\n Finished SF-SKAT \n\n")
 
-    if role == "1":
+    # both cohorts receive the results; the auxiliary party has none
+    if role != "0":
         process_output_files(role)
 
-    update_firestore("update_firestore::status=Finished protocol!")
+    update_firestore(f"update_firestore::status={FINISHED_STATUS}")
+
+
+def wait_for_other_parties() -> None:
+    update_firestore(f"update_firestore::status={COMPUTATION_DONE_STATUS}")
+    while True:
+        statuses = get_doc_ref_dict()["status"].values()
+        if all(
+            status in (COMPUTATION_DONE_STATUS, FINISHED_STATUS) or "FAILED" in status
+            for status in statuses
+        ):
+            break
+        print("Waiting for the other parties to finish...")
+        time.sleep(5)
 
 
 def process_output_files(role: str) -> None:
