@@ -17,6 +17,7 @@ def test_run_protocol(mocker):
     mocker.patch("sfkit.protocol.run_protocol.run_gwas_protocol")
     mocker.patch("sfkit.protocol.run_protocol.run_sfgwas_protocol")
     mocker.patch("sfkit.protocol.run_protocol.run_pca_protocol")
+    mocker.patch("sfkit.protocol.run_protocol.run_sfskat_protocol")
     mocker.patch(
         "sfkit.protocol.run_protocol.other_participant_not_ready",
         side_effect=[True] + [False] * 10,
@@ -42,6 +43,9 @@ def test_run_protocol(mocker):
     run_protocol.run_protocol(phase="1")
 
     mock_doc_ref_dict_copy["study_type"] = "PCA"
+    run_protocol.run_protocol()
+
+    mock_doc_ref_dict_copy["study_type"] = "SF-SKAT"
     run_protocol.run_protocol()
 
     mock_doc_ref_dict_copy["study_type"] = "garbage"

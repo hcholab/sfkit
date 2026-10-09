@@ -62,6 +62,7 @@ rm -rf ~/.local/sf-relate && mv sf-relate ~/.local/
 rm -rf ~/.local/secure-dti && mv secure-dti ~/.local/
 rm -rf ~/.local/secure-gwas && mv secure-gwas ~/.local/
 rm -rf ~/.local/sfgwas-lmm && mv sfgwas-lmm ~/.local/
+rm -rf ~/.local/sf-skat && mv sf-skat ~/.local/
 echo
 
 # check if ldd version is at least 2.34
@@ -69,7 +70,7 @@ glibc_minor_ver=$(ldd --version | awk 'NR==1{print $NF}' | cut -d. -f2)
 if [ "${glibc_minor_ver}" -lt 34 ]; then
   echo Patching sfkit binaries...
   mkdir -p ~/.local/lib/ && mv lib/* ~/.local/lib/
-  for p in ~/.local/bin/sfkit-proxy ~/.local/sfgwas/sfgwas ~/.local/sf-relate/sf-relate ~/.local/secure-dti/mpc/code/bin/* ~/.local/secure-gwas/code/bin/* ; do
+  for p in ~/.local/bin/sfkit-proxy ~/.local/sfgwas/sfgwas ~/.local/sf-relate/sf-relate ~/.local/sf-skat/secure-rvas ~/.local/secure-dti/mpc/code/bin/* ~/.local/secure-gwas/code/bin/* ; do
     patchelf --set-interpreter ~/.local/lib/ld-linux-x86-64.so.2 "$p"
   done
   echo
@@ -90,6 +91,7 @@ $PWD/.venv/bin:\
 \$HOME/.local/sfgwas:\
 \$HOME/.local/sfgwas-lmm:\
 \$HOME/.local/sf-relate:\
+\$HOME/.local/sf-skat:\
 \$HOME/.local/secure-dti/mpc/code/bin:\
 \$HOME/.local/secure-gwas/code/bin\
 \"" >> "$rc"
