@@ -30,6 +30,10 @@ from sfkit.utils.sfgwas_helper_functions import boot_sfkit_proxy, to_float_int_o
 from sfkit.utils.sfgwas_protocol import sync_with_other_vms
 
 GLOBAL_CONFIG_FILENAME = "configGlobal.toml"
+# Set once this party's secure-rvas has exited. It must not contain "Finished protocol",
+# which the website takes as the cue to stop the auxiliary party's VM.
+COMPUTATION_DONE_STATUS = "finishing SF-SKAT protocol"
+FINISHED_STATUS = "Finished protocol!"
 
 
 def run_sfskat_protocol(role: str, demo: bool = False) -> None:
@@ -46,7 +50,11 @@ def run_sfskat_protocol(role: str, demo: bool = False) -> None:
     print("Begin updating config files")
     config_dir = update_config(role)
 
-    sync_with_other_vms(role, demo)
+    # Start all parties together instead of staggering them by role: sfkit-proxy sets up its
+    # NAT bindings as soon as it boots, and they expire (after 30s on Google Cloud NAT) while
+    # an early party waits for the later ones. secure-rvas retries its connections, so the
+    # parties do not need to come up in order.
+    sync_with_other_vms(role, demo, stagger=0)
     start_sfskat(role, config_dir)
 
 
@@ -266,6 +274,12 @@ def start_sfskat(role: str, config_dir: str) -> None:
         role=role,
     )
 
+    # secure-rvas exits as soon as it has sent its last message, without waiting for the
+    # other parties to receive it; the auxiliary party in particular is done within seconds
+    # of connecting. So keep sfkit-proxy up, and hold off reporting completion (which makes
+    # the website stop the auxiliary party's VM), until every party's secure-rvas has exited.
+    wait_for_other_parties()
+
     if sfkit_proxy:
         sfkit_proxy.terminate()
 
@@ -274,7 +288,20 @@ def start_sfskat(role: str, config_dir: str) -> None:
     if role == "1":
         process_output_files(role)
 
-    update_firestore("update_firestore::status=Finished protocol!")
+    update_firestore(f"update_firestore::status={FINISHED_STATUS}")
+
+
+def wait_for_other_parties() -> None:
+    update_firestore(f"update_firestore::status={COMPUTATION_DONE_STATUS}")
+    while True:
+        statuses = get_doc_ref_dict()["status"].values()
+        if all(
+            status in (COMPUTATION_DONE_STATUS, FINISHED_STATUS) or "FAILED" in status
+            for status in statuses
+        ):
+            break
+        print("Waiting for the other parties to finish...")
+        time.sleep(5)
 
 
 def process_output_files(role: str) -> None:
