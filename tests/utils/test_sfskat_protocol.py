@@ -195,7 +195,6 @@ def test_update_config(mocker, tmp_path):
     config_dir = sfskat_protocol.update_config("1")
     assert config_dir == str(tmp_path / "skat_config")
     assert load_toml(os.path.join(config_dir, "configGlobal.toml")) == {
-        "run_dir": str(data_path),
         "chromosomes": [21, 22],
         "phenotype_columns": ["phenotype1", "phenotype2"],
         "ancestries": ["EUR", "AFR"],
@@ -222,7 +221,8 @@ def test_update_config(mocker, tmp_path):
             },
         },
     }
-    assert load_toml(os.path.join(config_dir, "configLocal.Party1.toml")) == {
+    assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
+        "run_dir": str(data_path),
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
         "genotype_dir": f"{chr_dir}/A/geno",
@@ -233,7 +233,8 @@ def test_update_config(mocker, tmp_path):
     }
 
     sfskat_protocol.update_config("2")
-    assert load_toml(os.path.join(config_dir, "configLocal.Party2.toml")) == {
+    assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
+        "run_dir": str(data_path),
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
         "genotype_dir": f"{chr_dir}/B/geno",
@@ -247,12 +248,12 @@ def test_update_config(mocker, tmp_path):
     # the auxiliary party has no data, and the proxy makes every peer local
     mocker.patch("sfkit.utils.sfskat_protocol.constants.SFKIT_PROXY_ON", True)
     sfskat_protocol.update_config("0")
-    assert load_toml(os.path.join(config_dir, "configLocal.Party0.toml")) == {
+    assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
+        "run_dir": str(tmp_path / "skat_run"),
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
     }
     global_config = load_toml(os.path.join(config_dir, "configGlobal.toml"))
-    assert global_config["run_dir"] == str(tmp_path / "skat_run")
     assert {server["ipaddr"] for server in global_config["servers"].values()} == {
         "127.0.0.1"
     }
@@ -303,7 +304,10 @@ def test_start_sfskat(mocker):
         "sf-skat", "secure-rvas"
     )
     sfskat_protocol.boot_sfkit_proxy.assert_called_once()
-    sfskat_protocol.process_output_files.assert_called_once()
+    # both cohorts receive results, the auxiliary party does not
+    sfskat_protocol.process_output_files.assert_called_with("2")
+    sfskat_protocol.start_sfskat("0", "config_dir")
+    assert sfskat_protocol.process_output_files.call_count == 2
 
 
 def test_wait_for_other_parties(mocker):
