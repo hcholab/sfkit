@@ -17,7 +17,6 @@ def make_doc_ref_dict(public_keys: list) -> dict:
         "parameters": {
             "chromosomes": {"value": "21,22"},
             "ancestries": {"value": "eur, AFR"},
-            "masks": {"value": "LoF=HC"},
             "max_maf": {"value": 0.01},
             "phenotype_columns": {"value": "phenotype1,phenotype2"},
             "num_cov": {"value": 10},
@@ -93,6 +92,45 @@ def test_parse_params():
     assert sfskat_protocol.parse_list_param("21, 22", []) == ["21", "22"]
     assert sfskat_protocol.parse_ancestries("") == ["EUR"]
     assert sfskat_protocol.parse_ancestries("eur, Afr") == ["EUR", "AFR"]
+    assert sfskat_protocol.parse_chromosomes("") == [21, 22]
+    assert sfskat_protocol.parse_chromosomes("1, 22") == [1, 22]
+    assert sfskat_protocol.parse_num_inds("eur=1000, AFR = 500") == {
+        "EUR": 1000,
+        "AFR": 500,
+    }
+    # studies created before the per-ancestry counts hold a single number
+    assert sfskat_protocol.parse_num_inds(100) == {}
+    assert sfskat_protocol.parse_num_inds("EUR=,AFR=x") == {}
+
+
+def test_prepared_dir(tmp_path):
+    prepared = tmp_path / "prepared"
+    cache = tmp_path / "cache" / "prepared"
+    for chromosome in (21, 22):
+        (cache / "EUR" / f"chr{chromosome}").mkdir(parents=True)
+    (prepared / "EUR").mkdir(parents=True)
+
+    # `secure-rvas prepare` links each chromosome into the cache by absolute path
+    for chromosome in (21, 22):
+        (prepared / "EUR" / f"chr{chromosome}").symlink_to(
+            cache / "EUR" / f"chr{chromosome}"
+        )
+    assert sfskat_protocol.prepared_dir(str(tmp_path), ["EUR"], [21, 22]) == str(
+        prepared
+    )
+
+    # those links dangle where run_dir is mounted at another path
+    for chromosome in (21, 22):
+        (prepared / "EUR" / f"chr{chromosome}").unlink()
+        (prepared / "EUR" / f"chr{chromosome}").symlink_to(
+            f"/elsewhere/cache/prepared/EUR/chr{chromosome}"
+        )
+    assert sfskat_protocol.prepared_dir(str(tmp_path), ["EUR"], [21, 22]) == str(cache)
+
+    # neither is complete: leave it to the data validation to say what is missing
+    assert sfskat_protocol.prepared_dir(str(tmp_path), ["EUR", "AFR"], [21]) == str(
+        prepared
+    )
 
 
 def test_get_run_dir(mocker, tmp_path):
@@ -221,8 +259,11 @@ def test_update_config(mocker, tmp_path):
             },
         },
     }
-    assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
+    # secure-rvas rejects run_dir anywhere but in configPrepare.toml
+    assert load_toml(os.path.join(config_dir, "configPrepare.toml")) == {
         "run_dir": str(data_path),
+    }
+    assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
         "genotype_dir": f"{chr_dir}/A/geno",
@@ -232,9 +273,14 @@ def test_update_config(mocker, tmp_path):
         "variant_counts_file": f"{chr_dir}/block_sizes.txt",
     }
 
+    # where the prepared links dangle, the inputs are read from the cache in run_dir
+    for chromosome in (21, 22):
+        (data_path / "cache" / "prepared" / "EUR" / f"chr{chromosome}").mkdir(parents=True)
+        (data_path / "cache" / "prepared" / "AFR" / f"chr{chromosome}").mkdir(parents=True)
+    chr_dir = f"{data_path}/cache/prepared/{{ancestry}}/chr{{chromosome}}"
+
     sfskat_protocol.update_config("2")
     assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
-        "run_dir": str(data_path),
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
         "genotype_dir": f"{chr_dir}/B/geno",
@@ -249,9 +295,11 @@ def test_update_config(mocker, tmp_path):
     mocker.patch("sfkit.utils.sfskat_protocol.constants.SFKIT_PROXY_ON", True)
     sfskat_protocol.update_config("0")
     assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
-        "run_dir": str(tmp_path / "skat_run"),
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
+    }
+    assert load_toml(os.path.join(config_dir, "configPrepare.toml")) == {
+        "run_dir": str(tmp_path / "skat_run"),
     }
     global_config = load_toml(os.path.join(config_dir, "configGlobal.toml"))
     assert {server["ipaddr"] for server in global_config["servers"].values()} == {
