@@ -242,7 +242,6 @@ def update_config(role: str) -> str:
         "data_bits": scalar("data_bits", 60),
         "fractional_bits": scalar("fractional_bits", 30),
         "probes": scalar("probes", 30),
-        "seed": scalar("seed", 42),
         "binding_ipaddr": "0.0.0.0",
         "servers": {},
     }

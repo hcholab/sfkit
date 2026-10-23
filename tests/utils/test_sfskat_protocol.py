@@ -27,6 +27,7 @@ def make_doc_ref_dict(public_keys: list) -> dict:
             "data_bits": {"value": 70},
             "fractional_bits": {"value": 40},
             "probes": {"value": 50},
+            # left in studies created before secure-skat dropped it; must not be written
             "seed": {"value": ""},
         },
         "personal_parameters": {
@@ -242,7 +243,6 @@ def test_update_config(mocker, tmp_path):
         "data_bits": 70,
         "fractional_bits": 40,
         "probes": 50,
-        "seed": 42,
         "binding_ipaddr": "0.0.0.0",
         "servers": {
             "party0": {
