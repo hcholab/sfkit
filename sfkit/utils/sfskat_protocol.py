@@ -11,6 +11,8 @@ party (like CP0 in SF-GWAS); role 1 is Cohort A; role 2 is Cohort B.
 import hashlib
 import os
 import random
+import subprocess
+import threading
 import time
 
 import tomlkit
@@ -36,6 +38,8 @@ PREPARE_CONFIG_FILENAME = "configPrepare.toml"
 # which the website takes as the cue to stop the auxiliary party's VM.
 COMPUTATION_DONE_STATUS = "finishing SF-SKAT protocol"
 FINISHED_STATUS = "Finished protocol!"
+# How often, in seconds, a party checks whether another one has failed while secure-rvas runs
+FAILURE_CHECK_INTERVAL = 30
 
 
 def run_sfskat_protocol(role: str, demo: bool = False) -> None:
@@ -303,15 +307,14 @@ def start_sfskat(role: str, config_dir: str) -> None:
         else os.path.join("sf-skat", "secure-rvas")
     )
 
-    run_command(
+    run_secure_rvas(
         [
             binary,
             "party",
             "--config", config_dir,
             "--party", role,
         ],
-        fail_message="Failed SF-SKAT protocol",
-        role=role,
+        role,
     )
 
     # secure-rvas exits as soon as it has sent its last message, without waiting for the
@@ -330,6 +333,62 @@ def start_sfskat(role: str, config_dir: str) -> None:
         process_output_files(role)
 
     update_firestore(f"update_firestore::status={FINISHED_STATUS}")
+
+
+def run_secure_rvas(command: list, role: str) -> None:
+    """
+    Run secure-rvas like run_command, but stop it as soon as another party has failed.
+    When a party's secure-rvas exits on an error, its sfkit-proxy does not close the
+    connections to the other parties (it retries the local connection instead), so
+    their secure-rvas would otherwise wait for it forever.
+    """
+    env = dict(constants.ENV.copy(), PYTHONUNBUFFERED="1", PID=role)
+    other_party_failed = threading.Event()
+    with subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        env=env,
+        text=True,
+        bufsize=1,
+    ) as process:
+        threading.Thread(
+            target=stop_if_other_party_fails,
+            args=(process, role, other_party_failed),
+            daemon=True,
+        ).start()
+        for line in process.stdout or []:
+            if line := line.strip():
+                print(line)
+
+    if process.returncode != 0:
+        print(f"FAILED - {command}")
+        print(f"Return code: {process.returncode}")
+        condition_or_fail(
+            False,
+            "Stopped SF-SKAT protocol because another participant failed"
+            if other_party_failed.is_set()
+            else "Failed SF-SKAT protocol",
+        )
+
+
+def stop_if_other_party_fails(process: subprocess.Popen, role: str, other_party_failed: threading.Event) -> None:
+    while process.poll() is None:
+        time.sleep(FAILURE_CHECK_INTERVAL)
+        try:
+            doc_ref_dict: dict = get_doc_ref_dict()
+            participants: list = doc_ref_dict["participants"]
+            statuses: dict = doc_ref_dict["status"]
+        except Exception as e:  # the website may be briefly unreachable; check again later
+            print(f"Could not check the other parties' statuses: {e}")
+            continue
+        for i, username in enumerate(participants):
+            status: str = statuses.get(username, "")
+            if i != int(role) and "FAILED" in status and process.poll() is None:
+                print(f"Stopping secure-rvas because party {i} ({username}) failed: {status}")
+                other_party_failed.set()
+                process.terminate()
+                return
 
 
 def wait_for_other_parties() -> None:

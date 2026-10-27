@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pytest
 import tomlkit
@@ -312,7 +313,7 @@ def test_start_sfskat(mocker):
     for name in [
         "update_firestore",
         "boot_sfkit_proxy",
-        "run_command",
+        "run_secure_rvas",
         "wait_for_other_parties",
         "process_output_files",
     ]:
@@ -324,17 +325,15 @@ def test_start_sfskat(mocker):
     sfskat_protocol.boot_sfkit_proxy.assert_called_once_with(
         "1", "config_dir/configGlobal.toml"
     )
-    sfskat_protocol.run_command.assert_called_once_with(
-        ["secure-rvas", "party", "--config", "config_dir", "--party", "1"],
-        fail_message="Failed SF-SKAT protocol",
-        role="1",
+    sfskat_protocol.run_secure_rvas.assert_called_once_with(
+        ["secure-rvas", "party", "--config", "config_dir", "--party", "1"], "1"
     )
     sfskat_protocol.process_output_files.assert_called_once_with("1")
     # the proxy stays up, and completion goes unreported, until the other parties are done
     assert [call[0] for call in calls.mock_calls if "__" not in call[0]] == [
         "update_firestore",
         "boot_sfkit_proxy",
-        "run_command",
+        "run_secure_rvas",
         "wait_for_other_parties",
         "boot_sfkit_proxy().terminate",
         "process_output_files",
@@ -348,7 +347,7 @@ def test_start_sfskat(mocker):
     mocker.patch("sfkit.utils.sfskat_protocol.constants.IS_DOCKER", False)
     mocker.patch("sfkit.utils.sfskat_protocol.constants.IS_INSTALLED_VIA_SCRIPT", False)
     sfskat_protocol.start_sfskat("2", "config_dir")
-    assert sfskat_protocol.run_command.call_args.args[0][0] == os.path.join(
+    assert sfskat_protocol.run_secure_rvas.call_args.args[0][0] == os.path.join(
         "sf-skat", "secure-rvas"
     )
     sfskat_protocol.boot_sfkit_proxy.assert_called_once()
@@ -356,6 +355,44 @@ def test_start_sfskat(mocker):
     sfskat_protocol.process_output_files.assert_called_with("2")
     sfskat_protocol.start_sfskat("0", "config_dir")
     assert sfskat_protocol.process_output_files.call_count == 2
+
+
+def test_run_secure_rvas(mocker, capsys):
+    condition_or_fail = mocker.patch("sfkit.utils.sfskat_protocol.condition_or_fail")
+    mocker.patch("sfkit.utils.sfskat_protocol.FAILURE_CHECK_INTERVAL", 0.01)
+    running = "running SF-SKAT protocol"
+
+    def statuses(*values):
+        return {"participants": PARTICIPANTS, "status": dict(zip(PARTICIPANTS, values))}
+
+    mocker.patch(
+        "sfkit.utils.sfskat_protocol.get_doc_ref_dict",
+        return_value=statuses(running, running, running),
+    )
+    sfskat_protocol.run_secure_rvas([sys.executable, "-c", "print('done')"], "1")
+    assert "done" in capsys.readouterr().out
+    condition_or_fail.assert_not_called()
+
+    sfskat_protocol.run_secure_rvas([sys.executable, "-c", "import sys; sys.exit(2)"], "1")
+    condition_or_fail.assert_called_once_with(False, "Failed SF-SKAT protocol")
+
+    # a party that failed may never close its connections, so the others must not wait for it;
+    # an unreachable website and this party's own status are no reason to stop
+    condition_or_fail.reset_mock()
+    get_doc_ref_dict = mocker.patch(
+        "sfkit.utils.sfskat_protocol.get_doc_ref_dict",
+        side_effect=[
+            ConnectionError("website unreachable"),
+            statuses(running, "FAILED - stale", running),
+            statuses("FAILED - Failed SF-SKAT protocol", running, running),
+        ],
+    )
+    sfskat_protocol.run_secure_rvas([sys.executable, "-c", "import time; time.sleep(60)"], "1")
+    assert get_doc_ref_dict.call_count == 3
+    assert "party 0 (Broad) failed" in capsys.readouterr().out
+    condition_or_fail.assert_called_once_with(
+        False, "Stopped SF-SKAT protocol because another participant failed"
+    )
 
 
 def test_wait_for_other_parties(mocker):
