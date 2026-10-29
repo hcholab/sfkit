@@ -15,8 +15,8 @@ from sfkit.utils.helper_functions import authenticate_user, condition_or_fail
 from sfkit.utils.sfskat_protocol import (
     parse_ancestries,
     parse_chromosomes,
+    parse_covariate_columns,
     parse_list_param,
-    parse_num_inds,
     prepared_dir,
 )
 
@@ -322,18 +322,14 @@ def validate_skat(
     ancestries = parse_ancestries(parameters["ancestries"]["value"])
     chromosomes = parse_chromosomes(parameters["chromosomes"]["value"])
     num_phenotypes = len(parse_list_param(parameters["phenotype_columns"]["value"], []))
-    num_cov = int(parameters["num_cov"]["value"])
-    num_inds = parse_num_inds(
-        doc_ref_dict["personal_parameters"][username]["NUM_INDS"]["value"]
-    )
+    covariate_columns = parse_covariate_columns(parameters)
     cohort = "A" if role == "1" else "B"
     prepared = prepared_dir(data_path, ancestries, chromosomes)
 
-    for ancestry in ancestries:
-        condition_or_fail(
-            ancestry in num_inds,
-            f"Number of Individuals for {ancestry} is not set. Please set it in Study Parameters and try again.",
-        )
+    condition_or_fail(
+        len(set(covariate_columns)) == len(covariate_columns),
+        "covariate_columns must not repeat a name",
+    )
 
     for ancestry in ancestries:
         for chromosome in chromosomes:
@@ -371,8 +367,8 @@ def validate_skat(
         for path in [cov_file, pheno_file]:
             condition_or_fail(os.path.isfile(path), f"Could not find {path}")
         condition_or_fail(
-            num_cols(cov_file) == num_cov,
-            f"num_cov does not match the number of columns in {cov_file}",
+            num_cols(cov_file) == len(covariate_columns),
+            f"covariate_columns does not match the number of columns in {cov_file}",
         )
         condition_or_fail(
             num_cols(pheno_file) == num_phenotypes,
@@ -381,10 +377,6 @@ def validate_skat(
         condition_or_fail(
             num_rows(cov_file) == num_rows(pheno_file),
             f"cov.txt and pheno.txt in {cohort_dir} have different number of rows",
-        )
-        condition_or_fail(
-            num_rows(pheno_file) == num_inds[ancestry],
-            f"Number of Individuals for {ancestry} does not match the number of rows in {pheno_file}",
         )
 
         # secure-rvas only writes its results and metrics under data_path once the

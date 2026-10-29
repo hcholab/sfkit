@@ -152,11 +152,7 @@ def test_validate_skat(
             "ancestries": {"value": "eur"},
             "chromosomes": {"value": "21,22"},
             "phenotype_columns": {"value": "phenotype1,phenotype2"},
-            "num_cov": {"value": 3},
-        },
-        "personal_parameters": {
-            "a@a.com": {"NUM_INDS": {"value": "EUR=2"}},
-            "b@b.com": {"NUM_INDS": {"value": "EUR=2"}},
+            "covariate_columns": {"value": "PC1,PC2,PC3"},
         },
     }
 
@@ -199,25 +195,34 @@ def test_validate_skat(
         register_data.validate_skat(doc_ref_dict, "b@b.com", str(run_b), "2")
 
     wrong_parameters = copy.deepcopy(doc_ref_dict)
-    wrong_parameters["parameters"]["num_cov"]["value"] = 16
-    with pytest.raises(AssertionError, match="num_cov does not match"):
+    wrong_parameters["parameters"]["covariate_columns"]["value"] = "PC1,PC2"
+    with pytest.raises(AssertionError, match="covariate_columns does not match"):
         register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
+    wrong_parameters["parameters"]["covariate_columns"]["value"] = "PC1,PC2,PC1"
+    with pytest.raises(AssertionError, match="covariate_columns must not repeat a name"):
+        register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
+
+    # studies created before covariate_columns hold only the number of covariates
+    old_parameters = copy.deepcopy(doc_ref_dict)
+    del old_parameters["parameters"]["covariate_columns"]
+    old_parameters["parameters"]["num_cov"] = {"value": 3}
+    assert register_data.validate_skat(old_parameters, "a@a.com", str(run_a), "1") == str(
+        run_a
+    )
 
     wrong_parameters = copy.deepcopy(doc_ref_dict)
     wrong_parameters["parameters"]["phenotype_columns"]["value"] = "phenotype1"
     with pytest.raises(AssertionError, match="phenotype_columns does not match"):
         register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
 
-    # every ancestry needs its own Number of Individuals, matching the data
+    # every chromosome and ancestry analyzed must have been prepared
     wrong_parameters = copy.deepcopy(doc_ref_dict)
-    wrong_parameters["parameters"]["ancestries"]["value"] = "EUR,AFR"
-    with pytest.raises(AssertionError, match="Number of Individuals for AFR is not set"):
+    wrong_parameters["parameters"]["chromosomes"]["value"] = "all"
+    with pytest.raises(AssertionError, match="Could not find .*/EUR/chr1$"):
         register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
     wrong_parameters = copy.deepcopy(doc_ref_dict)
-    wrong_parameters["personal_parameters"]["a@a.com"]["NUM_INDS"]["value"] = "EUR=3"
-    with pytest.raises(
-        AssertionError, match="Number of Individuals for EUR does not match .*/chr21/A/pheno.txt"
-    ):
+    wrong_parameters["parameters"]["ancestries"]["value"] = "EUR,ALL"
+    with pytest.raises(AssertionError, match="Could not find .*/ALL/chr21$"):
         register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
 
     (run_a / "prepared" / "EUR" / "chr21" / "A" / "pheno.txt").write_text("1\t2\n")

@@ -97,21 +97,23 @@ def parse_ancestries(value) -> list:
 
 
 def parse_chromosomes(value) -> list:
+    # "all" stands for chromosomes 1 to 22, as in secure-rvas's chromosomes = ["all"]
+    if str(value).strip().lower() == "all":
+        return list(range(1, 23))
     return [int(chromosome) for chromosome in parse_list_param(value, ["21", "22"])]
 
 
-def parse_num_inds(value) -> dict:
+def parse_covariate_columns(parameters: dict) -> list:
     """
-    Parse a participant's Number of Individuals, which the website stores per
-    ancestry for SF-SKAT (e.g. "EUR=1000,AFR=500"). Entries without a count, such
-    as the single number that studies created before that change hold, are dropped.
+    secure-rvas takes the number of covariates from the number of names in
+    covariate_columns. Studies created before then hold only that number, as
+    num_cov, so name that many columns PC1, PC2, ...
     """
-    num_inds = {}
-    for item in parse_list_param(value, []):
-        ancestry, _, count = item.partition("=")
-        if count.strip().isdigit():
-            num_inds[ancestry.strip().upper()] = int(count)
-    return num_inds
+    num_cov = int(parameters.get("num_cov", {}).get("value") or 10)
+    return parse_list_param(
+        parameters.get("covariate_columns", {}).get("value"),
+        [f"PC{i}" for i in range(1, num_cov + 1)],
+    )
 
 
 def prepared_dir(run_dir: str, ancestries: list, chromosomes: list) -> str:
@@ -222,7 +224,7 @@ def update_config(role: str) -> str:
     """
     Write the config directory that secure-rvas's ``party`` subcommand expects:
     configGlobal.toml (study parameters and networking, the same for every party),
-    configLocal.toml (this party's keys, thread count and prepared input paths)
+    configLocal.toml (this party's keys, thread count, logging and prepared input paths)
     and configPrepare.toml (its run directory, which secure-rvas accepts only
     there). Settings that only matter to ``secure-rvas prepare``, which sfkit does
     not invoke (participants must already have run it out-of-band), are left out.
@@ -240,7 +242,7 @@ def update_config(role: str) -> str:
         "chromosomes": parse_chromosomes(pars.get("chromosomes", {}).get("value")),
         "phenotype_columns": parse_list_param(pars.get("phenotype_columns", {}).get("value"), ["phenotype1"]),
         "ancestries": parse_ancestries(pars.get("ancestries", {}).get("value")),
-        "num_cov": scalar("num_cov", 16),
+        "covariate_columns": parse_covariate_columns(pars),
         "ckks": scalar("ckks", "PN14QP436S45"),
         "mpc_num_threads": scalar("mpc_num_threads", 2),
         "data_bits": scalar("data_bits", 60),
@@ -267,6 +269,10 @@ def update_config(role: str) -> str:
         "shared_keys_path": shared_keys_root(),
         "local_num_threads": os.cpu_count() or 1,
     }
+    # left unset, secure-rvas prints its progress, timings and p-value summary at Cohort A only
+    personal_parameters: dict = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][int(role)]]
+    if print_logs := personal_parameters.get("PRINT_LOGS", {}).get("value", ""):
+        local_config["print_logs"] = to_float_int_or_bool(print_logs) is True
     if role != "0":
         cohort = "A" if role == "1" else "B"
         prepared = prepared_dir(run_dir, global_config["ancestries"], global_config["chromosomes"])

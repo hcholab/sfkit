@@ -20,7 +20,7 @@ def make_doc_ref_dict(public_keys: list) -> dict:
             "ancestries": {"value": "eur, AFR"},
             "max_maf": {"value": 0.01},
             "phenotype_columns": {"value": "phenotype1,phenotype2"},
-            "num_cov": {"value": 10},
+            "covariate_columns": {"value": "PC1, PC2,PC3"},
         },
         "advanced_parameters": {
             "ckks": {"value": "PN14QP436S45"},
@@ -96,13 +96,17 @@ def test_parse_params():
     assert sfskat_protocol.parse_ancestries("eur, Afr") == ["EUR", "AFR"]
     assert sfskat_protocol.parse_chromosomes("") == [21, 22]
     assert sfskat_protocol.parse_chromosomes("1, 22") == [1, 22]
-    assert sfskat_protocol.parse_num_inds("eur=1000, AFR = 500") == {
-        "EUR": 1000,
-        "AFR": 500,
-    }
-    # studies created before the per-ancestry counts hold a single number
-    assert sfskat_protocol.parse_num_inds(100) == {}
-    assert sfskat_protocol.parse_num_inds("EUR=,AFR=x") == {}
+    assert sfskat_protocol.parse_chromosomes(" All ") == list(range(1, 23))
+    assert sfskat_protocol.parse_covariate_columns(
+        {"covariate_columns": {"value": "age, sex"}, "num_cov": {"value": 10}}
+    ) == ["age", "sex"]
+    assert sfskat_protocol.parse_covariate_columns({}) == [f"PC{i}" for i in range(1, 11)]
+    # studies created before covariate_columns hold only the number of covariates
+    assert sfskat_protocol.parse_covariate_columns({"num_cov": {"value": 3}}) == [
+        "PC1",
+        "PC2",
+        "PC3",
+    ]
 
 
 def test_prepared_dir(tmp_path):
@@ -219,9 +223,13 @@ def test_generate_shared_keys(mocker, tmp_path):
 
 
 def test_update_config(mocker, tmp_path):
+    doc_ref_dict = make_doc_ref_dict([""] * 3)
+    # each cohort chooses whether it prints logs; the auxiliary party has no such setting
+    doc_ref_dict["personal_parameters"]["a@a.com"]["PRINT_LOGS"] = {"value": "true"}
+    doc_ref_dict["personal_parameters"]["b@b.com"]["PRINT_LOGS"] = {"value": "false"}
     mocker.patch(
         "sfkit.utils.sfskat_protocol.get_doc_ref_dict",
-        return_value=make_doc_ref_dict([""] * 3),
+        return_value=doc_ref_dict,
     )
     mocker.patch("sfkit.utils.sfskat_protocol.update_firestore")
     mocker.patch("sfkit.utils.sfskat_protocol.constants.SFKIT_DIR", str(tmp_path))
@@ -238,7 +246,7 @@ def test_update_config(mocker, tmp_path):
         "chromosomes": [21, 22],
         "phenotype_columns": ["phenotype1", "phenotype2"],
         "ancestries": ["EUR", "AFR"],
-        "num_cov": 10,
+        "covariate_columns": ["PC1", "PC2", "PC3"],
         "ckks": "PN14QP436S45",
         "mpc_num_threads": 4,
         "data_bits": 70,
@@ -267,6 +275,7 @@ def test_update_config(mocker, tmp_path):
     assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
+        "print_logs": True,
         "genotype_dir": f"{chr_dir}/A/geno",
         "phenotype_file": f"{chr_dir}/A/pheno.txt",
         "covariate_file": f"{chr_dir}/A/cov.txt",
@@ -284,6 +293,7 @@ def test_update_config(mocker, tmp_path):
     assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
+        "print_logs": False,
         "genotype_dir": f"{chr_dir}/B/geno",
         "private_genotype_dir": f"{chr_dir}/B/private",
         "phenotype_file": f"{chr_dir}/B/pheno.txt",
