@@ -117,6 +117,26 @@ def test_build_sfgwas(mocker):
     sfgwas_protocol.build_sfgwas()
 
 
+def test_sync_with_other_vms(mocker):
+    mocker.patch("sfkit.utils.sfgwas_protocol.update_firestore")
+    mocker.patch(
+        "sfkit.utils.sfgwas_protocol.get_doc_ref_dict",
+        side_effect=lambda: copy.deepcopy(mock_doc_ref_dict_syncing_up),
+    )
+    sleep = mocker.patch("sfkit.utils.sfgwas_protocol.time.sleep")
+
+    sfgwas_protocol.sync_with_other_vms("2", True)
+    sleep.assert_not_called()
+
+    # by default, each role starts 15 seconds after the previous one
+    sfgwas_protocol.sync_with_other_vms("2", False)
+    sleep.assert_called_once_with(30)
+
+    sleep.reset_mock()
+    sfgwas_protocol.sync_with_other_vms("2", False, skip_cp0=True, stagger=0)
+    sleep.assert_called_once_with(0)
+
+
 def test_start_sfgwas(mocker):
     mocker.patch("sfkit.utils.sfgwas_protocol.boot_sfkit_proxy")
     mocker.patch("sfkit.utils.sfgwas_protocol.update_firestore")

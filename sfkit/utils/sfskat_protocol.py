@@ -11,6 +11,8 @@ party (like CP0 in SF-GWAS); role 1 is Cohort A; role 2 is Cohort B.
 import hashlib
 import os
 import random
+import subprocess
+import threading
 import time
 
 import tomlkit
@@ -30,6 +32,14 @@ from sfkit.utils.sfgwas_helper_functions import boot_sfkit_proxy, to_float_int_o
 from sfkit.utils.sfgwas_protocol import sync_with_other_vms
 
 GLOBAL_CONFIG_FILENAME = "configGlobal.toml"
+LOCAL_CONFIG_FILENAME = "configLocal.toml"
+PREPARE_CONFIG_FILENAME = "configPrepare.toml"
+# Set once this party's secure-rvas has exited. It must not contain "Finished protocol",
+# which the website takes as the cue to stop the auxiliary party's VM.
+COMPUTATION_DONE_STATUS = "finishing SF-SKAT protocol"
+FINISHED_STATUS = "Finished protocol!"
+# How often, in seconds, a party checks whether another one has failed while secure-rvas runs
+FAILURE_CHECK_INTERVAL = 30
 
 
 def run_sfskat_protocol(role: str, demo: bool = False) -> None:
@@ -46,7 +56,11 @@ def run_sfskat_protocol(role: str, demo: bool = False) -> None:
     print("Begin updating config files")
     config_dir = update_config(role)
 
-    sync_with_other_vms(role, demo)
+    # Start all parties together instead of staggering them by role: sfkit-proxy sets up its
+    # NAT bindings as soon as it boots, and they expire (after 30s on Google Cloud NAT) while
+    # an early party waits for the later ones. secure-rvas retries its connections, so the
+    # parties do not need to come up in order.
+    sync_with_other_vms(role, demo, stagger=0)
     start_sfskat(role, config_dir)
 
 
@@ -80,6 +94,46 @@ def parse_ancestries(value) -> list:
     # secure-rvas upper-cases ancestry labels, both when `prepare` names the
     # prepared/<ancestry> directories and when `party` looks up keys and inputs.
     return [ancestry.upper() for ancestry in parse_list_param(value, ["EUR"])]
+
+
+def parse_chromosomes(value) -> list:
+    # "all" stands for chromosomes 1 to 22, as in secure-rvas's chromosomes = ["all"]
+    if str(value).strip().lower() == "all":
+        return list(range(1, 23))
+    return [int(chromosome) for chromosome in parse_list_param(value, ["21", "22"])]
+
+
+def parse_covariate_columns(parameters: dict) -> list:
+    """
+    secure-rvas takes the number of covariates from the number of names in
+    covariate_columns. Studies created before then hold only that number, as
+    num_cov, so name that many columns PC1, PC2, ...
+    """
+    num_cov = int(parameters.get("num_cov", {}).get("value") or 10)
+    return parse_list_param(
+        parameters.get("covariate_columns", {}).get("value"),
+        [f"PC{i}" for i in range(1, num_cov + 1)],
+    )
+
+
+def prepared_dir(run_dir: str, ancestries: list, chromosomes: list) -> str:
+    """
+    Return the directory that holds <ancestry>/chr<chromosome> for every ancestry and
+    chromosome. `secure-rvas prepare` writes those under run_dir/cache/prepared and
+    links them into run_dir/prepared by absolute path, so the links dangle wherever
+    run_dir is seen at another path (such as /data inside Docker); the cache is then
+    used directly. If neither directory is complete, run_dir/prepared is returned, for
+    the data validation to report what is missing.
+    """
+    prepared = os.path.join(run_dir, "prepared")
+    for root in (prepared, os.path.join(run_dir, "cache", "prepared")):
+        if all(
+            os.path.isdir(os.path.join(root, ancestry, f"chr{chromosome}"))
+            for ancestry in ancestries
+            for chromosome in chromosomes
+        ):
+            return root
+    return prepared
 
 
 def get_registered_data_path() -> str:
@@ -169,11 +223,11 @@ def generate_shared_keys(role: int, ancestries: list) -> None:
 def update_config(role: str) -> str:
     """
     Write the config directory that secure-rvas's ``party`` subcommand expects:
-    configGlobal.toml (study parameters and networking, the same for every party
-    apart from run_dir) and configLocal.Party{role}.toml (this party's keys,
-    thread count and prepared input paths). Settings that only matter to
-    ``secure-rvas prepare``, which sfkit does not invoke (participants must
-    already have run it out-of-band), are left out.
+    configGlobal.toml (study parameters and networking, the same for every party),
+    configLocal.toml (this party's keys, thread count, logging and prepared input paths)
+    and configPrepare.toml (its run directory, which secure-rvas accepts only
+    there). Settings that only matter to ``secure-rvas prepare``, which sfkit does
+    not invoke (participants must already have run it out-of-band), are left out.
     """
     doc_ref_dict: dict = get_doc_ref_dict()
     pars = {**doc_ref_dict["parameters"], **doc_ref_dict["advanced_parameters"]}
@@ -185,17 +239,15 @@ def update_config(role: str) -> str:
     run_dir = get_run_dir(role)
 
     global_config = {
-        "run_dir": run_dir,
-        "chromosomes": [int(c) for c in parse_list_param(pars.get("chromosomes", {}).get("value"), ["21", "22"])],
+        "chromosomes": parse_chromosomes(pars.get("chromosomes", {}).get("value")),
         "phenotype_columns": parse_list_param(pars.get("phenotype_columns", {}).get("value"), ["phenotype1"]),
         "ancestries": parse_ancestries(pars.get("ancestries", {}).get("value")),
-        "num_cov": scalar("num_cov", 16),
+        "covariate_columns": parse_covariate_columns(pars),
         "ckks": scalar("ckks", "PN14QP436S45"),
         "mpc_num_threads": scalar("mpc_num_threads", 2),
         "data_bits": scalar("data_bits", 60),
         "fractional_bits": scalar("fractional_bits", 30),
         "probes": scalar("probes", 30),
-        "seed": scalar("seed", 42),
         "binding_ipaddr": "0.0.0.0",
         "servers": {},
     }
@@ -217,10 +269,15 @@ def update_config(role: str) -> str:
         "shared_keys_path": shared_keys_root(),
         "local_num_threads": os.cpu_count() or 1,
     }
+    # left unset, secure-rvas prints its progress, timings and p-value summary at Cohort A only
+    personal_parameters: dict = doc_ref_dict["personal_parameters"][doc_ref_dict["participants"][int(role)]]
+    if print_logs := personal_parameters.get("PRINT_LOGS", {}).get("value", ""):
+        local_config["print_logs"] = to_float_int_or_bool(print_logs) is True
     if role != "0":
         cohort = "A" if role == "1" else "B"
+        prepared = prepared_dir(run_dir, global_config["ancestries"], global_config["chromosomes"])
         # secure-rvas itself expands {ancestry} and {chromosome} in these paths
-        chr_dir = os.path.join(run_dir, "prepared", "{ancestry}", "chr{chromosome}")
+        chr_dir = os.path.join(prepared, "{ancestry}", "chr{chromosome}")
         local_config["genotype_dir"] = os.path.join(chr_dir, cohort, "geno")
         if role == "2":
             local_config["private_genotype_dir"] = os.path.join(chr_dir, cohort, "private")
@@ -233,7 +290,8 @@ def update_config(role: str) -> str:
     os.makedirs(config_dir, exist_ok=True)
     for filename, data in (
         (GLOBAL_CONFIG_FILENAME, global_config),
-        (f"configLocal.Party{role}.toml", local_config),
+        (LOCAL_CONFIG_FILENAME, local_config),
+        (PREPARE_CONFIG_FILENAME, {"run_dir": run_dir}),
     ):
         with open(os.path.join(config_dir, filename), "w") as f:
             f.write(tomlkit.dumps(data))
@@ -255,26 +313,101 @@ def start_sfskat(role: str, config_dir: str) -> None:
         else os.path.join("sf-skat", "secure-rvas")
     )
 
-    run_command(
+    run_secure_rvas(
         [
             binary,
             "party",
             "--config", config_dir,
             "--party", role,
         ],
-        fail_message="Failed SF-SKAT protocol",
-        role=role,
+        role,
     )
+
+    # secure-rvas exits as soon as it has sent its last message, without waiting for the
+    # other parties to receive it; the auxiliary party in particular is done within seconds
+    # of connecting. So keep sfkit-proxy up, and hold off reporting completion (which makes
+    # the website stop the auxiliary party's VM), until every party's secure-rvas has exited.
+    wait_for_other_parties()
 
     if sfkit_proxy:
         sfkit_proxy.terminate()
 
     print("\n\n Finished SF-SKAT \n\n")
 
-    if role == "1":
+    # both cohorts receive the results; the auxiliary party has none
+    if role != "0":
         process_output_files(role)
 
-    update_firestore("update_firestore::status=Finished protocol!")
+    update_firestore(f"update_firestore::status={FINISHED_STATUS}")
+
+
+def run_secure_rvas(command: list, role: str) -> None:
+    """
+    Run secure-rvas like run_command, but stop it as soon as another party has failed.
+    When a party's secure-rvas exits on an error, its sfkit-proxy does not close the
+    connections to the other parties (it retries the local connection instead), so
+    their secure-rvas would otherwise wait for it forever.
+    """
+    env = dict(constants.ENV.copy(), PYTHONUNBUFFERED="1", PID=role)
+    other_party_failed = threading.Event()
+    with subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        env=env,
+        text=True,
+        bufsize=1,
+    ) as process:
+        threading.Thread(
+            target=stop_if_other_party_fails,
+            args=(process, role, other_party_failed),
+            daemon=True,
+        ).start()
+        for line in process.stdout or []:
+            if line := line.strip():
+                print(line)
+
+    if process.returncode != 0:
+        print(f"FAILED - {command}")
+        print(f"Return code: {process.returncode}")
+        condition_or_fail(
+            False,
+            "Stopped SF-SKAT protocol because another participant failed"
+            if other_party_failed.is_set()
+            else "Failed SF-SKAT protocol",
+        )
+
+
+def stop_if_other_party_fails(process: subprocess.Popen, role: str, other_party_failed: threading.Event) -> None:
+    while process.poll() is None:
+        time.sleep(FAILURE_CHECK_INTERVAL)
+        try:
+            doc_ref_dict: dict = get_doc_ref_dict()
+            participants: list = doc_ref_dict["participants"]
+            statuses: dict = doc_ref_dict["status"]
+        except Exception as e:  # the website may be briefly unreachable; check again later
+            print(f"Could not check the other parties' statuses: {e}")
+            continue
+        for i, username in enumerate(participants):
+            status: str = statuses.get(username, "")
+            if i != int(role) and "FAILED" in status and process.poll() is None:
+                print(f"Stopping secure-rvas because party {i} ({username}) failed: {status}")
+                other_party_failed.set()
+                process.terminate()
+                return
+
+
+def wait_for_other_parties() -> None:
+    update_firestore(f"update_firestore::status={COMPUTATION_DONE_STATUS}")
+    while True:
+        statuses = get_doc_ref_dict()["status"].values()
+        if all(
+            status in (COMPUTATION_DONE_STATUS, FINISHED_STATUS) or "FAILED" in status
+            for status in statuses
+        ):
+            break
+        print("Waiting for the other parties to finish...")
+        time.sleep(5)
 
 
 def process_output_files(role: str) -> None:

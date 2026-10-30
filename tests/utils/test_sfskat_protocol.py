@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pytest
 import tomlkit
@@ -17,10 +18,9 @@ def make_doc_ref_dict(public_keys: list) -> dict:
         "parameters": {
             "chromosomes": {"value": "21,22"},
             "ancestries": {"value": "eur, AFR"},
-            "masks": {"value": "LoF=HC"},
             "max_maf": {"value": 0.01},
             "phenotype_columns": {"value": "phenotype1,phenotype2"},
-            "num_cov": {"value": 10},
+            "covariate_columns": {"value": "PC1, PC2,PC3"},
         },
         "advanced_parameters": {
             "ckks": {"value": "PN14QP436S45"},
@@ -28,6 +28,7 @@ def make_doc_ref_dict(public_keys: list) -> dict:
             "data_bits": {"value": 70},
             "fractional_bits": {"value": 40},
             "probes": {"value": 50},
+            # left in studies created before secure-skat dropped it; must not be written
             "seed": {"value": ""},
         },
         "personal_parameters": {
@@ -66,6 +67,8 @@ def test_run_sfskat_protocol(mocker):
 
     sfskat_protocol.run_sfskat_protocol("1")
     sfskat_protocol.generate_shared_keys.assert_called_once_with(1, ["EUR", "AFR"])
+    # the parties must not be staggered, or the early ones' NAT bindings go stale
+    sfskat_protocol.sync_with_other_vms.assert_called_with("1", False, stagger=0)
     sfskat_protocol.start_sfskat.assert_called_with("1", "config_dir")
 
     mocker.patch("sfkit.utils.sfskat_protocol.constants.IS_DOCKER", True)
@@ -91,6 +94,49 @@ def test_parse_params():
     assert sfskat_protocol.parse_list_param("21, 22", []) == ["21", "22"]
     assert sfskat_protocol.parse_ancestries("") == ["EUR"]
     assert sfskat_protocol.parse_ancestries("eur, Afr") == ["EUR", "AFR"]
+    assert sfskat_protocol.parse_chromosomes("") == [21, 22]
+    assert sfskat_protocol.parse_chromosomes("1, 22") == [1, 22]
+    assert sfskat_protocol.parse_chromosomes(" All ") == list(range(1, 23))
+    assert sfskat_protocol.parse_covariate_columns(
+        {"covariate_columns": {"value": "age, sex"}, "num_cov": {"value": 10}}
+    ) == ["age", "sex"]
+    assert sfskat_protocol.parse_covariate_columns({}) == [f"PC{i}" for i in range(1, 11)]
+    # studies created before covariate_columns hold only the number of covariates
+    assert sfskat_protocol.parse_covariate_columns({"num_cov": {"value": 3}}) == [
+        "PC1",
+        "PC2",
+        "PC3",
+    ]
+
+
+def test_prepared_dir(tmp_path):
+    prepared = tmp_path / "prepared"
+    cache = tmp_path / "cache" / "prepared"
+    for chromosome in (21, 22):
+        (cache / "EUR" / f"chr{chromosome}").mkdir(parents=True)
+    (prepared / "EUR").mkdir(parents=True)
+
+    # `secure-rvas prepare` links each chromosome into the cache by absolute path
+    for chromosome in (21, 22):
+        (prepared / "EUR" / f"chr{chromosome}").symlink_to(
+            cache / "EUR" / f"chr{chromosome}"
+        )
+    assert sfskat_protocol.prepared_dir(str(tmp_path), ["EUR"], [21, 22]) == str(
+        prepared
+    )
+
+    # those links dangle where run_dir is mounted at another path
+    for chromosome in (21, 22):
+        (prepared / "EUR" / f"chr{chromosome}").unlink()
+        (prepared / "EUR" / f"chr{chromosome}").symlink_to(
+            f"/elsewhere/cache/prepared/EUR/chr{chromosome}"
+        )
+    assert sfskat_protocol.prepared_dir(str(tmp_path), ["EUR"], [21, 22]) == str(cache)
+
+    # neither is complete: leave it to the data validation to say what is missing
+    assert sfskat_protocol.prepared_dir(str(tmp_path), ["EUR", "AFR"], [21]) == str(
+        prepared
+    )
 
 
 def test_get_run_dir(mocker, tmp_path):
@@ -177,9 +223,13 @@ def test_generate_shared_keys(mocker, tmp_path):
 
 
 def test_update_config(mocker, tmp_path):
+    doc_ref_dict = make_doc_ref_dict([""] * 3)
+    # each cohort chooses whether it prints logs; the auxiliary party has no such setting
+    doc_ref_dict["personal_parameters"]["a@a.com"]["PRINT_LOGS"] = {"value": "true"}
+    doc_ref_dict["personal_parameters"]["b@b.com"]["PRINT_LOGS"] = {"value": "false"}
     mocker.patch(
         "sfkit.utils.sfskat_protocol.get_doc_ref_dict",
-        return_value=make_doc_ref_dict([""] * 3),
+        return_value=doc_ref_dict,
     )
     mocker.patch("sfkit.utils.sfskat_protocol.update_firestore")
     mocker.patch("sfkit.utils.sfskat_protocol.constants.SFKIT_DIR", str(tmp_path))
@@ -193,17 +243,15 @@ def test_update_config(mocker, tmp_path):
     config_dir = sfskat_protocol.update_config("1")
     assert config_dir == str(tmp_path / "skat_config")
     assert load_toml(os.path.join(config_dir, "configGlobal.toml")) == {
-        "run_dir": str(data_path),
         "chromosomes": [21, 22],
         "phenotype_columns": ["phenotype1", "phenotype2"],
         "ancestries": ["EUR", "AFR"],
-        "num_cov": 10,
+        "covariate_columns": ["PC1", "PC2", "PC3"],
         "ckks": "PN14QP436S45",
         "mpc_num_threads": 4,
         "data_bits": 70,
         "fractional_bits": 40,
         "probes": 50,
-        "seed": 42,
         "binding_ipaddr": "0.0.0.0",
         "servers": {
             "party0": {
@@ -220,9 +268,14 @@ def test_update_config(mocker, tmp_path):
             },
         },
     }
-    assert load_toml(os.path.join(config_dir, "configLocal.Party1.toml")) == {
+    # secure-rvas rejects run_dir anywhere but in configPrepare.toml
+    assert load_toml(os.path.join(config_dir, "configPrepare.toml")) == {
+        "run_dir": str(data_path),
+    }
+    assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
+        "print_logs": True,
         "genotype_dir": f"{chr_dir}/A/geno",
         "phenotype_file": f"{chr_dir}/A/pheno.txt",
         "covariate_file": f"{chr_dir}/A/cov.txt",
@@ -230,10 +283,17 @@ def test_update_config(mocker, tmp_path):
         "variant_counts_file": f"{chr_dir}/block_sizes.txt",
     }
 
+    # where the prepared links dangle, the inputs are read from the cache in run_dir
+    for chromosome in (21, 22):
+        (data_path / "cache" / "prepared" / "EUR" / f"chr{chromosome}").mkdir(parents=True)
+        (data_path / "cache" / "prepared" / "AFR" / f"chr{chromosome}").mkdir(parents=True)
+    chr_dir = f"{data_path}/cache/prepared/{{ancestry}}/chr{{chromosome}}"
+
     sfskat_protocol.update_config("2")
-    assert load_toml(os.path.join(config_dir, "configLocal.Party2.toml")) == {
+    assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
+        "print_logs": False,
         "genotype_dir": f"{chr_dir}/B/geno",
         "private_genotype_dir": f"{chr_dir}/B/private",
         "phenotype_file": f"{chr_dir}/B/pheno.txt",
@@ -245,22 +305,29 @@ def test_update_config(mocker, tmp_path):
     # the auxiliary party has no data, and the proxy makes every peer local
     mocker.patch("sfkit.utils.sfskat_protocol.constants.SFKIT_PROXY_ON", True)
     sfskat_protocol.update_config("0")
-    assert load_toml(os.path.join(config_dir, "configLocal.Party0.toml")) == {
+    assert load_toml(os.path.join(config_dir, "configLocal.toml")) == {
         "shared_keys_path": str(tmp_path / "skat_shared_keys"),
         "local_num_threads": 8,
     }
+    assert load_toml(os.path.join(config_dir, "configPrepare.toml")) == {
+        "run_dir": str(tmp_path / "skat_run"),
+    }
     global_config = load_toml(os.path.join(config_dir, "configGlobal.toml"))
-    assert global_config["run_dir"] == str(tmp_path / "skat_run")
     assert {server["ipaddr"] for server in global_config["servers"].values()} == {
         "127.0.0.1"
     }
 
 
 def test_start_sfskat(mocker):
-    mocker.patch("sfkit.utils.sfskat_protocol.update_firestore")
-    mocker.patch("sfkit.utils.sfskat_protocol.boot_sfkit_proxy")
-    mocker.patch("sfkit.utils.sfskat_protocol.run_command")
-    mocker.patch("sfkit.utils.sfskat_protocol.process_output_files")
+    calls = mocker.Mock()
+    for name in [
+        "update_firestore",
+        "boot_sfkit_proxy",
+        "run_secure_rvas",
+        "wait_for_other_parties",
+        "process_output_files",
+    ]:
+        calls.attach_mock(mocker.patch(f"sfkit.utils.sfskat_protocol.{name}"), name)
     mocker.patch("sfkit.utils.sfskat_protocol.constants.IS_DOCKER", True)
 
     mocker.patch("sfkit.utils.sfskat_protocol.constants.SFKIT_PROXY_ON", True)
@@ -268,23 +335,107 @@ def test_start_sfskat(mocker):
     sfskat_protocol.boot_sfkit_proxy.assert_called_once_with(
         "1", "config_dir/configGlobal.toml"
     )
-    sfskat_protocol.boot_sfkit_proxy.return_value.terminate.assert_called_once()
-    sfskat_protocol.run_command.assert_called_once_with(
-        ["secure-rvas", "party", "--config", "config_dir", "--party", "1"],
-        fail_message="Failed SF-SKAT protocol",
-        role="1",
+    sfskat_protocol.run_secure_rvas.assert_called_once_with(
+        ["secure-rvas", "party", "--config", "config_dir", "--party", "1"], "1"
     )
     sfskat_protocol.process_output_files.assert_called_once_with("1")
+    # the proxy stays up, and completion goes unreported, until the other parties are done
+    assert [call[0] for call in calls.mock_calls if "__" not in call[0]] == [
+        "update_firestore",
+        "boot_sfkit_proxy",
+        "run_secure_rvas",
+        "wait_for_other_parties",
+        "boot_sfkit_proxy().terminate",
+        "process_output_files",
+        "update_firestore",
+    ]
+    sfskat_protocol.update_firestore.assert_called_with(
+        "update_firestore::status=Finished protocol!"
+    )
 
     mocker.patch("sfkit.utils.sfskat_protocol.constants.SFKIT_PROXY_ON", False)
     mocker.patch("sfkit.utils.sfskat_protocol.constants.IS_DOCKER", False)
     mocker.patch("sfkit.utils.sfskat_protocol.constants.IS_INSTALLED_VIA_SCRIPT", False)
     sfskat_protocol.start_sfskat("2", "config_dir")
-    assert sfskat_protocol.run_command.call_args.args[0][0] == os.path.join(
+    assert sfskat_protocol.run_secure_rvas.call_args.args[0][0] == os.path.join(
         "sf-skat", "secure-rvas"
     )
     sfskat_protocol.boot_sfkit_proxy.assert_called_once()
-    sfskat_protocol.process_output_files.assert_called_once()
+    # both cohorts receive results, the auxiliary party does not
+    sfskat_protocol.process_output_files.assert_called_with("2")
+    sfskat_protocol.start_sfskat("0", "config_dir")
+    assert sfskat_protocol.process_output_files.call_count == 2
+
+
+def test_run_secure_rvas(mocker, capsys):
+    condition_or_fail = mocker.patch("sfkit.utils.sfskat_protocol.condition_or_fail")
+    mocker.patch("sfkit.utils.sfskat_protocol.FAILURE_CHECK_INTERVAL", 0.01)
+    running = "running SF-SKAT protocol"
+
+    def statuses(*values):
+        return {"participants": PARTICIPANTS, "status": dict(zip(PARTICIPANTS, values))}
+
+    mocker.patch(
+        "sfkit.utils.sfskat_protocol.get_doc_ref_dict",
+        return_value=statuses(running, running, running),
+    )
+    sfskat_protocol.run_secure_rvas([sys.executable, "-c", "print('done')"], "1")
+    assert "done" in capsys.readouterr().out
+    condition_or_fail.assert_not_called()
+
+    sfskat_protocol.run_secure_rvas([sys.executable, "-c", "import sys; sys.exit(2)"], "1")
+    condition_or_fail.assert_called_once_with(False, "Failed SF-SKAT protocol")
+
+    # a party that failed may never close its connections, so the others must not wait for it;
+    # an unreachable website and this party's own status are no reason to stop
+    condition_or_fail.reset_mock()
+    get_doc_ref_dict = mocker.patch(
+        "sfkit.utils.sfskat_protocol.get_doc_ref_dict",
+        side_effect=[
+            ConnectionError("website unreachable"),
+            statuses(running, "FAILED - stale", running),
+            statuses("FAILED - Failed SF-SKAT protocol", running, running),
+        ],
+    )
+    sfskat_protocol.run_secure_rvas([sys.executable, "-c", "import time; time.sleep(60)"], "1")
+    assert get_doc_ref_dict.call_count == 3
+    assert "party 0 (Broad) failed" in capsys.readouterr().out
+    condition_or_fail.assert_called_once_with(
+        False, "Stopped SF-SKAT protocol because another participant failed"
+    )
+
+
+def test_wait_for_other_parties(mocker):
+    update_firestore = mocker.patch("sfkit.utils.sfskat_protocol.update_firestore")
+    sleep = mocker.patch("sfkit.utils.sfskat_protocol.time.sleep")
+    done = sfskat_protocol.COMPUTATION_DONE_STATUS
+    # the website stops the auxiliary party's VM on any status containing this
+    assert "Finished protocol" not in done
+
+    def statuses(*values):
+        return {"status": dict(zip(PARTICIPANTS, values))}
+
+    # the auxiliary party is done first, and has to outlast both cohorts
+    mocker.patch(
+        "sfkit.utils.sfskat_protocol.get_doc_ref_dict",
+        side_effect=[
+            statuses(done, "running SF-SKAT protocol", "running SF-SKAT protocol"),
+            statuses(done, done, "running SF-SKAT protocol"),
+            statuses(done, "Finished protocol!", done),
+        ],
+    )
+    sfskat_protocol.wait_for_other_parties()
+    update_firestore.assert_called_once_with(f"update_firestore::status={done}")
+    assert sleep.call_count == 2
+
+    # a failed party will never finish, so it must not be waited for
+    sleep.reset_mock()
+    mocker.patch(
+        "sfkit.utils.sfskat_protocol.get_doc_ref_dict",
+        return_value=statuses(done, "FAILED - Failed SF-SKAT protocol", done),
+    )
+    sfskat_protocol.wait_for_other_parties()
+    sleep.assert_not_called()
 
 
 def test_process_output_files(mocker, tmp_path):

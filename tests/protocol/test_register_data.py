@@ -1,5 +1,6 @@
 # sourcery skip: no-wildcard-imports
 import copy
+import shutil
 from pathlib import Path
 from typing import Callable, Generator
 
@@ -151,13 +152,12 @@ def test_validate_skat(
             "ancestries": {"value": "eur"},
             "chromosomes": {"value": "21,22"},
             "phenotype_columns": {"value": "phenotype1,phenotype2"},
-            "num_cov": {"value": 3},
+            "covariate_columns": {"value": "PC1,PC2,PC3"},
         },
     }
 
     # the layout written by `secure-rvas prepare --party 1` (A) and `--party 2` (B)
-    def prepare(run_dir: Path, cohort: str, chromosome: int) -> Path:
-        chr_dir = run_dir / "prepared" / "EUR" / f"chr{chromosome}"
+    def prepare(chr_dir: Path, cohort: str) -> Path:
         (chr_dir / cohort / "geno").mkdir(parents=True)
         if cohort == "B":
             (chr_dir / cohort / "private").mkdir()
@@ -169,14 +169,21 @@ def test_validate_skat(
 
     run_a, run_b = tmp_path / "a", tmp_path / "b"
     for chromosome in (21, 22):
-        prepare(run_a, "A", chromosome)
-        prepare(run_b, "B", chromosome)
+        prepare(run_a / "prepared" / "EUR" / f"chr{chromosome}", "A")
+        prepare(run_b / "prepared" / "EUR" / f"chr{chromosome}", "B")
 
     assert register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_a), "1") == str(
         run_a
     )
     assert register_data.validate_skat(doc_ref_dict, "b@b.com", str(run_b), "2") == str(
         run_b
+    )
+
+    # secure-rvas reads the samples from the first chromosome only
+    for name in ("cov.txt", "pheno.txt"):
+        (run_a / "prepared" / "EUR" / "chr22" / "A" / name).unlink()
+    assert register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_a), "1") == str(
+        run_a
     )
 
     # Cohort A's directory has neither B/ nor private genotypes
@@ -188,24 +195,57 @@ def test_validate_skat(
         register_data.validate_skat(doc_ref_dict, "b@b.com", str(run_b), "2")
 
     wrong_parameters = copy.deepcopy(doc_ref_dict)
-    wrong_parameters["parameters"]["num_cov"]["value"] = 16
-    with pytest.raises(AssertionError, match="num_cov does not match"):
+    wrong_parameters["parameters"]["covariate_columns"]["value"] = "PC1,PC2"
+    with pytest.raises(AssertionError, match="covariate_columns does not match"):
         register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
+    wrong_parameters["parameters"]["covariate_columns"]["value"] = "PC1,PC2,PC1"
+    with pytest.raises(AssertionError, match="covariate_columns must not repeat a name"):
+        register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
+
+    # studies created before covariate_columns hold only the number of covariates
+    old_parameters = copy.deepcopy(doc_ref_dict)
+    del old_parameters["parameters"]["covariate_columns"]
+    old_parameters["parameters"]["num_cov"] = {"value": 3}
+    assert register_data.validate_skat(old_parameters, "a@a.com", str(run_a), "1") == str(
+        run_a
+    )
 
     wrong_parameters = copy.deepcopy(doc_ref_dict)
     wrong_parameters["parameters"]["phenotype_columns"]["value"] = "phenotype1"
     with pytest.raises(AssertionError, match="phenotype_columns does not match"):
         register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
 
+    # every chromosome and ancestry analyzed must have been prepared
+    wrong_parameters = copy.deepcopy(doc_ref_dict)
+    wrong_parameters["parameters"]["chromosomes"]["value"] = "all"
+    with pytest.raises(AssertionError, match="Could not find .*/EUR/chr1$"):
+        register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
+    wrong_parameters = copy.deepcopy(doc_ref_dict)
+    wrong_parameters["parameters"]["ancestries"]["value"] = "EUR,ALL"
+    with pytest.raises(AssertionError, match="Could not find .*/ALL/chr21$"):
+        register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
+
     (run_a / "prepared" / "EUR" / "chr21" / "A" / "pheno.txt").write_text("1\t2\n")
     with pytest.raises(AssertionError, match="different number of rows"):
         register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_a), "1")
 
-    # prepared_cache_dir links that dangle (e.g. cache not mounted in the container)
+    # `secure-rvas prepare` links prepared/ into cache/prepared by absolute path, so the
+    # links dangle where run_dir is mounted elsewhere; the cache is then used directly
     run_c = tmp_path / "c"
     (run_c / "prepared" / "EUR").mkdir(parents=True)
-    (run_c / "prepared" / "EUR" / "chr21").symlink_to(tmp_path / "missing_cache")
-    with pytest.raises(AssertionError, match="broken link"):
+    for chromosome in (21, 22):
+        prepare(run_c / "cache" / "prepared" / "EUR" / f"chr{chromosome}", "A")
+        (run_c / "prepared" / "EUR" / f"chr{chromosome}").symlink_to(
+            f"/elsewhere/cache/prepared/EUR/chr{chromosome}"
+        )
+    assert register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_c), "1") == str(
+        run_c
+    )
+
+    shutil.rmtree(run_c / "cache")
+    with pytest.raises(
+        AssertionError, match="chr21 is a broken link to /elsewhere/cache/prepared/EUR/chr21"
+    ):
         register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_c), "1")
 
     with pytest.raises(AssertionError, match="Could not find .*/chr21$"):
@@ -214,7 +254,7 @@ def test_validate_skat(
     # results and metrics land in data_path, in whichever directories already exist
     run_d = tmp_path / "d"
     for chromosome in (21, 22):
-        prepare(run_d, "A", chromosome)
+        prepare(run_d / "prepared" / "EUR" / f"chr{chromosome}", "A")
     (run_d / "secure").mkdir()
     unwritable = [str(run_d / "secure")]
     mocker.patch(
