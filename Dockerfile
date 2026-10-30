@@ -65,7 +65,7 @@ RUN git clone https://github.com/froelich/sf-relate . && \
 FROM go AS sf-skat
 
 RUN git clone https://github.com/swanhong/secure-skat . && \
-    git checkout b076cc6 && \
+    git checkout 5bbd8d6 && \
     # upstream stopped tracking go.sum after 0f954e1, and go.mod has not changed since
     git checkout 0f954e1 -- go.sum && \
     # dial peers via the SOCKS proxy from the environment (as sfgwas does),
