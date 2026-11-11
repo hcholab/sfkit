@@ -151,6 +151,7 @@ def test_validate_skat(
         "parameters": {
             "ancestries": {"value": "eur"},
             "chromosomes": {"value": "21,22"},
+            "global_max_maf": {"value": "0.01,0.001"},
             "phenotype_columns": {"value": "phenotype1,phenotype2"},
             "covariate_columns": {"value": "PC1,PC2,PC3"},
         },
@@ -165,6 +166,11 @@ def test_validate_skat(
         (chr_dir / "block_sizes.txt").write_text("4\n0\n")
         (chr_dir / cohort / "cov.txt").write_text("1\t2\t3\n4\t5\t6\n")
         (chr_dir / cohort / "pheno.txt").write_text("1\t2\n3\t4\n")
+        # the site cohort's allele counts per gene (gene2 has no variants), and its size
+        (chr_dir / cohort / "allele_counts.txt").write_text("3 0 1 7\n\n")
+        if cohort == "B":
+            (chr_dir / cohort / "private_allele_counts.txt").write_text("2\n\n")
+        (chr_dir / cohort / "cohort_size.txt").write_text("40\n")
         return chr_dir
 
     run_a, run_b = tmp_path / "a", tmp_path / "b"
@@ -179,12 +185,53 @@ def test_validate_skat(
         run_b
     )
 
-    # secure-rvas reads the samples from the first chromosome only
-    for name in ("cov.txt", "pheno.txt"):
+    # secure-rvas reads the samples and the cohort size from the first chromosome only
+    for name in ("cov.txt", "pheno.txt", "cohort_size.txt"):
         (run_a / "prepared" / "EUR" / "chr22" / "A" / name).unlink()
     assert register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_a), "1") == str(
         run_a
     )
+
+    # data prepared by a secure-rvas without global_max_maf lacks the allele counts
+    allele_counts = run_a / "prepared" / "EUR" / "chr22" / "A" / "allele_counts.txt"
+    allele_counts.unlink()
+    with pytest.raises(
+        AssertionError,
+        match="Could not find .*/chr22/A/allele_counts.txt; prepare the data again",
+    ):
+        register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_a), "1")
+    allele_counts.write_text("3 0 1 7\n")
+    with pytest.raises(
+        AssertionError,
+        match="allele_counts.txt and genes.txt in .*/chr22 have different number of rows",
+    ):
+        register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_a), "1")
+    allele_counts.write_text("3 0 1 7\n\n")
+    private_allele_counts = run_b / "prepared" / "EUR" / "chr21" / "B" / "private_allele_counts.txt"
+    private_allele_counts.unlink()
+    with pytest.raises(
+        AssertionError, match="Could not find .*/chr21/B/private_allele_counts.txt"
+    ):
+        register_data.validate_skat(doc_ref_dict, "b@b.com", str(run_b), "2")
+    private_allele_counts.write_text("2\n\n")
+
+    cohort_size = run_a / "prepared" / "EUR" / "chr21" / "A" / "cohort_size.txt"
+    cohort_size.write_text("forty\n")
+    with pytest.raises(AssertionError, match="cohort_size.txt must hold the number of samples"):
+        register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_a), "1")
+    cohort_size.unlink()
+    with pytest.raises(AssertionError, match="Could not find .*/chr21/A/cohort_size.txt"):
+        register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_a), "1")
+    cohort_size.write_text("40\n")
+
+    # each threshold is a separate analysis; secure-rvas accepts distinct ones in (0, 0.5]
+    for thresholds in ("0.01,0.01", "0.6", "0", "nan", "0.01,rare"):
+        wrong_parameters = copy.deepcopy(doc_ref_dict)
+        wrong_parameters["parameters"]["global_max_maf"]["value"] = thresholds
+        with pytest.raises(
+            AssertionError, match=r"global_max_maf must list distinct thresholds in \(0, 0.5\]"
+        ):
+            register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
 
     # Cohort A's directory has neither B/ nor private genotypes
     with pytest.raises(AssertionError, match="Could not find .*/chr21/B/geno"):
@@ -202,9 +249,11 @@ def test_validate_skat(
     with pytest.raises(AssertionError, match="covariate_columns must not repeat a name"):
         register_data.validate_skat(wrong_parameters, "a@a.com", str(run_a), "1")
 
-    # studies created before covariate_columns hold only the number of covariates
+    # studies created before covariate_columns hold only the number of covariates,
+    # and no global_max_maf
     old_parameters = copy.deepcopy(doc_ref_dict)
     del old_parameters["parameters"]["covariate_columns"]
+    del old_parameters["parameters"]["global_max_maf"]
     old_parameters["parameters"]["num_cov"] = {"value": 3}
     assert register_data.validate_skat(old_parameters, "a@a.com", str(run_a), "1") == str(
         run_a
@@ -265,6 +314,11 @@ def test_validate_skat(
         register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_d), "1")
     unwritable[:] = [str(run_d)]
     with pytest.raises(AssertionError, match="/d must be writable"):
+        register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_d), "1")
+    # each global_max_maf threshold has its own results directory, e.g. left by an earlier run
+    (run_d / "secure" / "EUR" / "maf0.001").mkdir(parents=True)
+    unwritable[:] = [str(run_d / "secure" / "EUR" / "maf0.001")]
+    with pytest.raises(AssertionError, match="/d/secure/EUR/maf0.001 must be writable"):
         register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_d), "1")
     unwritable.clear()
     assert register_data.validate_skat(doc_ref_dict, "a@a.com", str(run_d), "1") == str(

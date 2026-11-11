@@ -103,6 +103,25 @@ def parse_chromosomes(value) -> list:
     return [int(chromosome) for chromosome in parse_list_param(value, ["21", "22"])]
 
 
+def parse_global_max_maf(value) -> list:
+    """
+    secure-rvas analyzes every ancestry once per threshold in global_max_maf, leaving out
+    the variants whose minor allele frequency over both cohorts is above it. Studies
+    created before then hold no thresholds and ran unfiltered, which is the threshold 0.5.
+    """
+    return [float(threshold) for threshold in parse_list_param(value, ["0.5"])]
+
+
+def maf_label(threshold: float) -> str:
+    """
+    Name the directory secure-rvas writes a threshold's results to, as Go's
+    strconv.FormatFloat(threshold, 'g', -1, 64) does: like repr, it gives the fewest
+    digits that read back as the same number, in exponent form below 1e-4 (e.g. maf0.01,
+    maf1e-05).
+    """
+    return f"maf{threshold!r}"
+
+
 def parse_covariate_columns(parameters: dict) -> list:
     """
     secure-rvas takes the number of covariates from the number of names in
@@ -227,7 +246,8 @@ def update_config(role: str) -> str:
     configLocal.toml (this party's keys, thread count, logging and prepared input paths)
     and configPrepare.toml (its run directory, which secure-rvas accepts only
     there). Settings that only matter to ``secure-rvas prepare``, which sfkit does
-    not invoke (participants must already have run it out-of-band), are left out.
+    not invoke (participants must already have run it out-of-band), are left out;
+    secure-rvas rejects some of them, such as max_maf and masks, in any config file.
     """
     doc_ref_dict: dict = get_doc_ref_dict()
     pars = {**doc_ref_dict["parameters"], **doc_ref_dict["advanced_parameters"]}
@@ -242,6 +262,7 @@ def update_config(role: str) -> str:
         "chromosomes": parse_chromosomes(pars.get("chromosomes", {}).get("value")),
         "phenotype_columns": parse_list_param(pars.get("phenotype_columns", {}).get("value"), ["phenotype1"]),
         "ancestries": parse_ancestries(pars.get("ancestries", {}).get("value")),
+        "global_max_maf": parse_global_max_maf(pars.get("global_max_maf", {}).get("value")),
         "covariate_columns": parse_covariate_columns(pars),
         "ckks": scalar("ckks", "PN14QP436S45"),
         "mpc_num_threads": scalar("mpc_num_threads", 2),
@@ -430,9 +451,11 @@ def process_output_files(role: str) -> None:
     if send_results == "Yes":
         pars = {**doc_ref_dict["parameters"], **doc_ref_dict["advanced_parameters"]}
         for ancestry in parse_ancestries(pars.get("ancestries", {}).get("value")):
-            results_file = os.path.join(secure_dir, ancestry, "all_secure_results.tsv")
-            if os.path.exists(results_file):
-                with open(results_file, "rb") as f:
-                    website_send_file(f, f"{ancestry}_all_secure_results.tsv")
+            for threshold in parse_global_max_maf(pars.get("global_max_maf", {}).get("value")):
+                label = maf_label(threshold)
+                results_file = os.path.join(secure_dir, ancestry, label, "all_secure_results.tsv")
+                if os.path.exists(results_file):
+                    with open(results_file, "rb") as f:
+                        website_send_file(f, f"{ancestry}_{label}_all_secure_results.tsv")
 
     print("Finished processing output files")

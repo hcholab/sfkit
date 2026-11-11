@@ -18,6 +18,9 @@ def make_doc_ref_dict(public_keys: list) -> dict:
         "parameters": {
             "chromosomes": {"value": "21,22"},
             "ancestries": {"value": "eur, AFR"},
+            "global_max_maf": {"value": "0.01, 0.001"},
+            # left in studies created before secure-skat replaced it with the prepare-only
+            # local_max_maf; must not be written, as secure-rvas rejects it
             "max_maf": {"value": 0.01},
             "phenotype_columns": {"value": "phenotype1,phenotype2"},
             "covariate_columns": {"value": "PC1, PC2,PC3"},
@@ -97,6 +100,17 @@ def test_parse_params():
     assert sfskat_protocol.parse_chromosomes("") == [21, 22]
     assert sfskat_protocol.parse_chromosomes("1, 22") == [1, 22]
     assert sfskat_protocol.parse_chromosomes(" All ") == list(range(1, 23))
+    assert sfskat_protocol.parse_global_max_maf("0.01, 0.001") == [0.01, 0.001]
+    assert sfskat_protocol.parse_global_max_maf(0.05) == [0.05]
+    # studies created before global_max_maf ran without filtering by it
+    assert sfskat_protocol.parse_global_max_maf(None) == [0.5]
+    with pytest.raises(ValueError):
+        sfskat_protocol.parse_global_max_maf("0.01,rare")
+    # named as secure-rvas names its results directories
+    assert [
+        sfskat_protocol.maf_label(threshold)
+        for threshold in [0.5, 0.01, 0.001, 0.0001, 0.00012, 0.00001, 0.000025]
+    ] == ["maf0.5", "maf0.01", "maf0.001", "maf0.0001", "maf0.00012", "maf1e-05", "maf2.5e-05"]
     assert sfskat_protocol.parse_covariate_columns(
         {"covariate_columns": {"value": "age, sex"}, "num_cov": {"value": 10}}
     ) == ["age", "sex"]
@@ -246,6 +260,7 @@ def test_update_config(mocker, tmp_path):
         "chromosomes": [21, 22],
         "phenotype_columns": ["phenotype1", "phenotype2"],
         "ancestries": ["EUR", "AFR"],
+        "global_max_maf": [0.01, 0.001],
         "covariate_columns": ["PC1", "PC2", "PC3"],
         "ckks": "PN14QP436S45",
         "mpc_num_threads": 4,
@@ -316,6 +331,12 @@ def test_update_config(mocker, tmp_path):
     assert {server["ipaddr"] for server in global_config["servers"].values()} == {
         "127.0.0.1"
     }
+
+    # secure-rvas requires global_max_maf, which studies created before it lack
+    del doc_ref_dict["parameters"]["global_max_maf"]
+    sfskat_protocol.update_config("0")
+    global_config = load_toml(os.path.join(config_dir, "configGlobal.toml"))
+    assert global_config["global_max_maf"] == [0.5]
 
 
 def test_start_sfskat(mocker):
@@ -449,8 +470,10 @@ def test_process_output_files(mocker, tmp_path):
     mocker.patch("sfkit.utils.sfskat_protocol.copy_results_to_cloud_storage")
     mocker.patch("sfkit.utils.sfskat_protocol.website_send_file")
     (tmp_path / "data_path.txt").write_text(f"{tmp_path}\n")
-    (tmp_path / "secure" / "EUR").mkdir(parents=True)
-    (tmp_path / "secure" / "EUR" / "all_secure_results.tsv").write_text("results\n")
+    # secure-rvas writes each ancestry's results once per global_max_maf threshold
+    for label in ("maf0.01", "maf0.001"):
+        (tmp_path / "secure" / "EUR" / label).mkdir(parents=True)
+        (tmp_path / "secure" / "EUR" / label / "all_secure_results.tsv").write_text("results\n")
 
     sfskat_protocol.process_output_files("1")
 
@@ -462,8 +485,9 @@ def test_process_output_files(mocker, tmp_path):
         "1", "bucket/path", secure_dir
     )
     # only EUR has results; AFR is skipped
-    sfskat_protocol.website_send_file.assert_called_once()
-    assert (
-        sfskat_protocol.website_send_file.call_args.args[1]
-        == "EUR_all_secure_results.tsv"
-    )
+    assert [
+        call.args[1] for call in sfskat_protocol.website_send_file.call_args_list
+    ] == [
+        "EUR_maf0.01_all_secure_results.tsv",
+        "EUR_maf0.001_all_secure_results.tsv",
+    ]

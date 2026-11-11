@@ -13,9 +13,11 @@ from sfkit.encryption.mpc.encrypt_data import encrypt_data
 from sfkit.utils import constants
 from sfkit.utils.helper_functions import authenticate_user, condition_or_fail
 from sfkit.utils.sfskat_protocol import (
+    maf_label,
     parse_ancestries,
     parse_chromosomes,
     parse_covariate_columns,
+    parse_global_max_maf,
     parse_list_param,
     prepared_dir,
 )
@@ -330,6 +332,16 @@ def validate_skat(
         len(set(covariate_columns)) == len(covariate_columns),
         "covariate_columns must not repeat a name",
     )
+    try:
+        global_max_maf = parse_global_max_maf(parameters.get("global_max_maf", {}).get("value"))
+    except ValueError:
+        global_max_maf = []
+    condition_or_fail(
+        bool(global_max_maf)
+        and len(set(global_max_maf)) == len(global_max_maf)
+        and all(0 < threshold <= 0.5 for threshold in global_max_maf),
+        "global_max_maf must list distinct thresholds in (0, 0.5]",
+    )
 
     for ancestry in ancestries:
         for chromosome in chromosomes:
@@ -357,6 +369,19 @@ def validate_skat(
                 num_rows(genes_file) == num_rows(block_sizes_file),
                 f"genes.txt and block_sizes.txt in {chr_dir} have different number of rows",
             )
+            # the site cohort's allele counts per gene, from which secure-rvas computes
+            # each variant's minor allele frequency over both cohorts for global_max_maf
+            count_files = ["allele_counts.txt", "private_allele_counts.txt"] if role == "2" else ["allele_counts.txt"]
+            for count_file in count_files:
+                path = os.path.join(cohort_dir, count_file)
+                condition_or_fail(
+                    os.path.isfile(path),
+                    f"Could not find {path}; prepare the data again with the current secure-rvas",
+                )
+                condition_or_fail(
+                    num_rows(path) == num_rows(genes_file),
+                    f"{count_file} and genes.txt in {chr_dir} have different number of rows",
+                )
 
         # secure-rvas reads the samples' covariates and phenotypes from the first
         # chromosome only, and reshapes them by the configured column counts, so a
@@ -378,11 +403,20 @@ def validate_skat(
             num_rows(cov_file) == num_rows(pheno_file),
             f"cov.txt and pheno.txt in {cohort_dir} have different number of rows",
         )
+        # and the size of the site cohort the allele counts were taken from
+        cohort_size_file = os.path.join(cohort_dir, "cohort_size.txt")
+        condition_or_fail(os.path.isfile(cohort_size_file), f"Could not find {cohort_size_file}")
+        with open(cohort_size_file) as f:
+            condition_or_fail(
+                f.read().strip().isdigit(),
+                f"{cohort_size_file} must hold the number of samples in the cohort",
+            )
 
         # secure-rvas only writes its results and metrics under data_path once the
         # whole protocol has finished, so make sure up front that it will be able to
-        for output in ["secure", "metrics"]:
-            output_dir = os.path.join(data_path, output, ancestry)
+        outputs = [os.path.join("secure", ancestry, maf_label(threshold)) for threshold in global_max_maf]
+        for output in outputs + [os.path.join("metrics", ancestry)]:
+            output_dir = os.path.join(data_path, output)
             while not os.path.isdir(output_dir):
                 output_dir = os.path.dirname(output_dir)
             condition_or_fail(
