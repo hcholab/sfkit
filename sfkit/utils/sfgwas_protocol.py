@@ -363,7 +363,7 @@ def build_sfgwas() -> None:
     print("Finished building sfgwas code")
 
 
-def sync_with_other_vms(role: str, demo: bool, skip_cp0: bool = False) -> None:
+def sync_with_other_vms(role: str, demo: bool, skip_cp0: bool = False, stagger: int = 15) -> None:
     update_firestore("update_firestore::status=syncing up")
     update_firestore("update_firestore::task=Syncing up machines")
     print("Begin syncing up")
@@ -381,7 +381,7 @@ def sync_with_other_vms(role: str, demo: bool, skip_cp0: bool = False) -> None:
             break
         print("Waiting for all participants to sync up...")
         time.sleep(5)
-    time.sleep(15 * int(role))
+    time.sleep(stagger * int(role))
     print("Finished syncing up")
 
 
