@@ -21,6 +21,7 @@ RUN echo install_weak_deps=0 >> /etc/dnf/dnf.conf && \
 FROM base AS go
 
 ARG GO_VERSION=1.25.5
+ENV GOFIPS140=certified
 
 RUN microdnf install -y \
         git-core \
@@ -89,7 +90,6 @@ RUN git clone https://github.com/hcholab/sfkit-proxy . && \
     git checkout 14eba92 && \
     go build && \
     # ensure the binary is built against the Go FIPS 140-3 module, fail if not
-    # (go-toolset >= 1.27 uses it instead of OpenSSL, so there is no FIPS_mode symbol)
     go version -m sfkit-proxy | grep -E '\sGOFIPS140=v[0-9]'
 
 
