@@ -88,10 +88,9 @@ SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
     git checkout 14eba92 && \
     go build && \
-    # ensure FIPS is enabled, fail if not
-    go get github.com/acardace/fips-detect && \
-    go run github.com/acardace/fips-detect sfkit-proxy \
-    | grep -E 'FIPS-capable Go binary.*Yes'
+    # ensure the binary is built against the Go FIPS 140-3 module, fail if not
+    # (go-toolset >= 1.27 uses it instead of OpenSSL, so there is no FIPS_mode symbol)
+    go version -m sfkit-proxy | grep -E '\sGOFIPS140=v[0-9]'
 
 
 # -------------------- dev -------------------- #
