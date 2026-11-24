@@ -21,6 +21,7 @@ RUN echo install_weak_deps=0 >> /etc/dnf/dnf.conf && \
 FROM base AS go
 
 ARG GO_VERSION=1.25.5
+ENV GOFIPS140=certified
 
 RUN microdnf install -y \
         git-core \
@@ -65,7 +66,9 @@ RUN git clone https://github.com/froelich/sf-relate . && \
 FROM go AS sf-skat
 
 RUN git clone https://github.com/swanhong/secure-skat . && \
-    git checkout 1d94279 && \
+    git checkout 3104e16 && \
+    # upstream stopped tracking go.sum after 0f954e1, and go.mod has not changed since
+    git checkout 0f954e1 -- go.sum && \
     # dial peers via the SOCKS proxy from the environment (as sfgwas does),
     # which sfkit-proxy relies on; fail if the patch no longer applies
     go get golang.org/x/net@v0.20.0 && \
@@ -86,10 +89,8 @@ SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 RUN git clone https://github.com/hcholab/sfkit-proxy . && \
     git checkout dcf01e8 && \
     go build && \
-    # ensure FIPS is enabled, fail if not
-    go get github.com/acardace/fips-detect && \
-    go run github.com/acardace/fips-detect sfkit-proxy \
-    | grep -E 'FIPS-capable Go binary.*Yes'
+    # ensure the binary is built against the Go FIPS 140-3 module, fail if not
+    go version -m sfkit-proxy | grep -E '\sGOFIPS140=v[0-9]'
 
 
 # -------------------- dev -------------------- #
